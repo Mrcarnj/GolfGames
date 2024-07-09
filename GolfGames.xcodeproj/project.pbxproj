@@ -11,6 +11,29 @@
 		05198A532C35BA530016F576 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A522C35BA530016F576 /* ContentView.swift */; };
 		05198A552C35BA550016F576 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 05198A542C35BA550016F576 /* Assets.xcassets */; };
 		05198A582C35BA550016F576 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 05198A572C35BA550016F576 /* Preview Assets.xcassets */; };
+		05198A682C35BDD00016F576 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A672C35BDD00016F576 /* AuthViewModel.swift */; };
+		05198A6A2C35BDDF0016F576 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A692C35BDDF0016F576 /* LoginView.swift */; };
+		05198A6C2C35BDEA0016F576 /* RegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A6B2C35BDEA0016F576 /* RegistrationView.swift */; };
+		05198A6F2C35BE290016F576 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 05198A6E2C35BE290016F576 /* FirebaseAnalytics */; };
+		05198A712C35BE290016F576 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 05198A702C35BE290016F576 /* FirebaseAuth */; };
+		05198A732C35BE290016F576 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 05198A722C35BE290016F576 /* FirebaseFirestore */; };
+		05198A752C35BE290016F576 /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 05198A742C35BE290016F576 /* FirebaseFirestoreSwift */; };
+		05198A792C35C26B0016F576 /* InputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A782C35C26B0016F576 /* InputView.swift */; };
+		05198A7B2C35C2770016F576 /* SettingsRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A7A2C35C2770016F576 /* SettingsRowView.swift */; };
+		05198A7D2C35C2840016F576 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A7C2C35C2840016F576 /* User.swift */; };
+		05198A7F2C35C2930016F576 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A7E2C35C2930016F576 /* ProfileView.swift */; };
+		05198A832C35E5060016F576 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 05198A822C35E5060016F576 /* GoogleService-Info.plist */; };
+		05198A872C3753E90016F576 /* InititalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A862C3753E90016F576 /* InititalView.swift */; };
+		054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */; };
+		054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85A2C37601100E44F97 /* SingleRound.swift */; };
+		054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85C2C37625200E44F97 /* CourseTee.swift */; };
+		054EB85F2C3A2C9B00E44F97 /* AddGolfersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85E2C3A2C9B00E44F97 /* AddGolfersView.swift */; };
+		054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8602C3A321400E44F97 /* ScoringModel.swift */; };
+		054EB8632C3C6A2600E44F97 /* Round.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8622C3C6A2500E44F97 /* Round.swift */; };
+		054EB8652C3C6A3D00E44F97 /* Hole.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8642C3C6A3D00E44F97 /* Hole.swift */; };
+		054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8662C3C6A6700E44F97 /* RoundView.swift */; };
+		054EB8692C3C6C9300E44F97 /* RoundViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */; };
+		054EB86C2C3CB53000E44F97 /* HoleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB86B2C3CB53000E44F97 /* HoleView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +42,25 @@
 		05198A522C35BA530016F576 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		05198A542C35BA550016F576 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		05198A572C35BA550016F576 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		05198A672C35BDD00016F576 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		05198A692C35BDDF0016F576 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		05198A6B2C35BDEA0016F576 /* RegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationView.swift; sourceTree = "<group>"; };
+		05198A782C35C26B0016F576 /* InputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputView.swift; sourceTree = "<group>"; };
+		05198A7A2C35C2770016F576 /* SettingsRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRowView.swift; sourceTree = "<group>"; };
+		05198A7C2C35C2840016F576 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		05198A7E2C35C2930016F576 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		05198A822C35E5060016F576 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		05198A862C3753E90016F576 /* InititalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InititalView.swift; sourceTree = "<group>"; };
+		054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRoundSetupView.swift; sourceTree = "<group>"; };
+		054EB85A2C37601100E44F97 /* SingleRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRound.swift; sourceTree = "<group>"; };
+		054EB85C2C37625200E44F97 /* CourseTee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseTee.swift; sourceTree = "<group>"; };
+		054EB85E2C3A2C9B00E44F97 /* AddGolfersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGolfersView.swift; sourceTree = "<group>"; };
+		054EB8602C3A321400E44F97 /* ScoringModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoringModel.swift; sourceTree = "<group>"; };
+		054EB8622C3C6A2500E44F97 /* Round.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Round.swift; sourceTree = "<group>"; };
+		054EB8642C3C6A3D00E44F97 /* Hole.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hole.swift; sourceTree = "<group>"; };
+		054EB8662C3C6A6700E44F97 /* RoundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundView.swift; sourceTree = "<group>"; };
+		054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundViewModel.swift; sourceTree = "<group>"; };
+		054EB86B2C3CB53000E44F97 /* HoleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -26,6 +68,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				05198A6F2C35BE290016F576 /* FirebaseAnalytics in Frameworks */,
+				05198A712C35BE290016F576 /* FirebaseAuth in Frameworks */,
+				05198A732C35BE290016F576 /* FirebaseFirestore in Frameworks */,
+				05198A752C35BE290016F576 /* FirebaseFirestoreSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -51,9 +97,12 @@
 		05198A4F2C35BA530016F576 /* GolfGames */ = {
 			isa = PBXGroup;
 			children = (
-				05198A502C35BA530016F576 /* GolfGamesApp.swift */,
-				05198A522C35BA530016F576 /* ContentView.swift */,
+				05198A612C35BD510016F576 /* App */,
+				05198A602C35BD4F0016F576 /* Core */,
+				05198A5F2C35BD4D0016F576 /* Components */,
+				05198A5E2C35BD4B0016F576 /* Model */,
 				05198A542C35BA550016F576 /* Assets.xcassets */,
+				05198A822C35E5060016F576 /* GoogleService-Info.plist */,
 				05198A562C35BA550016F576 /* Preview Content */,
 			);
 			path = GolfGames;
@@ -65,6 +114,102 @@
 				05198A572C35BA550016F576 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		05198A5E2C35BD4B0016F576 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				05198A7C2C35C2840016F576 /* User.swift */,
+				054EB85A2C37601100E44F97 /* SingleRound.swift */,
+				054EB85C2C37625200E44F97 /* CourseTee.swift */,
+				054EB8602C3A321400E44F97 /* ScoringModel.swift */,
+				054EB8622C3C6A2500E44F97 /* Round.swift */,
+				054EB8642C3C6A3D00E44F97 /* Hole.swift */,
+				054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		05198A5F2C35BD4D0016F576 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				05198A782C35C26B0016F576 /* InputView.swift */,
+				05198A7A2C35C2770016F576 /* SettingsRowView.swift */,
+				054EB86B2C3CB53000E44F97 /* HoleView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		05198A602C35BD4F0016F576 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				05198A622C35BD8A0016F576 /* Authentication */,
+				05198A652C35BD9E0016F576 /* Profile */,
+				058F89772C375F4400963DBC /* Rounds */,
+				05198A662C35BDA30016F576 /* Root */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		05198A612C35BD510016F576 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				05198A502C35BA530016F576 /* GolfGamesApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		05198A622C35BD8A0016F576 /* Authentication */ = {
+			isa = PBXGroup;
+			children = (
+				05198A642C35BD980016F576 /* View */,
+				05198A632C35BD930016F576 /* ViewModel */,
+			);
+			path = Authentication;
+			sourceTree = "<group>";
+		};
+		05198A632C35BD930016F576 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				05198A672C35BDD00016F576 /* AuthViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
+		05198A642C35BD980016F576 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				05198A692C35BDDF0016F576 /* LoginView.swift */,
+				05198A6B2C35BDEA0016F576 /* RegistrationView.swift */,
+				054EB85E2C3A2C9B00E44F97 /* AddGolfersView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		05198A652C35BD9E0016F576 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				05198A7E2C35C2930016F576 /* ProfileView.swift */,
+				05198A862C3753E90016F576 /* InititalView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		05198A662C35BDA30016F576 /* Root */ = {
+			isa = PBXGroup;
+			children = (
+				05198A522C35BA530016F576 /* ContentView.swift */,
+			);
+			path = Root;
+			sourceTree = "<group>";
+		};
+		058F89772C375F4400963DBC /* Rounds */ = {
+			isa = PBXGroup;
+			children = (
+				054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */,
+				054EB8662C3C6A6700E44F97 /* RoundView.swift */,
+			);
+			path = Rounds;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -83,6 +228,12 @@
 			dependencies = (
 			);
 			name = GolfGames;
+			packageProductDependencies = (
+				05198A6E2C35BE290016F576 /* FirebaseAnalytics */,
+				05198A702C35BE290016F576 /* FirebaseAuth */,
+				05198A722C35BE290016F576 /* FirebaseFirestore */,
+				05198A742C35BE290016F576 /* FirebaseFirestoreSwift */,
+			);
 			productName = GolfGames;
 			productReference = 05198A4D2C35BA530016F576 /* GolfGames.app */;
 			productType = "com.apple.product-type.application";
@@ -111,6 +262,9 @@
 				Base,
 			);
 			mainGroup = 05198A442C35BA520016F576;
+			packageReferences = (
+				05198A6D2C35BE290016F576 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			productRefGroup = 05198A4E2C35BA530016F576 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -126,6 +280,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				05198A582C35BA550016F576 /* Preview Assets.xcassets in Resources */,
+				05198A832C35E5060016F576 /* GoogleService-Info.plist in Resources */,
 				05198A552C35BA550016F576 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -138,7 +293,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				05198A532C35BA530016F576 /* ContentView.swift in Sources */,
+				054EB8652C3C6A3D00E44F97 /* Hole.swift in Sources */,
+				054EB85F2C3A2C9B00E44F97 /* AddGolfersView.swift in Sources */,
+				05198A7F2C35C2930016F576 /* ProfileView.swift in Sources */,
+				054EB86C2C3CB53000E44F97 /* HoleView.swift in Sources */,
 				05198A512C35BA530016F576 /* GolfGamesApp.swift in Sources */,
+				05198A6A2C35BDDF0016F576 /* LoginView.swift in Sources */,
+				05198A792C35C26B0016F576 /* InputView.swift in Sources */,
+				054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */,
+				05198A7D2C35C2840016F576 /* User.swift in Sources */,
+				054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */,
+				05198A682C35BDD00016F576 /* AuthViewModel.swift in Sources */,
+				05198A6C2C35BDEA0016F576 /* RegistrationView.swift in Sources */,
+				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,
+				054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */,
+				05198A872C3753E90016F576 /* InititalView.swift in Sources */,
+				05198A7B2C35C2770016F576 /* SettingsRowView.swift in Sources */,
+				054EB8692C3C6C9300E44F97 /* RoundViewModel.swift in Sources */,
+				054EB8632C3C6A2600E44F97 /* Round.swift in Sources */,
+				054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,6 +448,8 @@
 				DEVELOPMENT_TEAM = K7F2MY5SHH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = GolfGames;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -304,6 +479,8 @@
 				DEVELOPMENT_TEAM = K7F2MY5SHH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = GolfGames;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -344,6 +521,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		05198A6D2C35BE290016F576 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.28.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		05198A6E2C35BE290016F576 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05198A6D2C35BE290016F576 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		05198A702C35BE290016F576 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05198A6D2C35BE290016F576 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		05198A722C35BE290016F576 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05198A6D2C35BE290016F576 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		05198A742C35BE290016F576 /* FirebaseFirestoreSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 05198A6D2C35BE290016F576 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestoreSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 05198A452C35BA530016F576 /* Project object */;
 }

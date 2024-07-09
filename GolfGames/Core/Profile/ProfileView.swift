@@ -91,7 +91,9 @@ struct ProfileView: View {
 }
 
 #Preview {
-    ProfileView()
-        .environmentObject(AuthViewModel()) // Provide a mock or test instance here
+    let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
+        return ProfileView()
+            .environmentObject(SingleRoundViewModel())
+            .environmentObject(AuthViewModel(mockUser: mockUser))
 }
 

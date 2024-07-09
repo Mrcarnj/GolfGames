@@ -14,13 +14,13 @@ class RoundViewModel: ObservableObject {
     @Published var selectedCourse: Course?
     @Published var selectedLocation: String?
 
-    func beginRound(for user: User, completion: @escaping (String?, String?) -> Void) {
+    func beginRound(for user: User, completion: @escaping (String?, String?, String?) -> Void) {
         guard let course = selectedCourse,
               let tee = selectedTee,
               let courseId = course.id,
               let teeId = tee.id else {
             print("Missing required data to begin round")
-            completion(nil, nil)
+            completion(nil, nil, nil)
             return
         }
 
@@ -42,15 +42,15 @@ class RoundViewModel: ObservableObject {
             roundRef.getDocument { (document, error) in
                 if let document = document, document.exists {
                     print("Round saved with ID: \(document.documentID)")
-                    completion(courseId, teeId)
+                    completion(document.documentID, courseId, teeId)
                 } else {
                     print("Error saving round: \(error?.localizedDescription ?? "Unknown error")")
-                    completion(nil, nil)
+                    completion(nil, nil, nil)
                 }
             }
         } catch {
             print("Error saving round: \(error.localizedDescription)")
-            completion(nil, nil)
+            completion(nil, nil, nil)
         }
     }
 }
