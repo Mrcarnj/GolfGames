@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyBBaqH9_FAhboeEoOih_FaMoiwpiAlN9kI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>64996444063</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>FlushIt.GolfGames</string>
+	<key>PROJECT_ID</key>
+	<string>gamblegolf-19624</string>
+	<key>STORAGE_BUCKET</key>
+	<string>gamblegolf-19624.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:64996444063:ios:20c8e1ca5d553a902ddfaa</string>
+</dict>
+</plist>
