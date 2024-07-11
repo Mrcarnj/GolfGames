@@ -5,6 +5,27 @@
 //  Created by Mike Dietrich on 7/6/24.
 //
 
+//
+//  AddGolfersView.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/6/24.
+//
+
+//
+//  AddGolfersView.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/6/24.
+//
+
+//
+//  AddGolfersView.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/6/24.
+//
+
 import SwiftUI
 
 struct AddGolfersView: View {
@@ -17,6 +38,9 @@ struct AddGolfersView: View {
     @State private var courseId = ""
     @State private var teeId = ""
     @State private var playingHandicap: Int? = nil
+    @State private var additionalGolfers: [Golfer] = []
+    @State private var showingAddGolferSheet = false
+    @State private var golferToEdit: Golfer?
 
     var selectedCourse: Course?
     var selectedLocation: String?
@@ -105,6 +129,72 @@ struct AddGolfersView: View {
                                 // You can handle fetched tees here if needed
                             }
                         }
+                    }
+
+                    List {
+                        ForEach(additionalGolfers, id: \.id) { golfer in
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text(golfer.fullName)
+                                        .font(.subheadline)
+                                        .foregroundColor(Color.primary) // Adaptive color
+                                    Spacer()
+                                    Text("HCP: \(String(format: "%.1f", golfer.handicap))")
+                                        .font(.subheadline)
+                                        .foregroundColor(Color.primary) // Adaptive color
+                                    Spacer()
+                                    
+                                    if let selectedTee = golfer.tee {
+                                        let playingHandicap = HandicapCalculator.calculateCourseHandicap(
+                                            handicapIndex: golfer.handicap,
+                                            slopeRating: selectedTee.slope_rating,
+                                            courseRating: selectedTee.course_rating,
+                                            par: selectedTee.course_par
+                                        )
+                                        Text("CH: \(playingHandicap)")
+                                            .font(.subheadline)
+                                            .foregroundColor(Color.primary) // Adaptive color
+                                    }
+                                }
+                                if let selectedTee = golfer.tee {
+                                    Text("\(selectedTee.tee_name) \(selectedTee.tee_yards) yds (\(String(format: "%.1f", selectedTee.course_rating))/\(selectedTee.slope_rating)) Par \(selectedTee.course_par)")
+                                        .font(.footnote)
+                                        .foregroundColor(Color.primary) // Adaptive color
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
+                                }
+                            }
+                            .padding()
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                golferToEdit = golfer
+                                showingAddGolferSheet.toggle()
+                            }
+                            .swipeActions {
+                                Button(role: .destructive) {
+                                    if let index = additionalGolfers.firstIndex(of: golfer) {
+                                        additionalGolfers.remove(at: index)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                        }
+                    }
+                    .listStyle(PlainListStyle())
+
+                    Button(action: {
+                        showingAddGolferSheet.toggle()
+                    }) {
+                        Text("Add Golfer")
+                            .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                            .foregroundColor(.white)
+                            .background(Color(.systemGray))
+                            .cornerRadius(10)
+                    }
+                    .padding(.top)
+                    .sheet(isPresented: $showingAddGolferSheet) {
+                        CreateGolferView(golfers: $additionalGolfers, golferToEdit: $golferToEdit, course: selectedCourse)
+                            .environmentObject(singleRoundViewModel)
                     }
 
                     Button(action: {

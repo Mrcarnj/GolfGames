@@ -5,6 +5,13 @@
 //  Created by Mike Dietrich on 7/3/24.
 //
 
+//
+//  RegistrationView.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/3/24.
+//
+
 import SwiftUI
 
 struct RegistrationView: View {
@@ -39,29 +46,11 @@ struct RegistrationView: View {
                               placeholder: "name@example.com")
                     .autocapitalization(.none)
                     .focused($isFocused)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") {
-                                isFocused = false
-                            }
-                            .foregroundColor(.blue)
-                        }
-                    }
                     
                     InputView(text: $fullname,
                               title: "Full Name",
                               placeholder: "John Smith")
                     .focused($isFocused)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") {
-                                isFocused = false
-                            }
-                            .foregroundColor(.blue)
-                        }
-                    }
                     
                     ZStack (alignment: .trailing){
                         InputView(text: $password,
@@ -70,15 +59,6 @@ struct RegistrationView: View {
                                   isSecureField: true)
                         .autocapitalization(.none)
                         .focused($isFocused)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .keyboard) {
-                                Spacer()
-                                Button("Done") {
-                                    isFocused = false
-                                }
-                                .foregroundColor(.blue)
-                            }
-                        }
                         
                         if !password.isEmpty {
                             if password.count > 5 {
@@ -102,15 +82,6 @@ struct RegistrationView: View {
                                   isSecureField: true)
                         .autocapitalization(.none)
                         .focused($isFocused)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .keyboard) {
-                                Spacer()
-                                Button("Done") {
-                                    isFocused = false
-                                }
-                                .foregroundColor(.blue)
-                            }
-                        }
                         
                         if !password.isEmpty && !confirmPassword.isEmpty{
                             if password == confirmPassword {
@@ -132,36 +103,27 @@ struct RegistrationView: View {
                               placeholder: "1234567")
                     .keyboardType(.numberPad)
                     .focused($isFocused)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") {
-                                isFocused = false
-                            }
-                            .foregroundColor(.blue)
-                        }
-                    }
                     
                     InputView(text: $handicap,
                               title: "Handicap (optional)",
                               placeholder: "12.3")
-                    .keyboardType(.numberPad)
+                    .keyboardType(.decimalPad) // Use decimalPad instead of numberPad
                     .focused($isFocused)
-                    .toolbar {
-                        ToolbarItemGroup(placement: .keyboard) {
-                            Spacer()
-                            Button("Done") {
-                                isFocused = false
-                            }
-                            .foregroundColor(.blue)
-                        }
-                    }
                     
                 }
                 .padding(.horizontal)
                 .padding(.top, 12)
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            isFocused = false
+                        }
+                        .foregroundColor(.blue)
+                    }
+                }
                 
-                // sing in buttons
+                // sign in button
                 Button {
                     Task{
                         let ghinNumberValue = Int(ghinNumber)

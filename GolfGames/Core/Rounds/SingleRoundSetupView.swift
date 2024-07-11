@@ -5,6 +5,13 @@
 //  Created by Mike Dietrich on 7/4/24.
 //
 
+//
+//  SingleRoundSetupView.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/4/24.
+//
+
 import SwiftUI
 
 struct SingleRoundSetupView: View {
@@ -80,8 +87,6 @@ struct SingleRoundSetupView: View {
                     .padding()
                 }
 
-                Spacer()
-
                 // Button to navigate to Add Golfers View
                 Button(action: {
                     navigateToAddGolfersView = true
@@ -108,6 +113,7 @@ struct SingleRoundSetupView: View {
                         EmptyView()
                     }
                 )
+                Spacer()
             }
             .onAppear {
                 viewModel.fetchCourses()
