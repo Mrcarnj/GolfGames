@@ -32,6 +32,7 @@
 		054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96182C3FA3320036165A /* RecentRoundsModel.swift */; };
 		054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E961A2C403BAB0036165A /* AppDelegate.swift */; };
 		054E961D2C403BEF0036165A /* OrientationUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E961C2C403BEF0036165A /* OrientationUtility.swift */; };
+		054E96212C4054180036165A /* OrientationObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96202C4054180036165A /* OrientationObserver.swift */; };
 		054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */; };
 		054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85A2C37601100E44F97 /* SingleRound.swift */; };
 		054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85C2C37625200E44F97 /* CourseTee.swift */; };
@@ -67,6 +68,7 @@
 		054E96182C3FA3320036165A /* RecentRoundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentRoundsModel.swift; sourceTree = "<group>"; };
 		054E961A2C403BAB0036165A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		054E961C2C403BEF0036165A /* OrientationUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationUtility.swift; sourceTree = "<group>"; };
+		054E96202C4054180036165A /* OrientationObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationObserver.swift; sourceTree = "<group>"; };
 		054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRoundSetupView.swift; sourceTree = "<group>"; };
 		054EB85A2C37601100E44F97 /* SingleRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRound.swift; sourceTree = "<group>"; };
 		054EB85C2C37625200E44F97 /* CourseTee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseTee.swift; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 				054E96142C3F66F20036165A /* ScorecardViewType.swift */,
 				054E961A2C403BAB0036165A /* AppDelegate.swift */,
 				054E961C2C403BEF0036165A /* OrientationUtility.swift */,
+				054E96202C4054180036165A /* OrientationObserver.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -343,6 +346,7 @@
 				05198A792C35C26B0016F576 /* InputView.swift in Sources */,
 				054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */,
 				05198A7D2C35C2840016F576 /* User.swift in Sources */,
+				054E96212C4054180036165A /* OrientationObserver.swift in Sources */,
 				054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */,
 				054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */,
 				054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */,

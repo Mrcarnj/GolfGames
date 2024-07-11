@@ -85,7 +85,12 @@ struct AddGolfersView: View {
                                 roundViewModel.selectedTee = newValue
                                 // Recalculate playing handicap when tees are changed
                                 if let tee = newValue, let handicapIndex = currentUser.handicap {
-                                    self.playingHandicap = HandicapCalculator.calculateCourseHandicap(handicapIndex: handicapIndex, slopeRating: tee.slope_rating)
+                                    self.playingHandicap = HandicapCalculator.calculateCourseHandicap(
+                                        handicapIndex: handicapIndex,
+                                        slopeRating: tee.slope_rating,
+                                        courseRating: tee.course_rating,
+                                        par: tee.course_par
+                                    )
                                 } else {
                                     self.playingHandicap = nil
                                 }

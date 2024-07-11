@@ -10,12 +10,15 @@ import Firebase
 
 struct ScorecardView: View {
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.presentationMode) var presentationMode
     
     @State private var selectedViewType: ScorecardViewType = .scoreOnly
     @EnvironmentObject var viewModel: RoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var pars: [Int: Int] = [:]
     @State private var navigateToInitialView = false
+    
+    var showFinishButton: Bool // Add this parameter
 
     var body: some View {
         VStack {
@@ -30,7 +33,7 @@ struct ScorecardView: View {
             ScorecardComponentsView(viewType: selectedViewType, pars: pars)
                 .environmentObject(viewModel)
             
-            HStack{
+            HStack {
                 Circle()
                     .fill(Color.yellow)
                     .frame(width: 10, height: 10)
@@ -58,14 +61,16 @@ struct ScorecardView: View {
             }
             .padding()
 
-            Button(action: finishRound) {
-                Text("Finish Round")
-                    .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                    .foregroundColor(.white)
-                    .background(Color(.systemTeal))
-                    .cornerRadius(10)
+            if showFinishButton { // Conditionally display the button
+                Button(action: finishRound) {
+                    Text("Finish Round")
+                        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                        .foregroundColor(.white)
+                        .background(Color(.systemTeal))
+                        .cornerRadius(10)
+                }
+                .padding(.top)
             }
-            .padding(.top)
         }
         .onAppear {
             // Fetch the pars for the selected course and tee
@@ -84,6 +89,7 @@ struct ScorecardView: View {
                 print("Course or Tee ID is missing.")
             }
         }
+        .navigationBarBackButtonHidden(!showFinishButton)
         .background(
             NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(viewModel), isActive: $navigateToInitialView) {
                 EmptyView()
@@ -138,7 +144,7 @@ struct ScorecardView: View {
 
 struct ScorecardView_Previews: PreviewProvider {
     static var previews: some View {
-        ScorecardView()
+        ScorecardView(showFinishButton: true)
             .environmentObject(RoundViewModel())
     }
 }

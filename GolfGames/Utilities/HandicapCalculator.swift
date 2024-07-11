@@ -8,9 +8,26 @@
 import Foundation
 
 struct HandicapCalculator {
-    static func calculateCourseHandicap(handicapIndex: Float, slopeRating: Int) -> Int {
-        let courseHandicap = (handicapIndex * Float(slopeRating)) / 113
-        return Int(courseHandicap.rounded())
+    static func calculateCourseHandicap(handicapIndex: Float, slopeRating: Int, courseRating: Float, par: Int) -> Int {
+        print("Calculating Course Handicap...")
+        print("Handicap Index: \(handicapIndex)")
+        print("Slope Rating: \(slopeRating)")
+        print("Course Rating: \(courseRating)")
+        print("Par: \(par)")
+        
+        let courseHandicap = (handicapIndex * Float(slopeRating) / 113) + (courseRating - Float(par))
+        let roundedHandicap: Int
+        
+        if courseHandicap.truncatingRemainder(dividingBy: 1) >= 0.5 {
+            roundedHandicap = Int(courseHandicap.rounded(.up))
+        } else {
+            roundedHandicap = Int(courseHandicap.rounded(.down))
+        }
+
+        print("Course Handicap (unrounded): \(courseHandicap)")
+        print("Course Handicap (rounded): \(roundedHandicap)")
+        
+        return roundedHandicap
     }
 
     static func determineStrokeHoles(courseHandicap: Int, holeHandicaps: [Int]) -> [Int] {

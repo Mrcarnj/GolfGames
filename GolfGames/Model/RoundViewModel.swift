@@ -95,8 +95,15 @@ class RoundViewModel: ObservableObject {
             completion(pars)
 
             // Calculate playing handicap and stroke holes
-            if let slopeRating = self.selectedTee?.slope_rating {
-                self.playingHandicap = HandicapCalculator.calculateCourseHandicap(handicapIndex: user.handicap ?? 0.0, slopeRating: slopeRating)
+            if let slopeRating = self.selectedTee?.slope_rating,
+               let courseRating = self.selectedTee?.course_rating,
+               let coursePar = self.selectedTee?.course_par {
+                self.playingHandicap = HandicapCalculator.calculateCourseHandicap(
+                    handicapIndex: user.handicap ?? 0.0,
+                    slopeRating: slopeRating,
+                    courseRating: courseRating,
+                    par: coursePar
+                )
                 let strokeHoles = holeHandicaps.sorted { $0.value < $1.value }.prefix(self.playingHandicap).map { $0.key }
                 self.strokeHoles = strokeHoles
                 print("Playing Handicap: \(self.playingHandicap), Stroke Holes: \(self.strokeHoles)")
