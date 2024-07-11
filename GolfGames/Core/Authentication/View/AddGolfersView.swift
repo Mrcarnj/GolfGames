@@ -26,6 +26,13 @@
 //  Created by Mike Dietrich on 7/6/24.
 //
 
+//
+//  AddGolfersView.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/6/24.
+//
+
 import SwiftUI
 
 struct AddGolfersView: View {
@@ -198,7 +205,7 @@ struct AddGolfersView: View {
                     }
 
                     Button(action: {
-                        roundViewModel.beginRound(for: currentUser) { roundId, courseId, teeId in
+                        roundViewModel.beginRound(for: currentUser, additionalGolfers: additionalGolfers) { roundId, courseId, teeId in
                             if let roundId = roundId, let courseId = courseId, let teeId = teeId {
                                 self.roundId = roundId
                                 self.courseId = courseId

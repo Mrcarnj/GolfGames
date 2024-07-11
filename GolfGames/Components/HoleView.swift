@@ -11,8 +11,7 @@ struct HoleView: View {
     @Environment(\.colorScheme) var colorScheme
     
     var hole: Hole
-    var score: String
-    var onScoreChange: (String) -> Void
+    var onScoreChange: (String, String) -> Void
     var onNextHole: (() -> Void)?
     var onPreviousHole: (() -> Void)?
     var currentHoleNumber: Int
@@ -20,7 +19,7 @@ struct HoleView: View {
 
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var roundViewModel: RoundViewModel
-    @State private var scoreInput: String = ""
+    @State private var scoreInputs: [String: String] = [:]
     @State private var isEditing: Bool = false
     @FocusState private var isTextFieldFocused: Bool
 
@@ -88,10 +87,10 @@ struct HoleView: View {
             .border(Color.secondary)
             .cornerRadius(10)
 
-            // Player and Score
+            // Scores for each golfer
             VStack {
                 HStack {
-                    Text("Player")
+                    Text("Golfer")
                     Spacer()
                     Text("Score")
                 }
@@ -101,14 +100,20 @@ struct HoleView: View {
                 .fontWeight(.bold)
                 .foregroundColor(Color.primary)
                 .background(Color.secondary)
-
-                HStack {
-                    Text(authViewModel.currentUser?.fullname ?? "Unknown")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
+            }
+            
+            ForEach(roundViewModel.golfers, id: \.id) { golfer in
+                VStack {
                     HStack {
-                        if isEditing {
-                            TextField("\(hole.par)", text: $scoreInput)
+                        Text(golfer.fullName)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        HStack {
+                            if isEditing {
+                                TextField("\(hole.par)", text: Binding(
+                                    get: { scoreInputs[golfer.id] ?? "" },
+                                    set: { scoreInputs[golfer.id] = $0 }
+                                ))
                                 .keyboardType(.numberPad)
                                 .focused($isTextFieldFocused)
                                 .toolbar {
@@ -117,9 +122,9 @@ struct HoleView: View {
                                         Button("Done") {
                                             isEditing = false
                                             isTextFieldFocused = false
-                                            onScoreChange(scoreInput)
-                                            if let scoreInt = Int(scoreInput) {
-                                                roundViewModel.scores[hole.holeNumber] = scoreInt
+                                            onScoreChange(golfer.id, scoreInputs[golfer.id] ?? "")
+                                            if let scoreInt = Int(scoreInputs[golfer.id] ?? "") {
+                                                roundViewModel.scores[currentHoleNumber, default: [:]][golfer.id] = scoreInt
                                                 roundViewModel.updateNetScores()
                                                 print("Scores: \(roundViewModel.scores.sorted { $0.key < $1.key })")
                                                 print("Net Scores: \(roundViewModel.netScores.sorted { $0.key < $1.key })")
@@ -132,54 +137,55 @@ struct HoleView: View {
                                 .background(Color.gray.opacity(0.2))
                                 .cornerRadius(5)
                                 .multilineTextAlignment(.center)
-                                .onChange(of: scoreInput) { newValue in
+                                .onChange(of: scoreInputs[golfer.id] ?? "") { newValue in
                                     if newValue.isEmpty {
-                                        onScoreChange("")
+                                        onScoreChange(golfer.id, "")
                                     }
                                 }
                                 .onSubmit {
-                                    if let scoreInt = Int(scoreInput), scoreInt >= 1 && scoreInt <= 99 {
+                                    if let scoreInt = Int(scoreInputs[golfer.id] ?? ""), scoreInt >= 1 && scoreInt <= 99 {
                                         isEditing = false
-                                        onScoreChange(scoreInput)
-                                        roundViewModel.scores[hole.holeNumber] = scoreInt
+                                        onScoreChange(golfer.id, scoreInputs[golfer.id] ?? "")
+                                        roundViewModel.scores[currentHoleNumber, default: [:]][golfer.id] = scoreInt
                                         roundViewModel.updateNetScores()
                                         print("Scores: \(roundViewModel.scores.sorted { $0.key < $1.key })")
                                         print("Net Scores: \(roundViewModel.netScores.sorted { $0.key < $1.key })")
                                     } else {
-                                        onScoreChange("")
+                                        onScoreChange(golfer.id, "")
                                     }
                                 }
-                        } else {
-                            ZStack(alignment: .topTrailing) {
-                                Text(score.isEmpty ? "\(hole.par)" : score)
-                                    .frame(width: 50, height: 50)
-                                    .background(Color.gray.opacity(0.2))
-                                    .cornerRadius(5)
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(score.isEmpty ? Color.gray.opacity(0.7) : (colorScheme == .dark ? Color.white : Color.black))
-                                    .fontWeight(score.isEmpty ? .regular : .bold)
-                                
-                                if roundViewModel.strokeHoles.contains(hole.holeNumber) {
-                                    Circle()
-                                        .fill(colorScheme == .dark ? Color.white : Color.black)
-                                        .frame(width: 6, height: 6)
-                                        .offset(x: -5, y: 5)
+                            } else {
+                                ZStack(alignment: .topTrailing) {
+                                    Text(scoreInputs[golfer.id] ?? "\(hole.par)")
+                                        .frame(width: 50, height: 50)
+                                        .background(Color.gray.opacity(0.2))
+                                        .cornerRadius(5)
+                                        .multilineTextAlignment(.center)
+                                        .foregroundColor(scoreInputs[golfer.id] == nil ? Color.gray.opacity(0.7) : (colorScheme == .dark ? Color.white : Color.black))
+                                        .fontWeight(scoreInputs[golfer.id] == nil ? .regular : .bold)
+                                    
+                                    if roundViewModel.strokeHoles[golfer.id]?.contains(hole.holeNumber) ?? false {
+                                        Circle()
+                                            .fill(colorScheme == .dark ? Color.white : Color.black)
+                                            .frame(width: 6, height: 6)
+                                            .offset(x: -5, y: 5)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Button(action: {
-                        isEditing = true
-                        scoreInput = score
-                        isTextFieldFocused = true
-                    }) {
-                        Image(systemName: "pencil")
-                            .foregroundColor(.blue)
+                        Button(action: {
+                            isEditing = true
+                            scoreInputs[golfer.id] = scoreInputs[golfer.id] ?? ""
+                            isTextFieldFocused = true
+                        }) {
+                            Image(systemName: "pencil")
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.leading, 5)
                     }
-                    .padding(.leading, 5)
+                    .padding()
                 }
-                .padding()
             }
 
             Spacer()
@@ -192,8 +198,13 @@ struct HoleView_Previews: PreviewProvider {
     static var previews: some View {
         let mockHole = Hole(id: "mockHoleId", holeNumber: 1, par: 4, handicap: 15, yardage: 420)
 
-        return HoleView(hole: mockHole, score: "", onScoreChange: { _ in }, currentHoleNumber: 1, totalHoles: 18)
-            .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
-            .environmentObject(RoundViewModel())
+        return HoleView(
+            hole: mockHole,
+            onScoreChange: { _, _ in },
+            currentHoleNumber: 1,
+            totalHoles: 18
+        )
+        .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
+        .environmentObject(RoundViewModel())
     }
 }

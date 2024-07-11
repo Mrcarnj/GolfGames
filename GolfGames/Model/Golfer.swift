@@ -4,10 +4,11 @@
 //
 //  Created by Mike Dietrich on 7/11/24.
 //
+// Golfer.swift
 import Foundation
 
-struct Golfer: Identifiable, Equatable {
-    let id = UUID()
+struct Golfer: Identifiable, Equatable, Codable {
+    var id: String = UUID().uuidString
     var fullName: String
     var handicap: Float
     var tee: Tee?
@@ -16,3 +17,4 @@ struct Golfer: Identifiable, Equatable {
         return lhs.id == rhs.id
     }
 }
+

@@ -5,20 +5,6 @@
 //  Created by Mike Dietrich on 7/8/24.
 //
 
-//
-//  RoundView.swift
-//  GolfGames
-//
-//  Created by Mike Dietrich on 7/8/24.
-//
-
-//
-//  RoundView.swift
-//  GolfGames
-//
-//  Created by Mike Dietrich on 7/8/24.
-//
-
 import SwiftUI
 import Firebase
 import FirebaseFirestoreSwift
@@ -50,9 +36,8 @@ struct RoundView: View {
                     if let hole = hole {
                         HoleView(
                             hole: hole,
-                            score: roundViewModel.scores[currentHoleNumber].map { "\($0)" } ?? "",
-                            onScoreChange: { newScore in
-                                roundViewModel.scores[currentHoleNumber] = Int(newScore)
+                            onScoreChange: { newScore, golferId in
+                                roundViewModel.scores[currentHoleNumber, default: [:]][golferId] = Int(newScore)
                             },
                             onNextHole: {
                                 if roundViewModel.scores[currentHoleNumber] == nil {

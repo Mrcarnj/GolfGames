@@ -108,28 +108,32 @@ struct ScorecardView: View {
         // Generate a unique round result ID
         let roundResultID = roundRef.collection("results").document().documentID
 
+        // Helper function to sum the scores from the nested dictionary
+        func sumScores() -> Int {
+            return viewModel.scores.values.flatMap { $0.values }.reduce(0, +)
+        }
+
         var roundData: [String: Any] = [
             "date": Timestamp(date: Date()),  // Use Firestore Timestamp for date
             "course": course.name,
             "tees": tee.tee_name,
             "course_rating": tee.course_rating,  // Add course rating
             "slope_rating": tee.slope_rating,  // Add slope rating
-            "total_score": viewModel.scores.values.reduce(0, +),
+            "total_score": sumScores(),
             "roundResultID": roundResultID  // Add round result ID to the data
         ]
 
-        for (hole, score) in viewModel.scores {
-            roundData["hole_\(hole)"] = score
+        for (hole, scores) in viewModel.scores {
+            for (golfer, score) in scores {
+                roundData["hole_\(hole)_\(golfer)"] = score
+            }
         }
 
-        let resultsRef = roundRef.collection("results").document(roundResultID)
-        resultsRef.setData(roundData) { error in
+        roundRef.setData(roundData) { error in
             if let error = error {
                 print("Error saving round: \(error.localizedDescription)")
             } else {
                 print("Round successfully saved!")
-                resetLocalData()
-                navigateToInitialView = true
             }
         }
     }

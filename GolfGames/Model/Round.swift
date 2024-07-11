@@ -19,10 +19,11 @@ struct Round: Identifiable, Codable {
 
     struct Golfer: Identifiable, Codable {
         var id: String
-        var name: String
+        var fullName: String
         var handicap: Float
     }
 }
+
 
 
 extension DateFormatter {

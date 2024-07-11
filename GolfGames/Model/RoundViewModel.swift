@@ -13,15 +13,16 @@ class RoundViewModel: ObservableObject {
     @Published var selectedTee: Tee?
     @Published var selectedCourse: Course?
     @Published var selectedLocation: String?
-    @Published var scores: [Int: Int] = [:]  // Dictionary to hold scores keyed by hole number
+    @Published var scores: [Int: [String: Int]] = [:]  // Nested dictionary to hold scores keyed by hole number and golfer ID
     @Published var pars: [Int: Int] = [:]  // Dictionary to hold pars keyed by hole number
-    @Published var playingHandicap: Int = 0
-    @Published var strokeHoles: [Int] = []
+    @Published var playingHandicaps: [String: Int] = [:]  // Dictionary to hold playing handicaps keyed by golfer ID
+    @Published var strokeHoles: [String: [Int]] = [:]  // Dictionary to hold stroke holes keyed by golfer ID
     @Published var roundId: String?
-    @Published var netScores: [Int: Int] = [:] // Dictionary to hold net scores keyed by hole number
+    @Published var netScores: [Int: [String: Int]] = [:] // Nested dictionary to hold net scores keyed by hole number and golfer ID
     @Published var recentRounds: [Round] = []
+    @Published var golfers: [Golfer] = []
 
-    func beginRound(for user: User, completion: @escaping (String?, String?, String?) -> Void) {
+    func beginRound(for user: User, additionalGolfers: [Golfer], completion: @escaping (String?, String?, String?) -> Void) {
         guard let course = selectedCourse,
               let tee = selectedTee,
               let courseId = course.id,
@@ -31,13 +32,17 @@ class RoundViewModel: ObservableObject {
             return
         }
 
-        let golfer = Round.Golfer(id: user.id, name: user.fullname, handicap: user.handicap ?? 0.0)
+        self.golfers = [Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)] + additionalGolfers
+
+        let roundGolfers = self.golfers.map { golfer in
+            Round.Golfer(id: golfer.id, fullName: golfer.fullName, handicap: golfer.handicap)
+        }
 
         let round = Round(
             courseId: courseId,
             courseName: course.name,
             teeName: tee.tee_name,
-            golfers: [golfer],
+            golfers: roundGolfers,
             date: Date()
         )
 
@@ -94,56 +99,51 @@ class RoundViewModel: ObservableObject {
             print("Fetched pars: \(pars)")
             completion(pars)
 
-            // Calculate playing handicap and stroke holes
-            if let slopeRating = self.selectedTee?.slope_rating,
-               let courseRating = self.selectedTee?.course_rating,
-               let coursePar = self.selectedTee?.course_par {
-                self.playingHandicap = HandicapCalculator.calculateCourseHandicap(
-                    handicapIndex: user.handicap ?? 0.0,
-                    slopeRating: slopeRating,
-                    courseRating: courseRating,
-                    par: coursePar
+            // Calculate playing handicaps and stroke holes for all golfers
+            for golfer in self.golfers {
+                let golferHandicap = HandicapCalculator.calculateCourseHandicap(
+                    handicapIndex: golfer.handicap,
+                    slopeRating: self.selectedTee?.slope_rating ?? 113,
+                    courseRating: self.selectedTee?.course_rating ?? 72.0,
+                    par: self.selectedTee?.course_par ?? 72
                 )
-                let strokeHoles = holeHandicaps.sorted { $0.value < $1.value }.prefix(self.playingHandicap).map { $0.key }
-                self.strokeHoles = strokeHoles
-                print("Playing Handicap: \(self.playingHandicap), Stroke Holes: \(self.strokeHoles)")
-                
-                // Debug print statements
-                for holeNumber in self.strokeHoles {
-                    if let handicap = holeHandicaps[holeNumber] {
-                        print("Hole \(holeNumber) with handicap \(handicap) gets a stroke")
-                    }
-                }
+                self.playingHandicaps[golfer.id] = golferHandicap
+
+                let golferStrokeHoles = holeHandicaps.sorted { $0.value < $1.value }.prefix(golferHandicap).map { $0.key }
+                self.strokeHoles[golfer.id] = golferStrokeHoles
+
+                print("Golfer: \(golfer.fullName), Playing Handicap: \(golferHandicap), Stroke Holes: \(golferStrokeHoles)")
             }
         }
     }
 
     func updateNetScores() {
-        netScores = scores.mapValues { score in
-            let holeNumber = scores.first(where: { $0.value == score })?.key ?? 0
-            return strokeHoles.contains(holeNumber) ? score - 1 : score
+        var netScoreDict = [Int: [String: Int]]()
+
+        for (holeNumber, scoresDict) in scores {
+            for (golferId, score) in scoresDict {
+                netScoreDict[holeNumber, default: [:]][golferId] = (strokeHoles[golferId]?.contains(holeNumber) ?? false) ? score - 1 : score
+            }
         }
-        // Update the netScores dictionary correctly based on stroke holes
-        for (holeNumber, score) in scores {
-            netScores[holeNumber] = strokeHoles.contains(holeNumber) ? score - 1 : score
-        }
+
+        self.netScores = netScoreDict
     }
-    
+
     func fetchRecentRounds(for user: User) {
-            let db = Firestore.firestore()
-            db.collection("users").document(user.id).collection("rounds")
-                .order(by: "date", descending: true)
-                .limit(to: 10)
-                .getDocuments { snapshot, error in
-                    if let error = error {
-                        print("Error fetching recent rounds: \(error.localizedDescription)")
-                        return
-                    }
-                    guard let documents = snapshot?.documents else {
-                        print("No recent rounds found")
-                        return
-                    }
-                    self.recentRounds = documents.compactMap { try? $0.data(as: Round.self) }
+        let db = Firestore.firestore()
+        db.collection("users").document(user.id).collection("rounds")
+            .order(by: "date", descending: true)
+            .limit(to: 10)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching recent rounds: \(error.localizedDescription)")
+                    return
                 }
-        }
+                guard let documents = snapshot?.documents else {
+                    print("No recent rounds found")
+                    return
+                }
+                self.recentRounds = documents.compactMap { try? $0.data(as: Round.self) }
+            }
+    }
 }
