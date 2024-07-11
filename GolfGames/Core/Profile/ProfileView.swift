@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var viewModel: AuthViewModel
     
     var body: some View {
@@ -43,7 +44,7 @@ struct ProfileView: View {
                         
                         Text(user.handicap != nil ? String(format: "%.1f", user.handicap!) : "N/A")
                             .font(.subheadline)
-                            .foregroundStyle(Color(.gray))
+                            .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
                         
                     }
                     HStack {
@@ -53,7 +54,7 @@ struct ProfileView: View {
                         
                         Text(user.ghinNumber != nil ? String( user.ghinNumber!) : "N/A")
                             .font(.subheadline)
-                            .foregroundStyle(Color(.gray))
+                            .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
                     }
                 }
                 
@@ -65,7 +66,7 @@ struct ProfileView: View {
                         
                         Text("1.0.0")
                             .font(.subheadline)
-                            .foregroundStyle(Color(.gray))
+                            .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
                     }
                 }
                 Section("Account") {

@@ -11,6 +11,7 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @EnvironmentObject var viewModel: AuthViewModel
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         NavigationStack {
@@ -30,6 +31,17 @@ struct LoginView: View {
                               title: "Email Address",
                               placeholder: "name@example.com")
                         .autocapitalization(.none)
+                        .focused($isFocused)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") {
+                                    isFocused = false
+                                }
+                                .foregroundColor(.blue)
+                            }
+                        }
+                    
                     
                     
                     InputView(text: $password,
@@ -37,6 +49,16 @@ struct LoginView: View {
                               placeholder: "Enter Password",
                               isSecureField: true)
                         .autocapitalization(.none)
+                        .focused($isFocused)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") {
+                                    isFocused = false
+                                }
+                                .foregroundColor(.blue)
+                            }
+                        }
                 }
                 .padding(.horizontal)
                 .padding(.top, 12)

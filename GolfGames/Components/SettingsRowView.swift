@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct SettingsRowView: View {
+    @Environment(\.colorScheme) var colorScheme
     let imageName: String
     let title: String
     let tintColor: Color
@@ -21,7 +22,7 @@ struct SettingsRowView: View {
             
             Text(title)
                 .font(.subheadline)
-                .foregroundStyle(Color(.black))
+                .foregroundStyle(colorScheme == .dark ? Color.white : Color(.darkGray))
             
         }
     }
