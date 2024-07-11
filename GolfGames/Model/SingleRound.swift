@@ -31,7 +31,6 @@ class SingleRoundViewModel: ObservableObject {
 
             self.courses = documents.compactMap { try? $0.data(as: Course.self) }
             self.extractUniqueLocations()
-            print("Fetched courses: \(self.courses)")
         }
     }
 
@@ -48,7 +47,7 @@ class SingleRoundViewModel: ObservableObject {
         filteredCourses = courses.filter { $0.location == location }
     }
 
-    func fetchTees(for course: Course) {
+    func fetchTees(for course: Course, completion: @escaping ([Tee]) -> Void) {
         guard let courseId = course.id else { return }
 
         db.collection("courses").document(courseId).collection("Tees").getDocuments { snapshot, error in
@@ -62,17 +61,14 @@ class SingleRoundViewModel: ObservableObject {
                 return
             }
 
-            print("Tees documents count: \(documents.count)")
-
-            self.tees = documents.compactMap { doc -> Tee? in
+            let fetchedTees = documents.compactMap { doc -> Tee? in
                 let data = doc.data()
-                print("Tee document data: \(data)")
 
                 guard let teeName = data["tee_name"] as? String else {
                     print("Missing tee_name")
                     return nil
                 }
-                
+
                 let courseRatingValue = data["course_rating"]
                 let courseRating: Float
                 if let rating = courseRatingValue as? Float {
@@ -99,11 +95,9 @@ class SingleRoundViewModel: ObservableObject {
 
                 return Tee(id: doc.documentID, course_id: courseId, tee_name: teeName, course_rating: courseRating, slope_rating: slopeRating, course_par: coursePar, tee_yards: teeYards)
             }
-            
-            self.tees.sort { $0.tee_yards > $1.tee_yards } // Sort tees by tee_yards in descending order
-            
-            print("Fetched tees for course \(course.name): \(self.tees)")
+
+            self.tees = fetchedTees.sorted { $0.tee_yards > $1.tee_yards }
+            completion(self.tees)
         }
     }
 }
-

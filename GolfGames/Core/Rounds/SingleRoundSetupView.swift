@@ -13,6 +13,10 @@ struct SingleRoundSetupView: View {
     @State private var selectedLocation: String? = nil
     @State private var selectedCourse: Course? = nil
     @State private var navigateToAddGolfersView = false
+    
+    var formIsValid: Bool {
+        return selectedLocation != nil && selectedCourse != nil
+    }
 
     var body: some View {
         NavigationView {
@@ -26,21 +30,22 @@ struct SingleRoundSetupView: View {
                     .shadow(radius: 10)
                 Text("Single Round Setup \(Image(systemName: "figure.golf"))")
                     .font(.title)
-                    .shadow(radius: /*@START_MENU_TOKEN@*/10/*@END_MENU_TOKEN@*/)
+                    .shadow(radius: 10)
+                    .foregroundColor(Color.primary) // Adaptive color
 
                 HStack {
                     Picker("Select a State", selection: $selectedLocation) {
                         Text("None Selected").tag(String?.none)
-                            .foregroundStyle(.gray)
+                            .foregroundColor(.gray)
                             .font(.subheadline)
                         ForEach(viewModel.uniqueLocations, id: \.self) { location in
                             Text(location).tag(location as String?)
-                                .foregroundStyle(.black)
+                                .foregroundColor(Color.primary) // Adaptive color
                                 .font(.subheadline)
                         }
                     }
                     .pickerStyle(.navigationLink)
-                    .foregroundStyle(.black)
+                    .foregroundColor(Color.primary) // Adaptive color
                     .font(.headline)
                     .onChange(of: selectedLocation) { newValue in
                         viewModel.filterCourses(by: newValue)
@@ -53,20 +58,22 @@ struct SingleRoundSetupView: View {
                     HStack {
                         Picker("Course", selection: $selectedCourse) {
                             Text("None Selected").tag(Course?.none)
-                                .foregroundStyle(.gray)
+                                .foregroundColor(.gray)
                                 .font(.subheadline)
                             ForEach(viewModel.filteredCourses, id: \.id) { course in
                                 Text(course.name).tag(course as Course?)
-                                    .foregroundStyle(.black)
+                                    .foregroundColor(Color.primary) // Adaptive color
                                     .font(.subheadline)
                             }
                         }
                         .pickerStyle(.navigationLink)
-                        .foregroundStyle(.black)
+                        .foregroundColor(Color.primary) // Adaptive color
                         .font(.headline)
                         .onChange(of: selectedCourse) { newValue in
                             if let course = newValue {
-                                viewModel.fetchTees(for: course)
+                                viewModel.fetchTees(for: course) { tees in
+                                    // handle the fetched tees if needed
+                                }
                             }
                         }
                     }
@@ -89,6 +96,8 @@ struct SingleRoundSetupView: View {
                     .cornerRadius(10)
                 }
                 .padding(.top)
+                .disabled(!formIsValid)
+                .opacity(formIsValid ? 1.0 : 0.5)
 
                 NavigationLink(
                     destination: AddGolfersView(selectedCourse: selectedCourse, selectedLocation: selectedLocation)
@@ -103,6 +112,7 @@ struct SingleRoundSetupView: View {
             .onAppear {
                 viewModel.fetchCourses()
             }
+            .background(Color(.systemBackground)) // Adaptive background color
         }
     }
 }

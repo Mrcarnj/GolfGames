@@ -14,6 +14,7 @@ struct ContentView: View {
         Group {
             if viewModel.userSession != nil {
                 InititalView()
+                    .environmentObject(SingleRoundViewModel()) // Provide environment objects here if needed
             } else {
                 LoginView()
             }
@@ -27,3 +28,4 @@ struct ContentView_Previews: PreviewProvider {
             .environmentObject(AuthViewModel()) // Provide a mock or test instance here
     }
 }
+

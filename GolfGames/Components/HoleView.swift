@@ -6,10 +6,10 @@
 //
 
 import SwiftUI
-import Firebase
-import FirebaseFirestoreSwift
 
 struct HoleView: View {
+    @Environment(\.colorScheme) var colorScheme
+    
     var hole: Hole
     var score: String
     var onScoreChange: (String) -> Void
@@ -17,11 +17,13 @@ struct HoleView: View {
     var onPreviousHole: (() -> Void)?
     var currentHoleNumber: Int
     var totalHoles: Int
-    
+
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var roundViewModel: RoundViewModel
     @State private var scoreInput: String = ""
     @State private var isEditing: Bool = false
-    
+    @FocusState private var isTextFieldFocused: Bool
+
     var body: some View {
         VStack {
             // Navigation Arrows at the Top
@@ -34,12 +36,13 @@ struct HoleView: View {
                             Image(systemName: "arrow.left")
                             Text("Hole \(currentHoleNumber - 1)")
                         }
+                        .fontWeight(.bold)
                     }
                     .padding()
                 }
-                
+
                 Spacer()
-                
+
                 if currentHoleNumber < totalHoles {
                     Button(action: {
                         onNextHole?()
@@ -48,21 +51,14 @@ struct HoleView: View {
                             Text("Hole \(currentHoleNumber + 1)")
                             Image(systemName: "arrow.right")
                         }
+                        .fontWeight(.bold)
                     }
                     .padding()
                 } else {
-                    Button(action: {
-                        // Navigate to review page
-                    }) {
-                        HStack {
-                            Text("REVIEW")
-                            Image(systemName: "arrow.right")
-                        }
-                    }
-                    .padding()
+                    // No next button on the last hole
                 }
             }
-            
+
             // Hole Details
             VStack {
                 Text("Hole \(hole.holeNumber)")
@@ -71,28 +67,27 @@ struct HoleView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(3)
                     .background(Color(.systemTeal).opacity(0.3))
-                    .foregroundColor(.black)
-                
+
                 Text("\(hole.yardage) Yards")
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(0.5)
-                
+
                 Text("Par \(hole.par)")
                     .font(.system(size: 19))
                     .fontWeight(.bold)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(0.5)
                     .background(Color.gray.opacity(0.3))
-                
+
                 Text("Handicap \(hole.handicap)")
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(0.5)
             }
             .frame(width: UIScreen.main.bounds.width - 32)
             .padding(5)
-            .border(Color.black)
+            .border(Color.secondary)
             .cornerRadius(10)
-            
+
             // Player and Score
             VStack {
                 HStack {
@@ -104,42 +99,70 @@ struct HoleView: View {
                 .padding(.leading)
                 .padding(.trailing, 52)
                 .fontWeight(.bold)
-                .foregroundColor(.white)
-                .background(Color.black)
-                
+                .foregroundColor(Color.primary)
+                .background(Color.secondary)
+
                 HStack {
                     Text(authViewModel.currentUser?.fullname ?? "Unknown")
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    
+
                     HStack {
                         if isEditing {
                             TextField("\(hole.par)", text: $scoreInput)
                                 .keyboardType(.numberPad)
+                                .focused($isTextFieldFocused)
+                                .toolbar {
+                                    ToolbarItemGroup(placement: .keyboard) {
+                                        Spacer()
+                                        Button("Done") {
+                                            isEditing = false
+                                            isTextFieldFocused = false
+                                            onScoreChange(scoreInput)
+                                        }
+                                        .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+                                    }
+                                }
                                 .frame(width: 50, height: 50)
                                 .background(Color.gray.opacity(0.2))
                                 .cornerRadius(5)
                                 .multilineTextAlignment(.center)
-                                .foregroundColor(.black)
+                                .onChange(of: scoreInput) { newValue in
+                                    if newValue.isEmpty {
+                                        onScoreChange("")
+                                    }
+                                }
                                 .onSubmit {
                                     if let scoreInt = Int(scoreInput), scoreInt >= 1 && scoreInt <= 99 {
                                         isEditing = false
                                         onScoreChange(scoreInput)
+                                    } else {
+                                        onScoreChange("")
                                     }
                                 }
                         } else {
-                            Text(score.isEmpty ? "\(hole.par)" : score)
-                                .frame(width: 50, height: 50)
-                                .background(Color.gray.opacity(0.2))
-                                .cornerRadius(5)
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(score.isEmpty ? Color.gray.opacity(0.7) : .black)
-                                .fontWeight(score.isEmpty ? .regular : .bold)
+                            ZStack(alignment: .topTrailing) {
+                                Text(score.isEmpty ? "\(hole.par)" : score)
+                                    .frame(width: 50, height: 50)
+                                    .background(Color.gray.opacity(0.2))
+                                    .cornerRadius(5)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(score.isEmpty ? Color.gray.opacity(0.7) : (colorScheme == .dark ? Color.white : Color.black))
+                                    .fontWeight(score.isEmpty ? .regular : .bold)
+                                
+                                if roundViewModel.strokeHoles.contains(where: { $0 == hole.handicap }) {
+                                    Circle()
+                                        .fill(colorScheme == .dark ? Color.white : Color.black)
+                                        .frame(width: 6, height: 6)
+                                        .offset(x: -5, y: 5)
+                                }
+                            }
                         }
                     }
-                    
+
                     Button(action: {
                         isEditing = true
                         scoreInput = score
+                        isTextFieldFocused = true
                     }) {
                         Image(systemName: "pencil")
                             .foregroundColor(.blue)
@@ -148,11 +171,10 @@ struct HoleView: View {
                 }
                 .padding()
             }
-            
+
             Spacer()
         }
         .navigationBarBackButtonHidden(true)
-        .navigationTitle("Round")
     }
 }
 
@@ -162,5 +184,6 @@ struct HoleView_Previews: PreviewProvider {
 
         return HoleView(hole: mockHole, score: "", onScoreChange: { _ in }, currentHoleNumber: 1, totalHoles: 18)
             .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
+            .environmentObject(RoundViewModel())
     }
 }

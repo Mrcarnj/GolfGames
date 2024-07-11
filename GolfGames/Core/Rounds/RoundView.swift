@@ -11,9 +11,13 @@ import FirebaseFirestoreSwift
 
 struct RoundView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
+    @EnvironmentObject var roundViewModel: RoundViewModel
     @State private var currentHoleNumber: Int = 1
     @State private var hole: Hole?
-    @State private var scores: [Int: String] = [:]
+    @State private var showAlert = false
+    @State private var missingHole: Int? = nil
+    @State private var showScorecard = false
 
     var roundId: String
     var selectedCourseId: String
@@ -25,17 +29,24 @@ struct RoundView: View {
             if let hole = hole {
                 HoleView(
                     hole: hole,
-                    score: scores[currentHoleNumber] ?? "",
+                    score: roundViewModel.scores[currentHoleNumber].map { "\($0)" } ?? "",
                     onScoreChange: { newScore in
-                        scores[currentHoleNumber] = newScore
+                        roundViewModel.scores[currentHoleNumber] = Int(newScore)
                     },
                     onNextHole: {
-                        currentHoleNumber += 1
-                        fetchHoleData()
+                        if roundViewModel.scores[currentHoleNumber] == nil {
+                            missingHole = currentHoleNumber
+                            showAlert = true
+                        } else if currentHoleNumber < totalHoles {
+                            currentHoleNumber += 1
+                            fetchHoleData()
+                        }
                     },
                     onPreviousHole: {
-                        currentHoleNumber -= 1
-                        fetchHoleData()
+                        if currentHoleNumber > 1 {
+                            currentHoleNumber -= 1
+                            fetchHoleData()
+                        }
                     },
                     currentHoleNumber: currentHoleNumber,
                     totalHoles: totalHoles
@@ -45,11 +56,64 @@ struct RoundView: View {
                     .font(.headline)
                     .padding()
             }
+
+            if currentHoleNumber == totalHoles && !firstMissingScoreExists() {
+                Button(action: {
+                    showScorecard = true
+                }) {
+                    Text("REVIEW")
+                        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                        .foregroundColor(.white)
+                        .background(Color(.systemTeal))
+                        .cornerRadius(10)
+                }
+                .padding(.top)
+            }
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
             fetchHoleData()
+            print("Selected Course ID: \(selectedCourseId)")
+            print("Selected Tee ID: \(selectedTeeId)")
+
+            // Set the selected course in RoundViewModel
+            roundViewModel.selectedCourse = singleRoundViewModel.courses.first(where: { $0.id == selectedCourseId })
+            print("RoundViewModel Course ID: \(roundViewModel.selectedCourse?.id ?? "None")")
+
+            // Fetch and set the selected tee in RoundViewModel
+            singleRoundViewModel.fetchTees(for: roundViewModel.selectedCourse!) { tees in
+                roundViewModel.selectedTee = tees.first(where: { $0.id == selectedTeeId })
+                print("RoundViewModel Tee ID: \(roundViewModel.selectedTee?.id ?? "None")")
+
+                // Fetch pars for the selected tee
+                if let tee = roundViewModel.selectedTee, let user = authViewModel.currentUser {
+                    roundViewModel.fetchPars(for: selectedCourseId, teeId: tee.id!, user: user) { pars in
+                        roundViewModel.pars = pars
+                        print("Fetched pars: \(pars)")
+                    }
+                }
+            }
         }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text("CAUTION - No Score Entered"),
+                message: Text("You haven't entered a score for hole \(missingHole!)."),
+                primaryButton: .default(Text("Enter Score"), action: {
+                    // Close the alert and stay on the current hole
+                    showAlert = false
+                }),
+                secondaryButton: .destructive(Text("Continue"), action: {
+                    // Continue to the next hole
+                    currentHoleNumber += 1
+                    fetchHoleData()
+                })
+            )
+        }
+        .background(
+            NavigationLink(destination: ScorecardView().environmentObject(roundViewModel), isActive: $showScorecard) {
+                EmptyView()
+            }
+        )
     }
 
     func fetchHoleData() {
@@ -78,11 +142,13 @@ struct RoundView: View {
             }
         }
     }
-}
 
-struct RoundView_Previews: PreviewProvider {
-    static var previews: some View {
-        RoundView(roundId: "mockRoundId", selectedCourseId: "courseId", selectedTeeId: "teeId")
-            .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
+    func firstMissingScoreExists() -> Bool {
+        for hole in 1...totalHoles {
+            if roundViewModel.scores[hole] == nil {
+                return true
+            }
+        }
+        return false
     }
 }

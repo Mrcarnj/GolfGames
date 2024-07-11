@@ -31,6 +31,7 @@ struct LoginView: View {
                               placeholder: "name@example.com")
                         .autocapitalization(.none)
                     
+                    
                     InputView(text: $password,
                               title: "Password",
                               placeholder: "Enter Password",

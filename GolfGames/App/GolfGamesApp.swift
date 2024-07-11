@@ -10,7 +10,9 @@ import Firebase
 
 @main
 struct GolfGamesApp: App {
-    @StateObject private var viewModel = AuthViewModel()
+    @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var singleRoundViewModel = SingleRoundViewModel()
+    @StateObject private var roundViewModel = RoundViewModel()
     
     init() {
         FirebaseApp.configure()
@@ -19,7 +21,10 @@ struct GolfGamesApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(viewModel)
+                .environmentObject(authViewModel)
+                .environmentObject(singleRoundViewModel)
+                .environmentObject(roundViewModel)
         }
     }
 }
+

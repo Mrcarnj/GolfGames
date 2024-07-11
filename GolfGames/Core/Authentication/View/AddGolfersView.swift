@@ -16,65 +16,93 @@ struct AddGolfersView: View {
     @State private var roundId: String?
     @State private var courseId = ""
     @State private var teeId = ""
+    @State private var playingHandicap: Int? = nil
 
     var selectedCourse: Course?
     var selectedLocation: String?
+    
+    var formIsValid: Bool {
+        return selectedTee != nil && selectedTee?.tee_name != "Select Tees"
+    }
 
     var body: some View {
         VStack {
+            Image("golfgamble_bag")
+                .resizable()
+                .cornerRadius(10)
+                .scaledToFill()
+                .frame(width: 100, height: 120)
+                .padding(.vertical, 32)
+                .shadow(radius: 10)
+            
             if let course = selectedCourse {
-                Text("Selected Course: \(course.name)")
-                    .font(.headline)
-                    .padding()
+                Text("\(course.name)")
+                    .font(.title2)
+                    .padding(.top)
+                    .foregroundColor(Color.primary) // Adaptive color
 
                 Text("Add Golfers")
                     .font(.headline)
-                    .foregroundColor(.black)
+                    .foregroundColor(Color.primary) // Adaptive color
                     .padding(.top)
 
                 if let currentUser = authViewModel.currentUser {
                     VStack(alignment: .leading) {
                         HStack {
-                            Text("\(currentUser.fullname)")
+                            Text(currentUser.fullname)
                                 .font(.subheadline)
+                                .foregroundColor(Color.primary) // Adaptive color
                             Spacer()
-                            Text("Handicap: \(String(format: "%.1f", currentUser.handicap ?? 0.0))")
+                            Text("HCP: \(String(format: "%.1f", currentUser.handicap ?? 0.0))")
                                 .font(.subheadline)
+                                .foregroundColor(Color.primary) // Adaptive color
+                            Spacer()
+                            
+                            if let playingHandicap = playingHandicap {
+                                Text("CH: \(playingHandicap)")
+                                    .font(.subheadline)
+                                    .foregroundColor(Color.primary) // Adaptive color
+                            }
                         }
                         .padding(.bottom, 5)
 
                         HStack {
-                            Text("Select Tees")
-                                .font(.headline)
-                            Picker("Select Tees", selection: $roundViewModel.selectedTee) {
+                            Picker("", selection: $selectedTee) {
                                 Text("Select Tees").tag(Tee?.none)
-                                    .foregroundStyle(.gray)
+                                    .foregroundColor(.gray)
                                     .font(.subheadline)
                                 ForEach(singleRoundViewModel.tees, id: \.id) { tee in
                                     Text("\(tee.tee_name) \(tee.tee_yards) yds (\(String(format: "%.1f", tee.course_rating))/\(tee.slope_rating)) Par \(tee.course_par)")
                                         .tag(tee as Tee?)
-                                        .foregroundStyle(.black)
+                                        .foregroundColor(Color.primary) // Adaptive color
                                         .font(.subheadline)
                                 }
                             }
-                            .pickerStyle(MenuPickerStyle())
-                            .foregroundStyle(.black)
+                            .pickerStyle(.navigationLink)
+                            .foregroundColor(Color.primary) // Adaptive color
                             .font(.headline)
+                            .onChange(of: selectedTee) { newValue in
+                                roundViewModel.selectedTee = newValue
+                                // Recalculate playing handicap when tees are changed
+                                if let tee = newValue, let handicapIndex = currentUser.handicap {
+                                    self.playingHandicap = HandicapCalculator.calculateCourseHandicap(handicapIndex: handicapIndex, slopeRating: tee.slope_rating)
+                                } else {
+                                    self.playingHandicap = nil
+                                }
+                            }
                         }
                     }
                     .padding()
                     .onAppear {
                         if let course = selectedCourse {
-                            singleRoundViewModel.fetchTees(for: course)
-                            roundViewModel.selectedCourse = course
+                            singleRoundViewModel.fetchTees(for: course) { tees in
+                                roundViewModel.selectedCourse = course
+                                // You can handle fetched tees here if needed
+                            }
                         }
                     }
 
                     Button(action: {
-                        // Debug print statements
-                        print("Selected Course: \(roundViewModel.selectedCourse?.name ?? "None")")
-                        print("Selected Tee: \(roundViewModel.selectedTee?.tee_name ?? "None")")
-
                         roundViewModel.beginRound(for: currentUser) { roundId, courseId, teeId in
                             if let roundId = roundId, let courseId = courseId, let teeId = teeId {
                                 self.roundId = roundId
@@ -91,6 +119,8 @@ struct AddGolfersView: View {
                             .cornerRadius(10)
                     }
                     .padding(.top)
+                    .disabled(!formIsValid)
+                    .opacity(formIsValid ? 1.0 : 0.5)
 
                 } else {
                     Text("User not logged in")
@@ -104,17 +134,21 @@ struct AddGolfersView: View {
                 Text("No course selected")
                     .font(.headline)
                     .padding()
+                    .foregroundColor(Color.primary) // Adaptive color
             }
         }
         .navigationTitle("Add Golfers")
         .background(
             NavigationLink(
                 destination: RoundView(roundId: roundId ?? "", selectedCourseId: courseId, selectedTeeId: teeId)
-                    .environmentObject(authViewModel),
+                    .environmentObject(authViewModel)
+                    .environmentObject(singleRoundViewModel)
+                    .environmentObject(roundViewModel),
                 isActive: $navigateToRoundView,
                 label: { EmptyView() }
             )
         )
+        .background(Color(.systemBackground)) // Adaptive background color
     }
 }
 
