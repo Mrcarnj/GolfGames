@@ -42,8 +42,6 @@ struct LoginView: View {
                             }
                         }
                     
-                    
-                    
                     InputView(text: $password,
                               title: "Password",
                               placeholder: "Enter Password",
@@ -98,24 +96,27 @@ struct LoginView: View {
                     .font(.system(size: 14))
                 }
             }
+            .onAppear {
+                OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
+            }
+            .onDisappear {
+                OrientationUtility.lockOrientation(.all)
+            }
         }
     }
 }
 
-
- //MARK - AuthenticationFormProtocol
-extension LoginView: AuthenticationFormProtocol{
+//MARK - AuthenticationFormProtocol
+extension LoginView: AuthenticationFormProtocol {
     var formIsValid: Bool {
         return !email.isEmpty
         && email.contains("@")
         && !password.isEmpty
         && password.count > 5
     }
-    
 }
 
 #Preview {
     LoginView()
         .environmentObject(AuthViewModel()) // Provide a mock or test instance here
 }
-

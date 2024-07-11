@@ -149,6 +149,12 @@ struct AddGolfersView: View {
             )
         )
         .background(Color(.systemBackground)) // Adaptive background color
+        .onAppear {
+            OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
+        }
+        .onDisappear {
+            OrientationUtility.lockOrientation(.all)
+        }
     }
 }
 

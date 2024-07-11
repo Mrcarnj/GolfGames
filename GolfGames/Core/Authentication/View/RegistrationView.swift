@@ -28,17 +28,16 @@ struct RegistrationView: View {
                     .resizable()
                     .cornerRadius(10)
                     .scaledToFill()
-                    .frame(width: /*@START_MENU_TOKEN@*/100/*@END_MENU_TOKEN@*/, height: 170)
+                    .frame(width: 100, height: 170)
                     .padding(.vertical, 32)
-                    .shadow(radius: /*@START_MENU_TOKEN@*/10/*@END_MENU_TOKEN@*/)
-                    
+                    .shadow(radius: 10)
                 
                 // form fields
                 VStack(spacing: 12){
                     InputView(text: $email,
                               title: "Email Address",
                               placeholder: "name@example.com")
-                    .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
+                    .autocapitalization(.none)
                     .focused($isFocused)
                     .toolbar {
                         ToolbarItemGroup(placement: .keyboard) {
@@ -69,7 +68,7 @@ struct RegistrationView: View {
                                   title: "Password",
                                   placeholder: "Minimum 6 characters",
                                   isSecureField: true)
-                        .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
+                        .autocapitalization(.none)
                         .focused($isFocused)
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
@@ -101,7 +100,7 @@ struct RegistrationView: View {
                                   title: "Confirm Password",
                                   placeholder: "Re-Enter Password",
                                   isSecureField: true)
-                        .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
+                        .autocapitalization(.none)
                         .focused($isFocused)
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
@@ -159,7 +158,6 @@ struct RegistrationView: View {
                     }
                     
                 }
-                
                 .padding(.horizontal)
                 .padding(.top, 12)
                 
@@ -171,7 +169,7 @@ struct RegistrationView: View {
                         do {
                             try await viewModel.createUser(withEmail: email,
                                                            password: password,
-                                                           fullname: fullname, 
+                                                           fullname: fullname,
                                                            handicap: handicapValue,
                                                            ghinNumber: ghinNumberValue)
                         } catch {
@@ -207,8 +205,12 @@ struct RegistrationView: View {
                     }
                     .font(.system(size: 14))
                 }
-
-                
+            }
+            .onAppear {
+                OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
+            }
+            .onDisappear {
+                OrientationUtility.lockOrientation(.all)
             }
         }
     }

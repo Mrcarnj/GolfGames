@@ -87,14 +87,19 @@ struct ProfileView: View {
                     }
                 }
             }
+            .onAppear {
+                OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
+            }
+            .onDisappear {
+                OrientationUtility.lockOrientation(.all)
+            }
         }
     }
 }
 
 #Preview {
     let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
-        return ProfileView()
-            .environmentObject(SingleRoundViewModel())
-            .environmentObject(AuthViewModel(mockUser: mockUser))
+    return ProfileView()
+        .environmentObject(SingleRoundViewModel())
+        .environmentObject(AuthViewModel(mockUser: mockUser))
 }
-

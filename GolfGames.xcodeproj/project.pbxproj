@@ -30,6 +30,8 @@
 		054E96122C3F65E70036165A /* ScorecardComponentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96112C3F65E70036165A /* ScorecardComponentsView.swift */; };
 		054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96142C3F66F20036165A /* ScorecardViewType.swift */; };
 		054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96182C3FA3320036165A /* RecentRoundsModel.swift */; };
+		054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E961A2C403BAB0036165A /* AppDelegate.swift */; };
+		054E961D2C403BEF0036165A /* OrientationUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E961C2C403BEF0036165A /* OrientationUtility.swift */; };
 		054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */; };
 		054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85A2C37601100E44F97 /* SingleRound.swift */; };
 		054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85C2C37625200E44F97 /* CourseTee.swift */; };
@@ -63,6 +65,8 @@
 		054E96112C3F65E70036165A /* ScorecardComponentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardComponentsView.swift; sourceTree = "<group>"; };
 		054E96142C3F66F20036165A /* ScorecardViewType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardViewType.swift; sourceTree = "<group>"; };
 		054E96182C3FA3320036165A /* RecentRoundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentRoundsModel.swift; sourceTree = "<group>"; };
+		054E961A2C403BAB0036165A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		054E961C2C403BEF0036165A /* OrientationUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationUtility.swift; sourceTree = "<group>"; };
 		054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRoundSetupView.swift; sourceTree = "<group>"; };
 		054EB85A2C37601100E44F97 /* SingleRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRound.swift; sourceTree = "<group>"; };
 		054EB85C2C37625200E44F97 /* CourseTee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseTee.swift; sourceTree = "<group>"; };
@@ -224,6 +228,8 @@
 			children = (
 				054E960C2C3F64D20036165A /* HandicapCalculator.swift */,
 				054E96142C3F66F20036165A /* ScorecardViewType.swift */,
+				054E961A2C403BAB0036165A /* AppDelegate.swift */,
+				054E961C2C403BEF0036165A /* OrientationUtility.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -341,12 +347,14 @@
 				054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */,
 				054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */,
 				05198A682C35BDD00016F576 /* AuthViewModel.swift in Sources */,
+				054E961D2C403BEF0036165A /* OrientationUtility.swift in Sources */,
 				054E96102C3F656C0036165A /* HoleRowView.swift in Sources */,
 				05198A6C2C35BDEA0016F576 /* RegistrationView.swift in Sources */,
 				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,
 				054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */,
 				05198A872C3753E90016F576 /* InititalView.swift in Sources */,
 				054E960D2C3F64D20036165A /* HandicapCalculator.swift in Sources */,
+				054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */,
 				05198A7B2C35C2770016F576 /* SettingsRowView.swift in Sources */,
 				054EB8692C3C6C9300E44F97 /* RoundViewModel.swift in Sources */,
 				054EB8632C3C6A2600E44F97 /* Round.swift in Sources */,

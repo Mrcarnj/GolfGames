@@ -10,6 +10,7 @@ import Firebase
 
 @main
 struct GolfGamesApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var singleRoundViewModel = SingleRoundViewModel()
     @StateObject private var roundViewModel = RoundViewModel()

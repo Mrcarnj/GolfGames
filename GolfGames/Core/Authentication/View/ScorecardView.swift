@@ -99,18 +99,24 @@ struct ScorecardView: View {
         let db = Firestore.firestore()
         let roundRef = db.collection("users").document(user.id).collection("rounds").document(viewModel.roundId ?? "")
 
+        // Generate a unique round result ID
+        let roundResultID = roundRef.collection("results").document().documentID
+
         var roundData: [String: Any] = [
-            "date": DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .none),
+            "date": Timestamp(date: Date()),  // Use Firestore Timestamp for date
             "course": course.name,
             "tees": tee.tee_name,
-            "total_score": viewModel.scores.values.reduce(0, +)
+            "course_rating": tee.course_rating,  // Add course rating
+            "slope_rating": tee.slope_rating,  // Add slope rating
+            "total_score": viewModel.scores.values.reduce(0, +),
+            "roundResultID": roundResultID  // Add round result ID to the data
         ]
 
         for (hole, score) in viewModel.scores {
             roundData["hole_\(hole)"] = score
         }
 
-        let resultsRef = roundRef.collection("results").document("round_results")
+        let resultsRef = roundRef.collection("results").document(roundResultID)
         resultsRef.setData(roundData) { error in
             if let error = error {
                 print("Error saving round: \(error.localizedDescription)")
