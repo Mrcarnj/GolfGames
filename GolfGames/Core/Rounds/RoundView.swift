@@ -84,6 +84,18 @@ struct RoundView: View {
                 .padding(.top)
             }
         }
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width < -50 {
+                        nextHole()
+                    }
+                    if value.translation.width > 50 {
+                        previousHole()
+                    }
+                }
+        )
         .navigationBarBackButtonHidden(true)
         .onAppear {
             fetchHoleData()
@@ -164,5 +176,22 @@ struct RoundView: View {
             }
         }
         return false
+    }
+
+    private func nextHole() {
+        if roundViewModel.scores[currentHoleNumber] == nil {
+            missingHole = currentHoleNumber
+            showAlert = true
+        } else if currentHoleNumber < totalHoles {
+            currentHoleNumber += 1
+            fetchHoleData()
+        }
+    }
+
+    private func previousHole() {
+        if currentHoleNumber > 1 {
+            currentHoleNumber -= 1
+            fetchHoleData()
+        }
     }
 }
