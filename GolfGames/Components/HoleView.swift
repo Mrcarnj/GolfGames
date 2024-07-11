@@ -118,8 +118,14 @@ struct HoleView: View {
                                             isEditing = false
                                             isTextFieldFocused = false
                                             onScoreChange(scoreInput)
+                                            if let scoreInt = Int(scoreInput) {
+                                                roundViewModel.scores[hole.holeNumber] = scoreInt
+                                                roundViewModel.updateNetScores()
+                                                print("Scores: \(roundViewModel.scores.sorted { $0.key < $1.key })")
+                                                print("Net Scores: \(roundViewModel.netScores.sorted { $0.key < $1.key })")
+                                            }
                                         }
-                                        .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+                                        .foregroundColor(.blue)
                                     }
                                 }
                                 .frame(width: 50, height: 50)
@@ -135,6 +141,10 @@ struct HoleView: View {
                                     if let scoreInt = Int(scoreInput), scoreInt >= 1 && scoreInt <= 99 {
                                         isEditing = false
                                         onScoreChange(scoreInput)
+                                        roundViewModel.scores[hole.holeNumber] = scoreInt
+                                        roundViewModel.updateNetScores()
+                                        print("Scores: \(roundViewModel.scores.sorted { $0.key < $1.key })")
+                                        print("Net Scores: \(roundViewModel.netScores.sorted { $0.key < $1.key })")
                                     } else {
                                         onScoreChange("")
                                     }
@@ -149,7 +159,7 @@ struct HoleView: View {
                                     .foregroundColor(score.isEmpty ? Color.gray.opacity(0.7) : (colorScheme == .dark ? Color.white : Color.black))
                                     .fontWeight(score.isEmpty ? .regular : .bold)
                                 
-                                if roundViewModel.strokeHoles.contains(where: { $0 == hole.handicap }) {
+                                if roundViewModel.strokeHoles.contains(hole.holeNumber) {
                                     Circle()
                                         .fill(colorScheme == .dark ? Color.white : Color.black)
                                         .frame(width: 6, height: 6)

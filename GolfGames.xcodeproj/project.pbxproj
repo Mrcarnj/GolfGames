@@ -29,6 +29,7 @@
 		054E96102C3F656C0036165A /* HoleRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E960F2C3F656C0036165A /* HoleRowView.swift */; };
 		054E96122C3F65E70036165A /* ScorecardComponentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96112C3F65E70036165A /* ScorecardComponentsView.swift */; };
 		054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96142C3F66F20036165A /* ScorecardViewType.swift */; };
+		054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96182C3FA3320036165A /* RecentRoundsModel.swift */; };
 		054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */; };
 		054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85A2C37601100E44F97 /* SingleRound.swift */; };
 		054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85C2C37625200E44F97 /* CourseTee.swift */; };
@@ -61,6 +62,7 @@
 		054E960F2C3F656C0036165A /* HoleRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleRowView.swift; sourceTree = "<group>"; };
 		054E96112C3F65E70036165A /* ScorecardComponentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardComponentsView.swift; sourceTree = "<group>"; };
 		054E96142C3F66F20036165A /* ScorecardViewType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardViewType.swift; sourceTree = "<group>"; };
+		054E96182C3FA3320036165A /* RecentRoundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentRoundsModel.swift; sourceTree = "<group>"; };
 		054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRoundSetupView.swift; sourceTree = "<group>"; };
 		054EB85A2C37601100E44F97 /* SingleRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRound.swift; sourceTree = "<group>"; };
 		054EB85C2C37625200E44F97 /* CourseTee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseTee.swift; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 				054EB8622C3C6A2500E44F97 /* Round.swift */,
 				054EB8642C3C6A3D00E44F97 /* Hole.swift */,
 				054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */,
+				054E96182C3FA3320036165A /* RecentRoundsModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -334,6 +337,7 @@
 				05198A792C35C26B0016F576 /* InputView.swift in Sources */,
 				054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */,
 				05198A7D2C35C2840016F576 /* User.swift in Sources */,
+				054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */,
 				054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */,
 				054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */,
 				05198A682C35BDD00016F576 /* AuthViewModel.swift in Sources */,

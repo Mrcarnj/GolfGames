@@ -9,55 +9,92 @@ import SwiftUI
 import Firebase
 
 struct InititalView: View {
-    @EnvironmentObject var viewModel: AuthViewModel
-    
-    var body: some View {
-        if let user = viewModel.currentUser {
-            NavigationStack{
-                VStack {
-                    
-                    Text("Welcome, \(user.fullname)!")
-                    //  Text("Welcome, Mike Dietrich!")
-                        .padding(.top, 35)
-                    
-                    // image
-                    Image("golfgamble_bag")
-                        .resizable()
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var roundsViewModel = RecentRoundsModel()
+
+    private var dateFormatter: DateFormatter {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MM/dd/yy" // Adjust based on your date format
+            return formatter
+        }
+
+        var body: some View {
+            if let user = authViewModel.currentUser {
+                NavigationStack {
+                    VStack {
+                        Text("Welcome, \(user.fullname)!")
+                            .padding(.top, 35)
+
+                        Image("golfgamble_bag")
+                            .resizable()
+                            .cornerRadius(10)
+                            .scaledToFill()
+                            .frame(width: 100, height: 120)
+                            .padding(.vertical, 32)
+                            .shadow(radius: 10)
+
+                        NavigationLink(destination: SingleRoundSetupView()) {
+                            HStack {
+                                Text("New Single Round")
+                                Image(systemName: "plus")
+                            }
+                            .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                            .foregroundColor(.white)
+                            .background(Color(.systemTeal))
+                            .cornerRadius(10)
+                        }
+
+                        Button {
+                            // Action for Multiple Rounds
+                        } label: {
+                            HStack {
+                                Text("New Multiple Rounds")
+                                Image(systemName: "plus")
+                            }
+                        }
+                        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                        .foregroundColor(.white)
+                        .background(Color(.systemTeal))
                         .cornerRadius(10)
-                        .scaledToFill()
-                        .frame(width: 100, height: 120)
-                        .padding(.vertical, 32)
-                        .shadow(radius: 10)
-                }
-                
-                // Single Round Button
-                NavigationLink(destination: SingleRoundSetupView()) {
-                    HStack {
-                        Text("New Single Round")
-                        Image(systemName: "plus")
+                        .padding(.top, 15)
+
+                        Spacer()
+
+                        Text("Recent Rounds")
+                            .font(.headline)
+                            .padding(.top, 20)
+
+                        if roundsViewModel.recentRounds.isEmpty {
+                            Text("No recent rounds")
+                                .foregroundColor(.gray)
+                                .padding()
+                        } else {
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    ForEach(roundsViewModel.recentRounds, id: \.uniqueID) { round in
+                                        HStack {
+                                            if let date = dateFormatter.date(from: round.date) {
+                                                Text(dateFormatter.string(from: date))
+                                            } else {
+                                                Text("Invalid date")
+                                            }
+                                            Spacer()
+                                            Text(round.course)
+                                            Spacer()
+                                            Text("\(round.total_score)")
+                                            Spacer()
+                                            Text(round.tees)
+                                        }
+                                        .font(.subheadline)
+                                        .padding()
+                                        .background(Color.gray.opacity(0.1))
+                                        .cornerRadius(8)
+                                    }
+                                }
+                                .padding()
+                            }
+                        }
                     }
-                    .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                    .foregroundColor(.white) // Use foregroundColor instead of foregroundStyle for text color
-                    .background(Color(.systemTeal))
-                    .cornerRadius(10)
-                }
-                
-                // Multiple Round Button
-                Button {
-                    // Action for Multiple Rounds
-                } label: {
-                    HStack {
-                        Text("New Multiple Rounds")
-                        Image(systemName: "plus")
-                    }
-                }
-                .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                .foregroundStyle(Color(.white))
-                .background(Color(.systemTeal))
-                .cornerRadius(10)
-                .padding(.top, 15)
-                
-                Spacer()
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             NavigationLink {
@@ -69,15 +106,17 @@ struct InititalView: View {
                             }
                         }
                     }
+                    .onAppear {
+                        roundsViewModel.fetchRecentRounds(for: user)
+                    }
+                }
             }
         }
-        
     }
-}
 
-#Preview {
-    let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
+    #Preview {
+        let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
         return InititalView()
             .environmentObject(SingleRoundViewModel())
             .environmentObject(AuthViewModel(mockUser: mockUser))
-}
+    }

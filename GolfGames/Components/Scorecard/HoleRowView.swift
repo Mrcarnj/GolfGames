@@ -120,13 +120,12 @@ struct ParRowView: View {
 }
 
 struct ScoreRowView: View {
-    @Environment(\.colorScheme) var colorScheme
-    
     let scores: [Int]
     let pars: [Int]
     let totalScore: Int
     let totalScoreText: String
     let hasTotalColumn: Bool
+    let strokeHoles: [Int]
 
     var body: some View {
         HStack(spacing: 0) {
@@ -138,43 +137,47 @@ struct ScoreRowView: View {
             
             ForEach(scores.indices, id: \.self) { index in
                 ZStack {
+                    Color.white
+                    
                     if scores[index] == pars[index] - 1 {
                         Circle()
                             .fill(Color.red)
                             .frame(width: 25, height: 30)
-                            .background(.white)
                         Text("\(scores[index])").foregroundColor(.white).bold()
                     } else if scores[index] <= pars[index] - 2 {
                         Circle()
                             .fill(Color.yellow)
                             .frame(width: 25, height: 30)
-                            .background(.white)
                         Text("\(scores[index])").foregroundColor(.white).bold()
                     } else if scores[index] == pars[index] + 1 {
                         Rectangle()
                             .fill(Color.black)
                             .frame(width: 25, height: 30)
-                            .background(.white)
                         Text("\(scores[index])").foregroundColor(.white).bold()
                     } else if scores[index] >= pars[index] + 2 {
                         Rectangle()
                             .fill(Color.blue).opacity(0.8)
                             .frame(width: 25, height: 30)
-                            .background(.white)
                         Text("\(scores[index])").foregroundColor(.white).bold()
                     } else {
-                        Color.white
                         Text("\(scores[index])").foregroundColor(.black).bold()
+                    }
+                    
+                    if strokeHoles.contains(index + 1) || strokeHoles.contains(index + 10) {
+                        Circle()
+                            .fill(scores[index] == pars[index] + 1 ? Color.white : Color.black)
+                            .frame(width: 6, height: 6)
+                            .offset(x: 7, y: -10)  // Adjust x and y to move the dot to the correct position
                     }
                 }
                 .frame(width: 25, height: 30)
+//                .border(Color.gray, width: 1)
             }
             ZStack {
                 Color.white
                 Text("\(totalScore)").bold().foregroundColor(.black)
             }
             .frame(width: 35, height: 30)
-//            .border(Color.gray, width: 1)
             
             if hasTotalColumn {
                 ZStack {
@@ -193,9 +196,9 @@ struct ScoreRowView: View {
     }
 }
 
-struct NetScoreRowView: View {
-    @Environment(\.colorScheme) var colorScheme
 
+
+struct NetScoreRowView: View {
     let netScores: [Int]
     let pars: [Int]
     let totalNetScore: Int
@@ -217,25 +220,25 @@ struct NetScoreRowView: View {
                         Circle()
                             .fill(Color.red)
                             .frame(width: 25, height: 30)
-                            .background(colorScheme == .dark ? Color.white : Color.black)
+                            .background(.white)
                         Text("\(netScores[index])").foregroundColor(.white).bold()
                     } else if netScores[index] <= pars[index] - 2 {
                         Circle()
                             .fill(Color.yellow)
                             .frame(width: 25, height: 30)
-                            .background(colorScheme == .dark ? Color.white : Color.black)
+                            .background(.white)
                         Text("\(netScores[index])").foregroundColor(.white).bold()
                     } else if netScores[index] == pars[index] + 1 {
                         Rectangle()
                             .fill(Color.black)
                             .frame(width: 25, height: 30)
-                            .background(colorScheme == .dark ? Color.white : Color.black)
+                            .background(.white)
                         Text("\(netScores[index])").foregroundColor(.white).bold()
                     } else if netScores[index] >= pars[index] + 2 {
                         Rectangle()
                             .fill(Color.blue).opacity(0.8)
                             .frame(width: 25, height: 30)
-                            .background(colorScheme == .dark ? Color.white : Color.black)
+                            .background(.white)
                         Text("\(netScores[index])").foregroundColor(.white).bold()
                     } else {
                         Color.white
@@ -267,4 +270,3 @@ struct NetScoreRowView: View {
         }
     }
 }
-

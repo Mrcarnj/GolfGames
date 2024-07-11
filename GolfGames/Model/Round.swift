@@ -15,10 +15,21 @@ struct Round: Identifiable, Codable {
     var teeName: String
     var golfers: [Golfer]
     var date: Date
-    
+    var totalScore: Int? // Add this line if you don't have totalScore in your existing struct
+
     struct Golfer: Identifiable, Codable {
         var id: String
         var name: String
         var handicap: Float
     }
+}
+
+
+extension DateFormatter {
+    static let shortDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return formatter
+    }()
 }

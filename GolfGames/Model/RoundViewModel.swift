@@ -18,6 +18,8 @@ class RoundViewModel: ObservableObject {
     @Published var playingHandicap: Int = 0
     @Published var strokeHoles: [Int] = []
     @Published var roundId: String?
+    @Published var netScores: [Int: Int] = [:] // Dictionary to hold net scores keyed by hole number
+    @Published var recentRounds: [Round] = []
 
     func beginRound(for user: User, completion: @escaping (String?, String?, String?) -> Void) {
         guard let course = selectedCourse,
@@ -80,13 +82,13 @@ class RoundViewModel: ObservableObject {
             }
 
             var pars = [Int: Int]()
-            var handicaps = [Int]()
+            var holeHandicaps = [Int: Int]()
             for document in documents {
                 if let holeNumber = document.data()["hole_number"] as? Int,
                    let par = document.data()["par"] as? Int,
                    let handicap = document.data()["handicap"] as? Int {
                     pars[holeNumber] = par
-                    handicaps.append(handicap)
+                    holeHandicaps[holeNumber] = handicap
                 }
             }
             print("Fetched pars: \(pars)")
@@ -95,9 +97,46 @@ class RoundViewModel: ObservableObject {
             // Calculate playing handicap and stroke holes
             if let slopeRating = self.selectedTee?.slope_rating {
                 self.playingHandicap = HandicapCalculator.calculateCourseHandicap(handicapIndex: user.handicap ?? 0.0, slopeRating: slopeRating)
-                self.strokeHoles = HandicapCalculator.determineStrokeHoles(courseHandicap: self.playingHandicap, holeHandicaps: handicaps)
+                let strokeHoles = holeHandicaps.sorted { $0.value < $1.value }.prefix(self.playingHandicap).map { $0.key }
+                self.strokeHoles = strokeHoles
                 print("Playing Handicap: \(self.playingHandicap), Stroke Holes: \(self.strokeHoles)")
+                
+                // Debug print statements
+                for holeNumber in self.strokeHoles {
+                    if let handicap = holeHandicaps[holeNumber] {
+                        print("Hole \(holeNumber) with handicap \(handicap) gets a stroke")
+                    }
+                }
             }
         }
     }
+
+    func updateNetScores() {
+        netScores = scores.mapValues { score in
+            let holeNumber = scores.first(where: { $0.value == score })?.key ?? 0
+            return strokeHoles.contains(holeNumber) ? score - 1 : score
+        }
+        // Update the netScores dictionary correctly based on stroke holes
+        for (holeNumber, score) in scores {
+            netScores[holeNumber] = strokeHoles.contains(holeNumber) ? score - 1 : score
+        }
+    }
+    
+    func fetchRecentRounds(for user: User) {
+            let db = Firestore.firestore()
+            db.collection("users").document(user.id).collection("rounds")
+                .order(by: "date", descending: true)
+                .limit(to: 10)
+                .getDocuments { snapshot, error in
+                    if let error = error {
+                        print("Error fetching recent rounds: \(error.localizedDescription)")
+                        return
+                    }
+                    guard let documents = snapshot?.documents else {
+                        print("No recent rounds found")
+                        return
+                    }
+                    self.recentRounds = documents.compactMap { try? $0.data(as: Round.self) }
+                }
+        }
 }
