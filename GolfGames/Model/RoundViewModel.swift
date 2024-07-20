@@ -21,6 +21,7 @@ class RoundViewModel: ObservableObject {
     @Published var netScores: [Int: [String: Int]] = [:] // Nested dictionary to hold net scores keyed by hole number and golfer ID
     @Published var recentRounds: [Round] = []
     @Published var golfers: [Golfer] = []
+    @Published var currentHole: Int = 1  // Track the current hole
 
     func beginRound(for user: User, additionalGolfers: [Golfer], completion: @escaping (String?, String?, String?) -> Void) {
         guard let course = selectedCourse,
@@ -28,6 +29,7 @@ class RoundViewModel: ObservableObject {
               let courseId = course.id,
               let teeId = tee.id else {
             print("Missing required data to begin round")
+            print("Course: \(selectedCourse?.name ?? "None"), Tee: \(selectedTee?.tee_name ?? "None")")
             completion(nil, nil, nil)
             return
         }
@@ -46,10 +48,14 @@ class RoundViewModel: ObservableObject {
             date: Date()
         )
 
+        print("Round object created: \(round)")
+
         do {
             let db = Firestore.firestore()
             let roundsRef = db.collection("users").document(user.id).collection("rounds")
             let roundRef = try roundsRef.addDocument(from: round)
+
+            print("Round document reference created: \(roundRef.documentID)")
 
             roundRef.getDocument { (document, error) in
                 if let document = document, document.exists {
@@ -66,6 +72,7 @@ class RoundViewModel: ObservableObject {
             completion(nil, nil, nil)
         }
     }
+
 
     func fetchPars(for courseId: String, teeId: String, user: User, completion: @escaping ([Int: Int]) -> Void) {
         let db = Firestore.firestore()
@@ -97,6 +104,7 @@ class RoundViewModel: ObservableObject {
                 }
             }
             print("Fetched pars: \(pars)")
+            self.pars = pars  // Save pars to the view model
             completion(pars)
 
             // Calculate playing handicaps and stroke holes for all golfers
@@ -122,7 +130,10 @@ class RoundViewModel: ObservableObject {
 
         for (holeNumber, scoresDict) in scores {
             for (golferId, score) in scoresDict {
-                netScoreDict[holeNumber, default: [:]][golferId] = (strokeHoles[golferId]?.contains(holeNumber) ?? false) ? score - 1 : score
+                let strokeHoles = self.strokeHoles[golferId] ?? []
+                let netScore = strokeHoles.contains(holeNumber) ? score - 1 : score
+                netScoreDict[holeNumber, default: [:]][golferId] = netScore
+                print("Hole: \(holeNumber), Golfer ID: \(golferId), Gross Score: \(score), Net Score: \(netScore)")
             }
         }
 
@@ -144,6 +155,49 @@ class RoundViewModel: ObservableObject {
                     return
                 }
                 self.recentRounds = documents.compactMap { try? $0.data(as: Round.self) }
+                print("Fetched recent rounds: \(self.recentRounds)")
             }
+    }
+
+    func resetScoresForCurrentHole() {
+        for golfer in golfers {
+            let par = pars[currentHole] ?? 0
+            if let index = scores[currentHole]?.firstIndex(where: { $0.key == golfer.id }) {
+                scores[currentHole]?[golfer.id] = par
+            } else {
+                scores[currentHole, default: [:]][golfer.id] = par
+            }
+        }
+    }
+
+    func nextHole() {
+        saveScores()
+        if currentHole < 18 {
+            currentHole += 1
+            resetScoresForCurrentHole()
+        }
+    }
+
+    func previousHole() {
+        saveScores()
+        if currentHole > 1 {
+            currentHole -= 1
+            resetScoresForCurrentHole()
+        }
+    }
+
+    func saveScores() {
+        guard let roundId = roundId else { return }
+
+        let db = Firestore.firestore()
+        let scoresData = scores.mapValues { $0.mapValues { $0 } }
+
+        db.collection("users").document("user_id").collection("rounds").document(roundId).setData(["scores": scoresData], merge: true) { error in
+            if let error = error {
+                print("Error saving scores: \(error.localizedDescription)")
+            } else {
+                print("Scores saved successfully: \(self.scores)")
+            }
+        }
     }
 }

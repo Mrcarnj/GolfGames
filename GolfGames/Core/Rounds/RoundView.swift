@@ -36,16 +36,15 @@ struct RoundView: View {
                     if let hole = hole {
                         HoleView(
                             hole: hole,
-                            onScoreChange: { newScore, golferId in
+                            onScoreChange: { golferId, newScore in
                                 roundViewModel.scores[currentHoleNumber, default: [:]][golferId] = Int(newScore)
                             },
                             onNextHole: {
-                                if roundViewModel.scores[currentHoleNumber] == nil {
-                                    missingHole = currentHoleNumber
-                                    showAlert = true
-                                } else if currentHoleNumber < totalHoles {
+                                if allScoresEntered() {
                                     currentHoleNumber += 1
                                     fetchHoleData()
+                                } else {
+                                    showAlert = true
                                 }
                             },
                             onPreviousHole: {
@@ -65,6 +64,7 @@ struct RoundView: View {
 
                     if currentHoleNumber == totalHoles && !firstMissingScoreExists() {
                         Button(action: {
+                            printScoresAndNetScores() // Print scores and net scores before showing the scorecard
                             showScorecard = true
                         }) {
                             Text("REVIEW")
@@ -112,19 +112,12 @@ struct RoundView: View {
                         }
                     }
                 }
+
                 .alert(isPresented: $showAlert) {
                     Alert(
                         title: Text("CAUTION - No Score Entered"),
-                        message: Text("You haven't entered a score for hole \(missingHole!)."),
-                        primaryButton: .default(Text("Enter Score"), action: {
-                            // Close the alert and stay on the current hole
-                            showAlert = false
-                        }),
-                        secondaryButton: .destructive(Text("Continue"), action: {
-                            // Continue to the next hole
-                            currentHoleNumber += 1
-                            fetchHoleData()
-                        })
+                        message: Text("Please enter scores for all golfers before proceeding to the next hole."),
+                        dismissButton: .default(Text("OK"))
                     )
                 }
                 .background(
@@ -164,6 +157,16 @@ struct RoundView: View {
         }
     }
 
+
+    func allScoresEntered() -> Bool {
+        for golfer in roundViewModel.golfers {
+            if roundViewModel.scores[currentHoleNumber]?[golfer.id] == nil {
+                return false
+            }
+        }
+        return true
+    }
+
     func firstMissingScoreExists() -> Bool {
         for hole in 1...totalHoles {
             if roundViewModel.scores[hole] == nil {
@@ -174,12 +177,13 @@ struct RoundView: View {
     }
 
     private func nextHole() {
-        if roundViewModel.scores[currentHoleNumber] == nil {
-            missingHole = currentHoleNumber
+        if allScoresEntered() {
+            if currentHoleNumber < totalHoles {
+                currentHoleNumber += 1
+                fetchHoleData()
+            }
+        } else {
             showAlert = true
-        } else if currentHoleNumber < totalHoles {
-            currentHoleNumber += 1
-            fetchHoleData()
         }
     }
 
@@ -187,6 +191,22 @@ struct RoundView: View {
         if currentHoleNumber > 1 {
             currentHoleNumber -= 1
             fetchHoleData()
+        }
+    }
+    
+    private func printScoresAndNetScores() {
+        print("Scores:")
+        for (holeNumber, scoresDict) in roundViewModel.scores {
+            for (golferId, score) in scoresDict {
+                print("Hole \(holeNumber), Golfer \(golferId): Score \(score)")
+            }
+        }
+
+        print("Net Scores:")
+        for (holeNumber, netScoresDict) in roundViewModel.netScores {
+            for (golferId, netScore) in netScoresDict {
+                print("Hole \(holeNumber), Golfer \(golferId): Net Score \(netScore)")
+            }
         }
     }
 }

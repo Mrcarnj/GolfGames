@@ -20,6 +20,7 @@ struct SingleRoundSetupView: View {
     @State private var selectedLocation: String? = nil
     @State private var selectedCourse: Course? = nil
     @State private var navigateToAddGolfersView = false
+    @State private var additionalGolfers: [Golfer] = []
     
     var formIsValid: Bool {
         return selectedLocation != nil && selectedCourse != nil

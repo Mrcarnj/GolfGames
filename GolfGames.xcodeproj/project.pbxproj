@@ -35,6 +35,13 @@
 		054E96212C4054180036165A /* OrientationObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96202C4054180036165A /* OrientationObserver.swift */; };
 		054E96232C4063A20036165A /* Golfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96222C4063A20036165A /* Golfer.swift */; };
 		054E96252C4063D30036165A /* CreateGolferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96242C4063D30036165A /* CreateGolferView.swift */; };
+		054E96292C498A4F0036165A /* FriendsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96282C498A4F0036165A /* FriendsListView.swift */; };
+		054E962B2C498A630036165A /* CreateFriendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E962A2C498A630036165A /* CreateFriendView.swift */; };
+		054E962D2C498E2D0036165A /* FriendsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E962C2C498E2D0036165A /* FriendsViewModel.swift */; };
+		054E962F2C4991820036165A /* CheckboxToggleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E962E2C4991820036165A /* CheckboxToggleStyle.swift */; };
+		054E96312C4B21510036165A /* GolferRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96302C4B21510036165A /* GolferRowView.swift */; };
+		054E96332C4B21840036165A /* TeePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96322C4B21840036165A /* TeePickerView.swift */; };
+		054E96352C4B21A20036165A /* AddGolferButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96342C4B21A20036165A /* AddGolferButtonView.swift */; };
 		054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */; };
 		054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85A2C37601100E44F97 /* SingleRound.swift */; };
 		054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB85C2C37625200E44F97 /* CourseTee.swift */; };
@@ -73,6 +80,13 @@
 		054E96202C4054180036165A /* OrientationObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationObserver.swift; sourceTree = "<group>"; };
 		054E96222C4063A20036165A /* Golfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Golfer.swift; sourceTree = "<group>"; };
 		054E96242C4063D30036165A /* CreateGolferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGolferView.swift; sourceTree = "<group>"; };
+		054E96282C498A4F0036165A /* FriendsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsListView.swift; sourceTree = "<group>"; };
+		054E962A2C498A630036165A /* CreateFriendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFriendView.swift; sourceTree = "<group>"; };
+		054E962C2C498E2D0036165A /* FriendsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsViewModel.swift; sourceTree = "<group>"; };
+		054E962E2C4991820036165A /* CheckboxToggleStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckboxToggleStyle.swift; sourceTree = "<group>"; };
+		054E96302C4B21510036165A /* GolferRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolferRowView.swift; sourceTree = "<group>"; };
+		054E96322C4B21840036165A /* TeePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeePickerView.swift; sourceTree = "<group>"; };
+		054E96342C4B21A20036165A /* AddGolferButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddGolferButtonView.swift; sourceTree = "<group>"; };
 		054EB8582C375FE200E44F97 /* SingleRoundSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRoundSetupView.swift; sourceTree = "<group>"; };
 		054EB85A2C37601100E44F97 /* SingleRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleRound.swift; sourceTree = "<group>"; };
 		054EB85C2C37625200E44F97 /* CourseTee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseTee.swift; sourceTree = "<group>"; };
@@ -151,6 +165,7 @@
 				054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */,
 				054E96182C3FA3320036165A /* RecentRoundsModel.swift */,
 				054E96222C4063A20036165A /* Golfer.swift */,
+				054E962C2C498E2D0036165A /* FriendsViewModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -163,6 +178,11 @@
 				05198A7A2C35C2770016F576 /* SettingsRowView.swift */,
 				054EB86B2C3CB53000E44F97 /* HoleView.swift */,
 				054E96242C4063D30036165A /* CreateGolferView.swift */,
+				054E96282C498A4F0036165A /* FriendsListView.swift */,
+				054E962A2C498A630036165A /* CreateFriendView.swift */,
+				054E96302C4B21510036165A /* GolferRowView.swift */,
+				054E96322C4B21840036165A /* TeePickerView.swift */,
+				054E96342C4B21A20036165A /* AddGolferButtonView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -239,6 +259,7 @@
 				054E961A2C403BAB0036165A /* AppDelegate.swift */,
 				054E961C2C403BEF0036165A /* OrientationUtility.swift */,
 				054E96202C4054180036165A /* OrientationObserver.swift */,
+				054E962E2C4991820036165A /* CheckboxToggleStyle.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -347,7 +368,10 @@
 				054EB85F2C3A2C9B00E44F97 /* AddGolfersView.swift in Sources */,
 				05198A7F2C35C2930016F576 /* ProfileView.swift in Sources */,
 				054EB86C2C3CB53000E44F97 /* HoleView.swift in Sources */,
+				054E96332C4B21840036165A /* TeePickerView.swift in Sources */,
+				054E962F2C4991820036165A /* CheckboxToggleStyle.swift in Sources */,
 				05198A512C35BA530016F576 /* GolfGamesApp.swift in Sources */,
+				054E962B2C498A630036165A /* CreateFriendView.swift in Sources */,
 				05198A6A2C35BDDF0016F576 /* LoginView.swift in Sources */,
 				05198A792C35C26B0016F576 /* InputView.swift in Sources */,
 				054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */,
@@ -359,9 +383,11 @@
 				054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */,
 				05198A682C35BDD00016F576 /* AuthViewModel.swift in Sources */,
 				054E961D2C403BEF0036165A /* OrientationUtility.swift in Sources */,
+				054E96292C498A4F0036165A /* FriendsListView.swift in Sources */,
 				054E96102C3F656C0036165A /* HoleRowView.swift in Sources */,
 				05198A6C2C35BDEA0016F576 /* RegistrationView.swift in Sources */,
 				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,
+				054E96312C4B21510036165A /* GolferRowView.swift in Sources */,
 				054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */,
 				05198A872C3753E90016F576 /* InititalView.swift in Sources */,
 				054E96232C4063A20036165A /* Golfer.swift in Sources */,
@@ -369,7 +395,9 @@
 				054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */,
 				05198A7B2C35C2770016F576 /* SettingsRowView.swift in Sources */,
 				054EB8692C3C6C9300E44F97 /* RoundViewModel.swift in Sources */,
+				054E962D2C498E2D0036165A /* FriendsViewModel.swift in Sources */,
 				054EB8632C3C6A2600E44F97 /* Round.swift in Sources */,
+				054E96352C4B21A20036165A /* AddGolferButtonView.swift in Sources */,
 				054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */,
 				054E96122C3F65E70036165A /* ScorecardComponentsView.swift in Sources */,
 			);

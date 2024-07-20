@@ -18,7 +18,7 @@ struct ScorecardView: View {
     @State private var pars: [Int: Int] = [:]
     @State private var navigateToInitialView = false
     
-    var showFinishButton: Bool // Add this parameter
+    var showFinishButton: Bool
 
     var body: some View {
         VStack {
@@ -61,7 +61,7 @@ struct ScorecardView: View {
             }
             .padding()
 
-            if showFinishButton { // Conditionally display the button
+            if showFinishButton {
                 Button(action: finishRound) {
                     Text("Finish Round")
                         .frame(width: UIScreen.main.bounds.width - 32, height: 48)
@@ -70,16 +70,19 @@ struct ScorecardView: View {
                         .cornerRadius(10)
                 }
                 .padding(.top)
+                .background(
+                    NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(viewModel), isActive: $navigateToInitialView) {
+                        EmptyView()
+                    }
+                )
             }
         }
         .onAppear {
-            // Fetch the pars for the selected course and tee
             if let selectedCourseId = viewModel.selectedCourse?.id,
                let selectedTeeId = viewModel.selectedTee?.id,
                let user = authViewModel.currentUser {
                 viewModel.fetchPars(for: selectedCourseId, teeId: selectedTeeId, user: user) { fetchedPars in
                     self.pars = fetchedPars
-                    // Debug print statements
                     print("Fetched pars:")
                     for (holeNumber, par) in fetchedPars.sorted(by: { $0.key < $1.key }) {
                         print("Hole \(holeNumber): Par \(par)")
@@ -90,11 +93,6 @@ struct ScorecardView: View {
             }
         }
         .navigationBarBackButtonHidden(!showFinishButton)
-        .background(
-            NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(viewModel), isActive: $navigateToInitialView) {
-                EmptyView()
-            }
-        )
     }
 
     private func finishRound() {
@@ -114,13 +112,13 @@ struct ScorecardView: View {
         }
 
         var roundData: [String: Any] = [
-            "date": Timestamp(date: Date()),  // Use Firestore Timestamp for date
+            "date": Timestamp(date: Date()),
             "course": course.name,
             "tees": tee.tee_name,
-            "course_rating": tee.course_rating,  // Add course rating
-            "slope_rating": tee.slope_rating,  // Add slope rating
+            "course_rating": tee.course_rating,
+            "slope_rating": tee.slope_rating,
             "total_score": sumScores(),
-            "roundResultID": roundResultID  // Add round result ID to the data
+            "roundResultID": roundResultID
         ]
 
         for (hole, scores) in viewModel.scores {
@@ -129,11 +127,14 @@ struct ScorecardView: View {
             }
         }
 
-        roundRef.setData(roundData) { error in
+        let resultsRef = roundRef.collection("results").document("round_results")
+        resultsRef.setData(roundData) { error in
             if let error = error {
                 print("Error saving round: \(error.localizedDescription)")
             } else {
                 print("Round successfully saved!")
+                resetLocalData()
+                navigateToInitialView = true
             }
         }
     }
@@ -143,6 +144,7 @@ struct ScorecardView: View {
         viewModel.pars = [:]
         viewModel.selectedCourse = nil
         viewModel.selectedTee = nil
+        viewModel.roundId = nil
     }
 }
 
@@ -150,5 +152,6 @@ struct ScorecardView_Previews: PreviewProvider {
     static var previews: some View {
         ScorecardView(showFinishButton: true)
             .environmentObject(RoundViewModel())
+            .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
     }
 }

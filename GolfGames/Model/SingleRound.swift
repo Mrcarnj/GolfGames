@@ -14,6 +14,7 @@ class SingleRoundViewModel: ObservableObject {
     @Published var uniqueLocations: [String] = []
     @Published var filteredCourses: [Course] = []
     @Published var tees: [Tee] = []
+    @Published var selectedCourse: Course?  // Ensure this property exists
 
     private var db = Firestore.firestore()
 

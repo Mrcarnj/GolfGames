@@ -71,7 +71,7 @@ struct InititalView: View {
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 2) {
-                                ForEach(roundsViewModel.recentRounds, id: \.uniqueID) { round in
+                                ForEach(roundsViewModel.recentRounds, id: \.id) { round in
                                     HStack {
                                         Text(dateFormatter.string(from: round.date))
                                         Spacer()
@@ -81,7 +81,7 @@ struct InititalView: View {
                                         Spacer()
                                         Text("(\(String(format: "%.1f", round.courseRating))/\(Int(round.slopeRating)))")
                                         Spacer()
-                                        Text("\(round.total_score)")
+                                        Text("\(round.totalScore)")
                                             .fontWeight(.bold)
                                     }
                                     .font(.system(size: 10))
