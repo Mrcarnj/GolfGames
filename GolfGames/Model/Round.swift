@@ -15,7 +15,6 @@ struct Round: Identifiable, Codable {
     var teeName: String
     var golfers: [Golfer]
     var date: Date
-    var totalScore: Int? // Add this line if you don't have totalScore in your existing struct
 
     struct Golfer: Identifiable, Codable {
         var id: String
@@ -23,6 +22,7 @@ struct Round: Identifiable, Codable {
         var handicap: Float
     }
 }
+
 
 
 

@@ -20,8 +20,7 @@ struct SingleRoundSetupView: View {
     @State private var selectedLocation: String? = nil
     @State private var selectedCourse: Course? = nil
     @State private var navigateToAddGolfersView = false
-    @State private var additionalGolfers: [Golfer] = []
-    
+
     var formIsValid: Bool {
         return selectedLocation != nil && selectedCourse != nil
     }
@@ -41,13 +40,32 @@ struct SingleRoundSetupView: View {
                     .shadow(radius: 10)
                     .foregroundColor(Color.primary) // Adaptive color
 
-                HStack {
-                    Picker("Select a State", selection: $selectedLocation) {
-                        Text("None Selected").tag(String?.none)
+                Picker("Select a State", selection: $selectedLocation) {
+                    Text("None Selected").tag(String?.none)
+                        .foregroundColor(.gray)
+                        .font(.subheadline)
+                    ForEach(viewModel.uniqueLocations, id: \.self) { location in
+                        Text(location).tag(location as String?)
+                            .foregroundColor(Color.primary) // Adaptive color
+                            .font(.subheadline)
+                    }
+                }
+                .pickerStyle(.navigationLink)
+                .foregroundColor(Color.primary) // Adaptive color
+                .font(.headline)
+                .onChange(of: selectedLocation) { newValue in
+                    viewModel.filterCourses(by: newValue)
+                    selectedCourse = nil
+                }
+                .padding()
+
+                if let _ = selectedLocation, !viewModel.filteredCourses.isEmpty {
+                    Picker("Course", selection: $selectedCourse) {
+                        Text("None Selected").tag(Course?.none)
                             .foregroundColor(.gray)
                             .font(.subheadline)
-                        ForEach(viewModel.uniqueLocations, id: \.self) { location in
-                            Text(location).tag(location as String?)
+                        ForEach(viewModel.filteredCourses, id: \.id) { course in
+                            Text(course.name).tag(course as Course?)
                                 .foregroundColor(Color.primary) // Adaptive color
                                 .font(.subheadline)
                         }
@@ -55,60 +73,33 @@ struct SingleRoundSetupView: View {
                     .pickerStyle(.navigationLink)
                     .foregroundColor(Color.primary) // Adaptive color
                     .font(.headline)
-                    .onChange(of: selectedLocation) { newValue in
-                        viewModel.filterCourses(by: newValue)
-                        selectedCourse = nil
-                    }
-                }
-                .padding()
-
-                if let _ = selectedLocation, !viewModel.filteredCourses.isEmpty {
-                    HStack {
-                        Picker("Course", selection: $selectedCourse) {
-                            Text("None Selected").tag(Course?.none)
-                                .foregroundColor(.gray)
-                                .font(.subheadline)
-                            ForEach(viewModel.filteredCourses, id: \.id) { course in
-                                Text(course.name).tag(course as Course?)
-                                    .foregroundColor(Color.primary) // Adaptive color
-                                    .font(.subheadline)
-                            }
-                        }
-                        .pickerStyle(.navigationLink)
-                        .foregroundColor(Color.primary) // Adaptive color
-                        .font(.headline)
-                        .onChange(of: selectedCourse) { newValue in
-                            if let course = newValue {
-                                viewModel.fetchTees(for: course) { tees in
-                                    // handle the fetched tees if needed
-                                }
+                    .onChange(of: selectedCourse) { newValue in
+                        if let course = newValue {
+                            viewModel.fetchTees(for: course) { tees in
+                                // handle the fetched tees if needed
                             }
                         }
                     }
                     .padding()
                 }
 
-                // Button to navigate to Add Golfers View
                 Button(action: {
                     navigateToAddGolfersView = true
                 }) {
-                    HStack {
-                        Text("Add Golfers")
-                        Image(systemName: "plus")
-                    }
-                    .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                    .foregroundColor(.white)
-                    .background(Color(.systemTeal))
-                    .cornerRadius(10)
+                    Text("Next")
+                        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                        .foregroundColor(.white)
+                        .background(Color(.systemTeal))
+                        .cornerRadius(10)
                 }
                 .padding(.top)
                 .disabled(!formIsValid)
-                .opacity(formIsValid ? 1.0 : 0.5)
 
                 NavigationLink(
-                    destination: AddGolfersView(selectedCourse: selectedCourse, selectedLocation: selectedLocation)
+                    destination: AddGolfersView(selectedCourse: selectedCourse)
                         .environmentObject(viewModel)
-                        .environmentObject(authViewModel),
+                        .environmentObject(authViewModel)
+                        .environmentObject(SharedViewModel()),
                     isActive: $navigateToAddGolfersView,
                     label: {
                         EmptyView()
@@ -128,6 +119,7 @@ struct SingleRoundSetupView_Previews: PreviewProvider {
     static var previews: some View {
         SingleRoundSetupView()
             .environmentObject(SingleRoundViewModel())
-            .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
+            .environmentObject(AuthViewModel())
+            .environmentObject(SharedViewModel())
     }
 }

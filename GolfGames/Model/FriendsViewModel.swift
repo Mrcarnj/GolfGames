@@ -47,7 +47,7 @@ class FriendsViewModel: ObservableObject {
     func addFriend(fullName: String, ghinNumber: Int?, handicap: Float) {
         guard let userId = userId else { return }
 
-        let newFriend = Golfer(id: UUID().uuidString, fullName: fullName, handicap: handicap, tee: nil, ghinNumber: ghinNumber)
+        let newFriend = Golfer(fullName: fullName, handicap: handicap, ghinNumber: ghinNumber)
         
         do {
             try db.collection("users").document(userId).collection("friends").document(newFriend.id).setData(from: newFriend) { error in

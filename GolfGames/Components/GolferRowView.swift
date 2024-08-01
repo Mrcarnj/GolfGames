@@ -8,11 +8,9 @@
 import SwiftUI
 
 struct GolferRowView: View {
-    var golfer: Golfer
+    @Binding var golfer: Golfer
     var isEditing: Bool
     var onRemove: () -> Void
-    @Binding var selectedTee: Tee?
-    @Binding var playingHandicap: Int?
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
 
     var body: some View {
@@ -27,7 +25,7 @@ struct GolferRowView: View {
                     .foregroundColor(Color.primary)
                 Spacer()
 
-                if let playingHandicap = playingHandicap {
+                if let playingHandicap = golfer.playingHandicap {
                     Text("CH: \(playingHandicap)")
                         .font(.subheadline)
                         .foregroundColor(Color.primary)
@@ -36,7 +34,7 @@ struct GolferRowView: View {
             .padding(.bottom, 5)
 
             HStack {
-                Picker("", selection: $selectedTee) {
+                Picker("", selection: $golfer.selectedTee) {
                     Text("Select Tees").tag(Tee?.none)
                         .foregroundColor(.gray)
                         .font(.subheadline)
@@ -50,17 +48,16 @@ struct GolferRowView: View {
                 .pickerStyle(.navigationLink)
                 .foregroundColor(Color.primary)
                 .font(.headline)
-                .onChange(of: selectedTee) { newValue in
-                    // Recalculate playing handicap when tees are changed
-                    if let tee = newValue {
-                        self.playingHandicap = HandicapCalculator.calculateCourseHandicap(
+                .onChange(of: golfer.selectedTee) { newValue in
+                    if let newTee = newValue {
+                        golfer.playingHandicap = HandicapCalculator.calculateCourseHandicap(
                             handicapIndex: golfer.handicap,
-                            slopeRating: tee.slope_rating,
-                            courseRating: tee.course_rating,
-                            par: tee.course_par
+                            slopeRating: newTee.slope_rating,
+                            courseRating: newTee.course_rating,
+                            par: newTee.course_par
                         )
                     } else {
-                        self.playingHandicap = nil
+                        golfer.playingHandicap = nil
                     }
                 }
                 

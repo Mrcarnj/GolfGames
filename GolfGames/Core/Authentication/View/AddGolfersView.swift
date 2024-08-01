@@ -5,29 +5,24 @@
 //  Created by Mike Dietrich on 7/6/24.
 //
 
-import Firebase
+//
+//  AddGolfersView.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/6/24.
+//
+
 import SwiftUI
 
 struct AddGolfersView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
-    @StateObject private var roundViewModel = RoundViewModel()
-    @State private var selectedTee: Tee? = nil
-    @State private var navigateToRoundView = false
-    @State private var roundId: String?
-    @State private var courseId = ""
-    @State private var teeId = ""
-    @State private var playingHandicap: Int? = nil
-    @State private var additionalGolfers: [Golfer] = []
-    @State private var showingAddGolferSheet = false
-    @State private var golferToEdit: Golfer?
-
+    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var roundViewModel: RoundViewModel
+    @State private var navigateToFriendsList = false
+    @State private var selectedFriends: [Golfer] = []
+    @State private var navigateToTeeSelection = false
     var selectedCourse: Course?
-    var selectedLocation: String?
-
-    var formIsValid: Bool {
-        return selectedTee != nil && selectedTee?.tee_name != "Select Tees"
-    }
 
     var body: some View {
         VStack {
@@ -50,162 +45,46 @@ struct AddGolfersView: View {
                     .foregroundColor(Color.primary)
                     .padding(.top)
 
-                if let currentUser = authViewModel.currentUser {
-                    let golfer = convertUserToGolfer(user: currentUser)
-
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text(currentUser.fullname)
-                                .font(.subheadline)
-                                .foregroundColor(Color.primary)
-                            Spacer()
-                            Text("HCP: \(String(format: "%.1f", currentUser.handicap ?? 0.0))")
-                                .font(.subheadline)
-                                .foregroundColor(Color.primary)
-                            Spacer()
-
-                            if let playingHandicap = playingHandicap {
-                                Text("CH: \(playingHandicap)")
-                                    .font(.subheadline)
-                                    .foregroundColor(Color.primary)
-                            }
-                        }
-                        .padding(.bottom, 5)
-
-                        HStack {
-                            TeePickerView(
-                                selectedTee: $selectedTee,
-                                playingHandicap: $playingHandicap,
-                                currentGolfer: golfer
-                            )
-                            .environmentObject(singleRoundViewModel)
+                List {
+                    if let currentUserGolfer = sharedViewModel.currentUserGolfer {
+                        GolferRow(golfer: currentUserGolfer, isCurrentUser: true)
+                    }
+                    ForEach(selectedFriends, id: \.id) { golfer in
+                        GolferRow(golfer: golfer, isCurrentUser: false) {
+                            selectedFriends.removeAll { $0.id == golfer.id }
                         }
                     }
-                    .padding()
-                    .onAppear {
-                        if let course = selectedCourse {
-                            singleRoundViewModel.fetchTees(for: course) { tees in
-                                roundViewModel.selectedCourse = course
-                                print("Selected Course: \(course.name)")
-                                if self.selectedTee == nil {
-                                    self.selectedTee = nil // Explicitly set to nil for placeholder
-                                }
-                                print("Selected Tee: \(self.selectedTee?.tee_name ?? "None")")
-                            }
-                        }
-                    }
-
-                    // Additional Golfers List
-                    ForEach(additionalGolfers, id: \.id) { golfer in
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(golfer.fullName)
-                                    .font(.subheadline)
-                                    .foregroundColor(Color.primary)
-                                Spacer()
-                                Text("HCP: \(String(format: "%.1f", golfer.handicap))")
-                                    .font(.subheadline)
-                                    .foregroundColor(Color.primary)
-                                Spacer()
-
-                                if let selectedTee = golfer.tee {
-                                    let playingHandicap = HandicapCalculator.calculateCourseHandicap(
-                                        handicapIndex: golfer.handicap,
-                                        slopeRating: selectedTee.slope_rating,
-                                        courseRating: selectedTee.course_rating,
-                                        par: selectedTee.course_par
-                                    )
-                                    Text("CH: \(playingHandicap)")
-                                        .font(.subheadline)
-                                        .foregroundColor(Color.primary)
-                                }
-                            }
-                            if let selectedTee = golfer.tee {
-                                Text("\(selectedTee.tee_name) \(selectedTee.tee_yards) yds (\(String(format: "%.1f", selectedTee.course_rating))/\(selectedTee.slope_rating)) Par \(selectedTee.course_par)")
-                                    .font(.footnote)
-                                    .foregroundColor(Color.primary)
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-                            }
-                        }
-                        .padding()
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            golferToEdit = golfer
-                            showingAddGolferSheet.toggle()
-                        }
-                        .swipeActions {
-                            Button(role: .destructive) {
-                                if let index = additionalGolfers.firstIndex(of: golfer) {
-                                    additionalGolfers.remove(at: index)
-                                }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
-
-                    Button(action: {
-                        showingAddGolferSheet.toggle()
-                    }) {
-                        Text("Add Golfer")
-                            .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                            .foregroundColor(.white)
-                            .background(Color(.systemGray))
-                            .cornerRadius(10)
-                    }
-                    .padding(.top)
-                    .sheet(isPresented: $showingAddGolferSheet) {
-                        FriendsListView(
-                            viewModel: FriendsViewModel(userId: authViewModel.currentUser?.id),
-                            additionalGolfers: $additionalGolfers,
-                            alreadyAddedGolfers: Set(additionalGolfers.map { $0.id })
-                        )
-                        .environmentObject(singleRoundViewModel)
-                        .environmentObject(authViewModel)
-                    }
-
-                    Button(action: {
-                        print("Begin Round button clicked")
-                        print("Selected Course: \(selectedCourse?.name ?? "None")")
-                        print("Selected Tee: \(selectedTee?.tee_name ?? "None")")
-                        
-                        roundViewModel.selectedCourse = selectedCourse
-                        roundViewModel.selectedTee = selectedTee
-                        
-                        if let selectedCourse = selectedCourse, let selectedTee = selectedTee {
-                            roundViewModel.beginRound(for: currentUser, additionalGolfers: additionalGolfers) { roundId, courseId, teeId in
-                                if let roundId = roundId, let courseId = courseId, let teeId = teeId {
-                                    self.roundId = roundId
-                                    self.courseId = courseId
-                                    self.teeId = teeId
-                                    self.navigateToRoundView = true
-                                    print("Navigation to RoundView triggered")
-                                } else {
-                                    print("Failed to begin round")
-                                }
-                            }
-                        } else {
-                            print("Selected Course or Tee is nil")
-                        }
-                    }) {
-                        Text("Begin Round")
-                            .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                            .foregroundColor(.white)
-                            .background(Color(.systemTeal))
-                            .cornerRadius(10)
-                    }
-                    .padding(.top)
-                    .disabled(!formIsValid)
-                    .opacity(formIsValid ? 1.0 : 0.5)
-
-                } else {
-                    Text("User not logged in")
-                        .font(.subheadline)
-                        .foregroundColor(.red)
-                        .padding()
                 }
 
-                Spacer()
+                Button(action: {
+                    navigateToFriendsList = true
+                }) {
+                    Text("Add Golfer")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemGray))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+
+                Button(action: {
+                    let allGolfers = ([sharedViewModel.currentUserGolfer] + selectedFriends).compactMap { $0 }
+                    sharedViewModel.golfers = allGolfers
+                    navigateToTeeSelection = true
+                }) {
+                    HStack {
+                        Text("Next: Tee Selection")
+                        Image(systemName: "arrow.right")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemTeal))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                .disabled(sharedViewModel.currentUserGolfer == nil)
             } else {
                 Text("No course selected")
                     .font(.headline)
@@ -213,23 +92,50 @@ struct AddGolfersView: View {
                     .foregroundColor(Color.primary)
             }
         }
-        .navigationTitle("Add Golfers")
         .background(
-            NavigationLink(
-                destination: RoundView(roundId: roundId ?? "", selectedCourseId: courseId, selectedTeeId: teeId)
-                    .environmentObject(authViewModel)
-                    .environmentObject(singleRoundViewModel)
-                    .environmentObject(roundViewModel),
-                isActive: $navigateToRoundView,
-                label: { EmptyView() }
-            )
+            NavigationLink(destination: TeeSelectionView()
+                .environmentObject(sharedViewModel)
+                .environmentObject(authViewModel)
+                .environmentObject(roundViewModel)
+                .environmentObject(singleRoundViewModel), isActive: $navigateToTeeSelection) {
+                EmptyView()
+            }
         )
-        .background(Color(.systemBackground))
+        .background(
+            NavigationLink(destination: FriendsListView(viewModel: FriendsViewModel(userId: authViewModel.currentUser?.id), selectedFriends: $selectedFriends, onDone: {
+                navigateToFriendsList = false
+            }).environmentObject(singleRoundViewModel).environmentObject(authViewModel), isActive: $navigateToFriendsList) {
+                EmptyView()
+            }
+        )
         .onAppear {
-            OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
+            if let user = authViewModel.currentUser {
+                sharedViewModel.currentUserGolfer = Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)
+            }
+            if let course = selectedCourse {
+                sharedViewModel.selectedCourse = course
+            }
         }
-        .onDisappear {
-            OrientationUtility.lockOrientation(.all)
+    }
+}
+
+struct GolferRow: View {
+    let golfer: Golfer
+    let isCurrentUser: Bool
+    var onRemove: (() -> Void)? = nil
+
+    var body: some View {
+        HStack {
+            Text(golfer.fullName)
+            Spacer()
+            if !isCurrentUser {
+                Button(action: {
+                    onRemove?()
+                }) {
+                    Image(systemName: "minus.circle")
+                        .foregroundColor(.red)
+                }
+            }
         }
     }
 }
@@ -240,10 +146,11 @@ struct AddGolfersView_Previews: PreviewProvider {
         let mockCourse = Course(id: "courseId", name: "Mock Course", location: "Mock Location")
 
         return AddGolfersView(
-            selectedCourse: mockCourse,
-            selectedLocation: "Mock State"
+            selectedCourse: mockCourse
         )
         .environmentObject(SingleRoundViewModel())
         .environmentObject(AuthViewModel(mockUser: mockUser))
+        .environmentObject(RoundViewModel())
+        .environmentObject(SharedViewModel())
     }
 }

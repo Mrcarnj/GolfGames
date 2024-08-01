@@ -13,8 +13,9 @@ class SingleRoundViewModel: ObservableObject {
     @Published var courses: [Course] = []
     @Published var uniqueLocations: [String] = []
     @Published var filteredCourses: [Course] = []
+    @Published var selectedCourse: Course?
     @Published var tees: [Tee] = []
-    @Published var selectedCourse: Course?  // Ensure this property exists
+    @Published var holes: [Hole] = []
 
     private var db = Firestore.firestore()
 
@@ -98,7 +99,40 @@ class SingleRoundViewModel: ObservableObject {
             }
 
             self.tees = fetchedTees.sorted { $0.tee_yards > $1.tee_yards }
-            completion(self.tees)
+            completion(fetchedTees)
+        }
+    }
+
+    func loadHoles(for courseId: String, teeId: String, completion: @escaping ([Hole]) -> Void) {
+        let db = Firestore.firestore()
+        db.collection("courses").document(courseId).collection("Tees").document(teeId).collection("Holes").getDocuments { (querySnapshot, error) in
+            if let error = error {
+                print("Error getting documents: \(error)")
+                completion([])
+                return
+            }
+            
+            guard let documents = querySnapshot?.documents else {
+                print("No documents found")
+                completion([])
+                return
+            }
+            
+            let loadedHoles = documents.compactMap { document -> Hole? in
+                do {
+                    let hole = try document.data(as: Hole.self)
+                    return hole
+                } catch {
+                    print("Error decoding hole document \(document.documentID): \(error)")
+                    return nil
+                }
+            }.sorted { $0.holeNumber < $1.holeNumber }
+            
+            DispatchQueue.main.async {
+                self.holes = loadedHoles
+                print("Holes loaded in SingleRoundViewModel: \(self.holes.map { "Hole \($0.holeNumber): Par \($0.par), Handicap \($0.handicap), Yardage \($0.yardage)" }.joined(separator: ", "))")
+                completion(loadedHoles)
+            }
         }
     }
 }

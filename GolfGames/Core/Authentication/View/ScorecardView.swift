@@ -13,9 +13,9 @@ struct ScorecardView: View {
     @Environment(\.presentationMode) var presentationMode
     
     @State private var selectedViewType: ScorecardViewType = .scoreOnly
-    @EnvironmentObject var viewModel: RoundViewModel
+    @EnvironmentObject var roundViewModel: RoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var pars: [Int: Int] = [:]
+    @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @State private var navigateToInitialView = false
     
     var showFinishButton: Bool
@@ -30,86 +30,72 @@ struct ScorecardView: View {
             .pickerStyle(SegmentedPickerStyle())
             .padding()
 
-            ScorecardComponentsView(viewType: selectedViewType, pars: pars)
-                .environmentObject(viewModel)
+            ScrollView {
+                ScorecardComponentsView(viewType: selectedViewType)
+                    .environmentObject(roundViewModel)
+                    .environmentObject(singleRoundViewModel)
+            }
             
-            HStack {
-                Circle()
-                    .fill(Color.yellow)
-                    .frame(width: 10, height: 10)
-                    
-                Text("Eagle or better").foregroundColor(colorScheme == .dark ? Color.white : Color.black).font(.system(size: 9))
-                
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 10, height: 10)
-                    
-                Text("Birdie").foregroundColor(colorScheme == .dark ? Color.white : Color.black).font(.system(size: 9))
-                
-                Rectangle()
-                    .fill(.black) // Use foregroundColor instead of fill
-                    .frame(width: 10, height: 10)
-                    .border(colorScheme == .dark ? Color.white : Color.black)
-                    
-                Text("Bogey").foregroundColor(colorScheme == .dark ? Color.white : Color.black).font(.system(size: 9))
-                
-                Rectangle()
-                    .fill(Color.blue).opacity(0.8)
-                    .frame(width: 10, height: 10)
-                    
-                Text("Double Bogey or worse").foregroundColor(colorScheme == .dark ? Color.white : Color.black).font(.system(size: 9))
-            }
-            .padding()
-
+            legendView
+            
             if showFinishButton {
-                Button(action: finishRound) {
-                    Text("Finish Round")
-                        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                        .foregroundColor(.white)
-                        .background(Color(.systemTeal))
-                        .cornerRadius(10)
-                }
-                .padding(.top)
-                .background(
-                    NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(viewModel), isActive: $navigateToInitialView) {
-                        EmptyView()
-                    }
-                )
+                finishButton
             }
         }
-        .onAppear {
-            if let selectedCourseId = viewModel.selectedCourse?.id,
-               let selectedTeeId = viewModel.selectedTee?.id,
-               let user = authViewModel.currentUser {
-                viewModel.fetchPars(for: selectedCourseId, teeId: selectedTeeId, user: user) { fetchedPars in
-                    self.pars = fetchedPars
-                    print("Fetched pars:")
-                    for (holeNumber, par) in fetchedPars.sorted(by: { $0.key < $1.key }) {
-                        print("Hole \(holeNumber): Par \(par)")
-                    }
-                }
-            } else {
-                print("Course or Tee ID is missing.")
-            }
-        }
+        .onAppear(perform: loadRoundData)
         .navigationBarBackButtonHidden(!showFinishButton)
+        .background(
+            NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(roundViewModel), isActive: $navigateToInitialView) {
+                EmptyView()
+            }
+        )
+    }
+
+    private var legendView: some View {
+        HStack {
+            LegendItem(color: .yellow, text: "Eagle or better")
+            LegendItem(color: .red, text: "Birdie")
+            LegendItem(color: .black, text: "Bogey")
+            LegendItem(color: .blue.opacity(0.8), text: "Double Bogey or worse")
+        }
+        .padding()
+    }
+
+    private var finishButton: some View {
+        Button(action: finishRound) {
+            Text("Finish Round")
+                .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                .foregroundColor(.white)
+                .background(Color(.systemTeal))
+                .cornerRadius(10)
+        }
+        .padding(.top)
+    }
+
+    private func loadRoundData() {
+        guard let courseId = roundViewModel.selectedCourse?.id,
+              let teeId = roundViewModel.selectedTee?.id else {
+            print("Course or Tee not selected")
+            return
+        }
+
+        print("Loading holes for Course ID: \(courseId), Tee ID: \(teeId)")
+        singleRoundViewModel.loadHoles(for: courseId, teeId: teeId) { loadedHoles in
+            print("Holes loaded: \(loadedHoles.map { "Hole \($0.holeNumber): Par \($0.par)" }.joined(separator: ", "))")
+            self.roundViewModel.calculateStrokeHoles(holes: loadedHoles)
+            print("Holes loaded and stroke holes calculated")
+        }
     }
 
     private func finishRound() {
-        guard let user = authViewModel.currentUser else { return }
-        guard let course = viewModel.selectedCourse else { return }
-        guard let tee = viewModel.selectedTee else { return }
+        guard let user = authViewModel.currentUser,
+              let course = roundViewModel.selectedCourse,
+              let tee = roundViewModel.selectedTee else { return }
 
         let db = Firestore.firestore()
-        let roundRef = db.collection("users").document(user.id).collection("rounds").document(viewModel.roundId ?? "")
+        let roundRef = db.collection("users").document(user.id).collection("rounds").document(roundViewModel.roundId ?? "")
 
-        // Generate a unique round result ID
         let roundResultID = roundRef.collection("results").document().documentID
-
-        // Helper function to sum the scores from the nested dictionary
-        func sumScores() -> Int {
-            return viewModel.scores.values.flatMap { $0.values }.reduce(0, +)
-        }
 
         var roundData: [String: Any] = [
             "date": Timestamp(date: Date()),
@@ -117,18 +103,17 @@ struct ScorecardView: View {
             "tees": tee.tee_name,
             "course_rating": tee.course_rating,
             "slope_rating": tee.slope_rating,
-            "total_score": sumScores(),
+            "total_score": roundViewModel.grossScores.values.flatMap { $0.values }.reduce(0, +),
             "roundResultID": roundResultID
         ]
 
-        for (hole, scores) in viewModel.scores {
+        for (hole, scores) in roundViewModel.grossScores {
             for (golfer, score) in scores {
                 roundData["hole_\(hole)_\(golfer)"] = score
             }
         }
 
-        let resultsRef = roundRef.collection("results").document("round_results")
-        resultsRef.setData(roundData) { error in
+        roundRef.setData(roundData) { error in
             if let error = error {
                 print("Error saving round: \(error.localizedDescription)")
             } else {
@@ -140,11 +125,11 @@ struct ScorecardView: View {
     }
 
     private func resetLocalData() {
-        viewModel.scores = [:]
-        viewModel.pars = [:]
-        viewModel.selectedCourse = nil
-        viewModel.selectedTee = nil
-        viewModel.roundId = nil
+        roundViewModel.grossScores = [:]
+        roundViewModel.netScores = [:]
+        roundViewModel.strokeHoles = [:]
+        roundViewModel.selectedCourse = nil
+        roundViewModel.selectedTee = nil
     }
 }
 
@@ -152,6 +137,7 @@ struct ScorecardView_Previews: PreviewProvider {
     static var previews: some View {
         ScorecardView(showFinishButton: true)
             .environmentObject(RoundViewModel())
-            .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
+            .environmentObject(AuthViewModel())
+            .environmentObject(SingleRoundViewModel())
     }
 }

@@ -13,28 +13,32 @@ class RoundViewModel: ObservableObject {
     @Published var selectedTee: Tee?
     @Published var selectedCourse: Course?
     @Published var selectedLocation: String?
-    @Published var scores: [Int: [String: Int]] = [:]  // Nested dictionary to hold scores keyed by hole number and golfer ID
-    @Published var pars: [Int: Int] = [:]  // Dictionary to hold pars keyed by hole number
-    @Published var playingHandicaps: [String: Int] = [:]  // Dictionary to hold playing handicaps keyed by golfer ID
-    @Published var strokeHoles: [String: [Int]] = [:]  // Dictionary to hold stroke holes keyed by golfer ID
-    @Published var roundId: String?
+    @Published var grossScores: [Int: [String: Int]] = [:] // Nested dictionary to hold gross scores keyed by hole number and golfer ID
     @Published var netScores: [Int: [String: Int]] = [:] // Nested dictionary to hold net scores keyed by hole number and golfer ID
+    @Published var pars: [Int: Int] = [:] // Dictionary to hold pars keyed by hole number
+    @Published var playingHandicaps: [String: Int] = [:] // Dictionary to hold playing handicaps keyed by golfer ID
+    @Published var strokeHoles: [String: [Int]] = [:] // Dictionary to hold stroke holes keyed by golfer ID
+    @Published var roundId: String?
     @Published var recentRounds: [Round] = []
     @Published var golfers: [Golfer] = []
-    @Published var currentHole: Int = 1  // Track the current hole
+    @Published var currentHole: Int = 1 // Track the current hole
+    @Published var courseHandicaps: [String: Int] = [:] // Dictionary to hold course handicaps keyed by golfer ID
+    @Published var holes: [String: [Hole]] = [:]
 
     func beginRound(for user: User, additionalGolfers: [Golfer], completion: @escaping (String?, String?, String?) -> Void) {
+        print("Beginning round...")
         guard let course = selectedCourse,
               let tee = selectedTee,
-              let courseId = course.id,
-              let teeId = tee.id else {
-            print("Missing required data to begin round")
-            print("Course: \(selectedCourse?.name ?? "None"), Tee: \(selectedTee?.tee_name ?? "None")")
+              let courseId = course.id else {
+            print("Missing required data to begin round. Course: \(selectedCourse?.name ?? "nil"), Tee: \(selectedTee?.tee_name ?? "nil")")
             completion(nil, nil, nil)
             return
         }
 
+        print("Course and tee selected: \(course.name), \(tee.tee_name)")
+
         self.golfers = [Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)] + additionalGolfers
+        print("Golfers for this round: \(self.golfers.map { $0.fullName })")
 
         let roundGolfers = self.golfers.map { golfer in
             Round.Golfer(id: golfer.id, fullName: golfer.fullName, handicap: golfer.handicap)
@@ -48,20 +52,16 @@ class RoundViewModel: ObservableObject {
             date: Date()
         )
 
-        print("Round object created: \(round)")
-
         do {
             let db = Firestore.firestore()
             let roundsRef = db.collection("users").document(user.id).collection("rounds")
             let roundRef = try roundsRef.addDocument(from: round)
 
-            print("Round document reference created: \(roundRef.documentID)")
-
             roundRef.getDocument { (document, error) in
                 if let document = document, document.exists {
                     print("Round saved with ID: \(document.documentID)")
                     self.roundId = document.documentID // Set roundId here
-                    completion(document.documentID, courseId, teeId)
+                    completion(document.documentID, courseId, tee.id)
                 } else {
                     print("Error saving round: \(error?.localizedDescription ?? "Unknown error")")
                     completion(nil, nil, nil)
@@ -72,7 +72,6 @@ class RoundViewModel: ObservableObject {
             completion(nil, nil, nil)
         }
     }
-
 
     func fetchPars(for courseId: String, teeId: String, user: User, completion: @escaping ([Int: Int]) -> Void) {
         let db = Firestore.firestore()
@@ -104,10 +103,9 @@ class RoundViewModel: ObservableObject {
                 }
             }
             print("Fetched pars: \(pars)")
-            self.pars = pars  // Save pars to the view model
+            self.pars = pars
             completion(pars)
 
-            // Calculate playing handicaps and stroke holes for all golfers
             for golfer in self.golfers {
                 let golferHandicap = HandicapCalculator.calculateCourseHandicap(
                     handicapIndex: golfer.handicap,
@@ -125,20 +123,40 @@ class RoundViewModel: ObservableObject {
         }
     }
 
-    func updateNetScores() {
-        var netScoreDict = [Int: [String: Int]]()
+    func calculateStrokeHoles(holes: [Hole]) {
+        for golfer in golfers {
+            guard let courseHandicap = courseHandicaps[golfer.id] else {
+                print("Warning: No course handicap found for golfer \(golfer.fullName)")
+                continue
+            }
+            
+            let strokeHoles = HandicapCalculator.determineStrokeHoles(courseHandicap: courseHandicap, holes: holes)
+            self.strokeHoles[golfer.id] = strokeHoles
+            
+            print("Calculated stroke holes for \(golfer.fullName): \(strokeHoles)")
+            print("Course Handicap: \(courseHandicap)")
+        }
+    }
 
-        for (holeNumber, scoresDict) in scores {
-            for (golferId, score) in scoresDict {
-                let strokeHoles = self.strokeHoles[golferId] ?? []
-                let netScore = strokeHoles.contains(holeNumber) ? score - 1 : score
-                netScoreDict[holeNumber, default: [:]][golferId] = netScore
-                print("Hole: \(holeNumber), Golfer ID: \(golferId), Gross Score: \(score), Net Score: \(netScore)")
+    func updateNetScores() {
+        for (holeNumber, scores) in grossScores {
+            for (golferId, grossScore) in scores {
+                let isStrokeHole = strokeHoles[golferId]?.contains(holeNumber) ?? false
+                let netScore = isStrokeHole ? grossScore - 1 : grossScore
+                netScores[holeNumber, default: [:]][golferId] = netScore
+                
+                print("Hole \(holeNumber) for golfer \(golferId): Gross \(grossScore), Net \(netScore), Stroke Hole: \(isStrokeHole)")
             }
         }
-
-        self.netScores = netScoreDict
     }
+    
+    func printDebugInfo() {
+            print("RoundViewModel Debug Info:")
+            print("Number of golfers: \(golfers.count)")
+            print("Golfers: \(golfers)")
+            print("Scores: \(grossScores)")
+            print("Stroke Holes: \(strokeHoles)")
+        }
 
     func fetchRecentRounds(for user: User) {
         let db = Firestore.firestore()
@@ -162,10 +180,10 @@ class RoundViewModel: ObservableObject {
     func resetScoresForCurrentHole() {
         for golfer in golfers {
             let par = pars[currentHole] ?? 0
-            if let index = scores[currentHole]?.firstIndex(where: { $0.key == golfer.id }) {
-                scores[currentHole]?[golfer.id] = par
+            if let index = grossScores[currentHole]?.firstIndex(where: { $0.key == golfer.id }) {
+                grossScores[currentHole]?[golfer.id] = par
             } else {
-                scores[currentHole, default: [:]][golfer.id] = par
+                grossScores[currentHole, default: [:]][golfer.id] = par
             }
         }
     }
@@ -190,14 +208,30 @@ class RoundViewModel: ObservableObject {
         guard let roundId = roundId else { return }
 
         let db = Firestore.firestore()
-        let scoresData = scores.mapValues { $0.mapValues { $0 } }
+        let grossScoresData = grossScores.mapValues { $0.mapValues { $0 } }
+        let netScoresData = netScores.mapValues { $0.mapValues { $0 } }
 
-        db.collection("users").document("user_id").collection("rounds").document(roundId).setData(["scores": scoresData], merge: true) { error in
+        db.collection("users").document("user_id").collection("rounds").document(roundId).setData(["gross_scores": grossScoresData, "net_scores": netScoresData], merge: true) { error in
             if let error = error {
                 print("Error saving scores: \(error.localizedDescription)")
             } else {
-                print("Scores saved successfully: \(self.scores)")
+                print("Scores saved successfully: \(self.grossScores)")
             }
         }
+    }
+
+    func getMissingScores(for golferId: String) -> [Int] {
+        return (1...18).filter { holeNumber in
+            grossScores[holeNumber]?[golferId] == nil
+        }
+    }
+
+    func allScoresEntered() -> Bool {
+        for golfer in golfers {
+            if !getMissingScores(for: golfer.id).isEmpty {
+                return false
+            }
+        }
+        return true
     }
 }

@@ -12,14 +12,10 @@ struct AddGolferButtonView: View {
     @Binding var formIsValid: Bool
     @Binding var navigateToRoundView: Bool
     @Binding var roundId: String?
-    @Binding var courseId: String
-    @Binding var teeId: String
     @StateObject var roundViewModel: RoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @Binding var additionalGolfers: [Golfer]
-    @Binding var selectedTee: Tee?
-    @Binding var playingHandicap: Int?
 
     var body: some View {
         VStack {
@@ -36,29 +32,53 @@ struct AddGolferButtonView: View {
             .sheet(isPresented: $showingAddGolferSheet) {
                 FriendsListView(
                     viewModel: FriendsViewModel(userId: authViewModel.currentUser?.id),
-                    additionalGolfers: $additionalGolfers,
-                    alreadyAddedGolfers: Set(additionalGolfers.map { $0.id })
+                    selectedFriends: $additionalGolfers,
+                    onDone: {
+                        showingAddGolferSheet = false
+                    }
                 )
                 .environmentObject(singleRoundViewModel)
                 .environmentObject(authViewModel)
             }
 
-            if let currentUser = authViewModel.currentUser {
-                let golfer = convertUserToGolfer(user: currentUser)
-
-                HStack {
-                    TeePickerView(
-                        selectedTee: $selectedTee,
-                        playingHandicap: $playingHandicap,
-                        currentGolfer: golfer
-                    )
-                    .environmentObject(singleRoundViewModel)
+            Button(action: {
+                if let currentUser = authViewModel.currentUser {
+                    roundViewModel.beginRound(for: currentUser, additionalGolfers: additionalGolfers) { roundId, courseId, teeId in
+                        if let roundId = roundId {
+                            self.roundId = roundId
+                            self.navigateToRoundView = true
+                        }
+                    }
                 }
+            }) {
+                Text("Begin Round")
+                    .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                    .foregroundColor(.white)
+                    .background(Color(.systemTeal))
+                    .cornerRadius(10)
             }
+            .padding(.top)
+            .disabled(!formIsValid)
+            .opacity(formIsValid ? 1.0 : 0.5)
         }
     }
 }
 
 func convertUserToGolfer(user: User) -> Golfer {
-    return Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0, tee: nil, ghinNumber: user.ghinNumber, isChecked: false)
+    return Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0, ghinNumber: user.ghinNumber, isChecked: false)
+}
+
+struct AddGolferButtonView_Previews: PreviewProvider {
+    static var previews: some View {
+        AddGolferButtonView(
+            showingAddGolferSheet: .constant(false),
+            formIsValid: .constant(true),
+            navigateToRoundView: .constant(false),
+            roundId: .constant(nil),
+            roundViewModel: RoundViewModel(),
+            additionalGolfers: .constant([])
+        )
+        .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
+        .environmentObject(SingleRoundViewModel())
+    }
 }

@@ -1,0 +1,41 @@
+//
+//  SharedViewModel.swift
+//  GolfGames
+//
+//  Created by Mike Dietrich on 7/30/24.
+//
+
+import SwiftUI
+
+class SharedViewModel: ObservableObject {
+    @Published var golfers: [Golfer] = []
+    @Published var selectedTees: [String: Tee?] = [:]
+    @Published var playingHandicaps: [String: Int] = [:]
+    @Published var selectedCourse: Course?
+    @Published var roundId: String?
+    @Published var currentUserGolfer: Golfer?
+    @Published var golferTeeSelections: [String: String] = [:]  // [GolferID: TeeID]
+
+    func addGolfer(_ golfer: Golfer) {
+        if !golfers.contains(where: { $0.id == golfer.id }) {
+            golfers.append(golfer)
+            if currentUserGolfer == nil {
+                currentUserGolfer = golfer
+            }
+        }
+    }
+
+    func removeGolfer(_ golfer: Golfer) {
+        golfers.removeAll { $0.id == golfer.id }
+    }
+
+    func resetForNewRound() {
+        golfers = []
+        selectedTees = [:]
+        playingHandicaps = [:]
+        selectedCourse = nil
+        roundId = nil
+        golferTeeSelections = [:]
+        // Note: We don't reset currentUserGolfer here
+    }
+}

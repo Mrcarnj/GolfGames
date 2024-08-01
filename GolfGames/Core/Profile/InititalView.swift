@@ -12,18 +12,11 @@ struct InititalView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var roundsViewModel = RecentRoundsModel()
 
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/yy" // Adjusted date format
-        return formatter
-    }
-
     var body: some View {
         if let user = authViewModel.currentUser {
             NavigationStack {
                 VStack {
-                    Text("Welcome, \(user.fullname)!")
-                        .padding(.top, 35)
+                    welcomeMessage(for: user)
 
                     Image("golfgamble_bag")
                         .resizable()
@@ -33,30 +26,7 @@ struct InititalView: View {
                         .padding(.vertical, 32)
                         .shadow(radius: 10)
 
-                    NavigationLink(destination: SingleRoundSetupView()) {
-                        HStack {
-                            Text("New Single Round")
-                            Image(systemName: "plus")
-                        }
-                        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                        .foregroundColor(.white)
-                        .background(Color(.systemTeal))
-                        .cornerRadius(10)
-                    }
-
-                    Button {
-                        // Action for Multiple Rounds
-                    } label: {
-                        HStack {
-                            Text("New Multiple Rounds")
-                            Image(systemName: "plus")
-                        }
-                    }
-                    .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                    .foregroundColor(.white)
-                    .background(Color(.systemTeal))
-                    .cornerRadius(10)
-                    .padding(.top, 15)
+                    newRoundButtons()
 
                     Spacer()
 
@@ -70,26 +40,7 @@ struct InititalView: View {
                             .padding()
                     } else {
                         ScrollView {
-                            VStack(alignment: .leading, spacing: 2) {
-                                ForEach(roundsViewModel.recentRounds, id: \.id) { round in
-                                    HStack {
-                                        Text(dateFormatter.string(from: round.date))
-                                        Spacer()
-                                        Text(round.course)
-                                        Spacer()
-                                        Text(round.tees)
-                                        Spacer()
-                                        Text("(\(String(format: "%.1f", round.courseRating))/\(Int(round.slopeRating)))")
-                                        Spacer()
-                                        Text("\(round.totalScore)")
-                                            .fontWeight(.bold)
-                                    }
-                                    .font(.system(size: 10))
-                                    .padding()
-                                    .background(Color.gray.opacity(0.1))
-                                    .cornerRadius(8)
-                                }
-                            }
+                            RecentRoundsListView(roundsViewModel: roundsViewModel)
                         }
                     }
                 }
@@ -114,6 +65,40 @@ struct InititalView: View {
                 .navigationBarBackButtonHidden(true)
             }
         }
+    }
+
+    @ViewBuilder
+    private func welcomeMessage(for user: User) -> some View {
+        Text("Welcome, \(user.fullname)!")
+            .padding(.top, 35)
+    }
+
+    @ViewBuilder
+    private func newRoundButtons() -> some View {
+        NavigationLink(destination: SingleRoundSetupView()) {
+            HStack {
+                Text("New Single Round")
+                Image(systemName: "plus")
+            }
+            .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+            .foregroundColor(.white)
+            .background(Color(.systemTeal))
+            .cornerRadius(10)
+        }
+
+        Button {
+            // Action for Multiple Rounds
+        } label: {
+            HStack {
+                Text("New Multiple Rounds")
+                Image(systemName: "plus")
+            }
+        }
+        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+        .foregroundColor(.white)
+        .background(Color(.systemTeal))
+        .cornerRadius(10)
+        .padding(.top, 15)
     }
 }
 

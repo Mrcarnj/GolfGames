@@ -32,35 +32,44 @@ class RecentRoundsModel: ObservableObject {
             
             for document in documents {
                 group.enter()
-                let roundId = document.documentID
-                let resultsRef = roundsRef.document(roundId).collection("results").document("round_results")
+                let data = document.data()
                 
-                resultsRef.getDocument { resultSnapshot, error in
-                    defer { group.leave() }
-                    if let error = error {
-                        print("Error fetching round result: \(error.localizedDescription)")
-                        return
-                    }
+                // Check if roundResultID exists in the document
+                guard let roundResultID = data["roundResultID"] as? String else {
+                    print("No roundResultID found for document: \(document.documentID)")
+                    group.leave()
+                    continue
+                }
+                
+                // Use the data directly from the round document
+                if let course = data["courseName"] as? String,
+                   let date = (data["date"] as? Timestamp)?.dateValue(),
+                   let tees = data["tees"] as? String,
+                   let courseRating = data["courseRating"] as? Float,
+                   let slopeRating = data["slopeRating"] as? Float,
+                   let golfers = data["golfers"] as? [[String: Any]] {
                     
-                    guard let data = resultSnapshot?.data() else {
-//                        print("No result data found for round ID: \(roundId)")
-                        return
-                    }
-                    
-                    if let course = data["course"] as? String,
-                       let date = (data["date"] as? Timestamp)?.dateValue(),
-                       let totalScore = data["total_score"] as? Int,
-                       let tees = data["tees"] as? String,
-                       let courseRating = data["course_rating"] as? Float,
-                       let slopeRating = data["slope_rating"] as? Float {
+                    // Assuming the first golfer in the array is the main player
+                    if let firstGolfer = golfers.first,
+                       let totalScore = firstGolfer["grossTotal"] as? Int {
                         
-                        let roundResult = RoundResult(id: roundId, course: course, date: date, totalScore: totalScore, tees: tees, courseRating: courseRating, slopeRating: slopeRating)
+                        let roundResult = RoundResult(
+                            id: document.documentID,
+                            course: course,
+                            date: date,
+                            totalScore: totalScore,
+                            tees: tees,
+                            courseRating: courseRating,
+                            slopeRating: slopeRating
+                        )
                         roundResults.append(roundResult)
                         
-                        print("Found round result for round ID: \(roundId)")
+                        print("Found round result for round ID: \(document.documentID)")
                         print("Course: \(course), Date: \(date), Total Score: \(totalScore), Tees: \(tees), Course Rating: \(courseRating), Slope Rating: \(slopeRating)")
                     }
                 }
+                
+                group.leave()
             }
             
             group.notify(queue: .main) {

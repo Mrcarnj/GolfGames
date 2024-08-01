@@ -16,6 +16,7 @@ struct Hole: Identifiable, Codable {
     var yardage: Int
 
     enum CodingKeys: String, CodingKey {
+        case id
         case holeNumber = "hole_number"
         case par
         case handicap
