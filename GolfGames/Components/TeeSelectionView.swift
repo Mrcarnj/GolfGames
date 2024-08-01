@@ -29,12 +29,18 @@ struct TeeSelectionView: View {
                         HStack {
                             Text(golfer.fullName)
                                 .font(.headline)
-                            Text("HCP: \(String(format: "%.1f", golfer.handicap))")
+                            Spacer ()
+                            Text("HCP:")
+                                .font(.headline)
+                                .fontWeight(.regular)
+                            Text("\(String(format: "%.1f", golfer.handicap))")
                                 .font(.headline)
                             if let playingHandicap = sharedViewModel.playingHandicaps[golfer.id] {
-                                Text("CH: \(playingHandicap)")
+                                Text(" CH:")
                                     .font(.headline)
                                     .fontWeight(.regular)
+                                Text("\(playingHandicap)")
+                                    .font(.headline)
                             }
                         }
 

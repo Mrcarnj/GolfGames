@@ -74,6 +74,21 @@ class AuthViewModel: ObservableObject {
         self.currentUser = try? snapshot.data(as:User.self)
         
     }
+    
+    func updateUserProfile(_ updatedUser: User) async throws {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+        
+        do {
+            let encodedUser = try Firestore.Encoder().encode(updatedUser)
+            try await Firestore.firestore().collection("users").document(uid).setData(encodedUser)
+            self.currentUser = updatedUser
+        } catch {
+            print("DEBUG: Failed to update user profile with error \(error.localizedDescription)")
+            throw error
+        }
+    }
 }
 
 class MockAuthViewModel: AuthViewModel {

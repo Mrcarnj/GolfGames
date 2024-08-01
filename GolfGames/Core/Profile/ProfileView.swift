@@ -10,6 +10,13 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var viewModel: AuthViewModel
+    @State private var isEditing = false
+    @State private var editedFullname = ""
+    @State private var editedEmail = ""
+    @State private var editedHandicap = ""
+    @State private var editedGHIN = ""
+    @State private var showAlert = false
+    @State private var alertMessage = ""
     
     var body: some View {
         if let user = viewModel.currentUser {
@@ -25,36 +32,51 @@ struct ProfileView: View {
                             .clipShape(Circle())
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(user.fullname)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .padding(.top, 4)
-                            
-                            Text(user.email)
-                                .font(.footnote)
-                                .foregroundStyle(.gray)
+                            if isEditing {
+                                TextField("Full Name", text: $editedFullname)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                TextField("Email", text: $editedEmail)
+                                    .font(.footnote)
+                                    .foregroundStyle(.gray)
+                            } else {
+                                Text(user.fullname)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .padding(.top, 4)
+                                Text(user.email)
+                                    .font(.footnote)
+                                    .foregroundStyle(.gray)
+                            }
                         }
                     }
                 }
                 Section("Golfer Info") {
                     HStack {
                         SettingsRowView(imageName: "figure.golf", title: "Handicap", tintColor: Color(.systemGray))
-                        
                         Spacer()
-                        
-                        Text(user.handicap != nil ? String(format: "%.1f", user.handicap!) : "N/A")
-                            .font(.subheadline)
-                            .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
-                        
+                        if isEditing {
+                            TextField("Handicap", text: $editedHandicap)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                        } else {
+                            Text(user.handicap != nil ? String(format: "%.1f", user.handicap!) : "N/A")
+                                .font(.subheadline)
+                                .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
+                        }
                     }
                     HStack {
                         SettingsRowView(imageName: "numbersign", title: "GHIN", tintColor: Color(.systemGray))
-                        
                         Spacer()
-                        
-                        Text(user.ghinNumber != nil ? String( user.ghinNumber!) : "N/A")
-                            .font(.subheadline)
-                            .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
+                        if isEditing {
+                            TextField("GHIN", text: $editedGHIN)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                        } else {
+                            Text(user.ghinNumber != nil ? String(user.ghinNumber!) : "N/A")
+                                .font(.subheadline)
+                                .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
+                        }
                     }
                 }
                 
@@ -87,11 +109,53 @@ struct ProfileView: View {
                     }
                 }
             }
+            .navigationBarItems(trailing: Button(isEditing ? "Update" : "Edit") {
+                if isEditing {
+                    updateUserInfo()
+                } else {
+                    isEditing.toggle()
+                }
+            })
             .onAppear {
                 OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
+                initializeEditFields(with: user)
             }
             .onDisappear {
                 OrientationUtility.lockOrientation(.all)
+            }
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("Profile Update"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+        }
+    }
+    
+    private func initializeEditFields(with user: User) {
+        editedFullname = user.fullname
+        editedEmail = user.email
+        editedHandicap = user.handicap != nil ? String(format: "%.1f", user.handicap!) : ""
+        editedGHIN = user.ghinNumber != nil ? String(user.ghinNumber!) : ""
+    }
+    
+    private func updateUserInfo() {
+        guard let user = viewModel.currentUser else { return }
+        
+        let updatedUser = User(
+            id: user.id,
+            fullname: editedFullname,
+            email: editedEmail,
+            handicap: Float(editedHandicap),
+            ghinNumber: Int(editedGHIN)
+        )
+        
+        Task {
+            do {
+                try await viewModel.updateUserProfile(updatedUser)
+                isEditing = false
+                alertMessage = "Profile updated successfully"
+                showAlert = true
+            } catch {
+                alertMessage = "Failed to update profile: \(error.localizedDescription)"
+                showAlert = true
             }
         }
     }
