@@ -9,10 +9,13 @@ import SwiftUI
 
 struct CreateFriendView: View {
     @ObservedObject var viewModel: FriendsViewModel
+    @Binding var friendToEdit: Golfer?
     @Environment(\.presentationMode) var presentationMode
     @State private var fullName = ""
     @State private var ghinNumber = ""
     @State private var handicap = ""
+    @State private var showAlert = false
+    @State private var alertMessage = ""
 
     var body: some View {
         NavigationView {
@@ -20,21 +23,80 @@ struct CreateFriendView: View {
                 Section(header: Text("Friend Information")) {
                     TextField("Full Name", text: $fullName)
                     TextField("GHIN (Optional)", text: $ghinNumber)
-                        .keyboardType(.numberPad)  // Ensure only numbers can be entered
+                        .keyboardType(.numberPad)
                     TextField("Handicap", text: $handicap)
                         .keyboardType(.decimalPad)
                 }
             }
-            .navigationBarTitle("Add Friend", displayMode: .inline)
-            .navigationBarItems(leading: Button("Cancel") {
-                presentationMode.wrappedValue.dismiss()
-            }, trailing: Button("Create") {
-                if let handicapValue = Float(handicap) {
-                    let ghinNumberValue = Int(ghinNumber)  // Convert to optional Int
-                    viewModel.addFriend(fullName: fullName, ghinNumber: ghinNumberValue, handicap: handicapValue)
+            .navigationBarTitle(friendToEdit == nil ? "Add Friend" : "Edit Friend", displayMode: .inline)
+            .navigationBarItems(
+                leading: Button("Cancel") {
                     presentationMode.wrappedValue.dismiss()
+                },
+                trailing: Button(friendToEdit == nil ? "Add" : "Update") {
+                    friendToEdit == nil ? addFriend() : updateFriend()
                 }
-            })
+            )
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("Message"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+        }
+        .onAppear {
+            if let friend = friendToEdit {
+                fullName = friend.fullName
+                ghinNumber = friend.ghinNumber.map(String.init) ?? ""
+                handicap = String(format: "%.1f", friend.handicap)
+            }
+        }
+    }
+
+    private func addFriend() {
+        guard validateInput() else { return }
+        
+        let ghinNumberValue = Int(ghinNumber)
+        let handicapValue = Float(handicap) ?? 0.0
+        
+        viewModel.addFriend(fullName: fullName, ghinNumber: ghinNumberValue, handicap: handicapValue) { result in
+            handleResult(result)
+        }
+    }
+
+    private func updateFriend() {
+        guard validateInput() else { return }
+        
+        let ghinNumberValue = Int(ghinNumber)
+        let handicapValue = Float(handicap) ?? 0.0
+        
+        guard let friend = friendToEdit else { return }
+        
+        viewModel.updateFriend(friend, fullName: fullName, ghinNumber: ghinNumberValue, handicap: handicapValue) { result in
+            handleResult(result)
+        }
+    }
+
+    private func validateInput() -> Bool {
+        guard !fullName.isEmpty else {
+            alertMessage = "Please enter a name"
+            showAlert = true
+            return false
+        }
+        
+        guard let _ = Float(handicap) else {
+            alertMessage = "Please enter a valid handicap"
+            showAlert = true
+            return false
+        }
+        
+        return true
+    }
+
+    private func handleResult(_ result: Result<Void, Error>) {
+        switch result {
+        case .success:
+            presentationMode.wrappedValue.dismiss()
+        case .failure(let error):
+            alertMessage = "Failed to \(friendToEdit == nil ? "add" : "update") friend: \(error.localizedDescription)"
+            showAlert = true
         }
     }
 }

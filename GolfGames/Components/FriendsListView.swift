@@ -11,40 +11,50 @@ struct FriendsListView: View {
     @ObservedObject var viewModel: FriendsViewModel
     @Binding var selectedFriends: [Golfer]
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State private var showingAddFriendSheet = false
     @Environment(\.presentationMode) var presentationMode
+    @State private var showingAddFriendSheet = false
+    @State private var friendToEdit: Golfer?
     var onDone: () -> Void
 
     var body: some View {
         VStack {
-            List(viewModel.friends) { friend in
-                HStack {
-                    Text(friend.fullName)
-                    Spacer()
-                    if selectedFriends.contains(where: { $0.id == friend.id }) {
-                        Image(systemName: "checkmark")
-                            .foregroundColor(.green)
+            List {
+                ForEach(viewModel.friends) { friend in
+                    HStack {
+                        Text(friend.fullName)
+                        Spacer()
+                        HStack(spacing: 10) {
+                            Text(String(format: "%.1f", friend.handicap))
+                                .foregroundColor(.secondary)
+                            if selectedFriends.contains(where: { $0.id == friend.id }) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.green)
+                            }
+                        }
+                        .frame(width: 70, alignment: .trailing)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        toggleFriendSelection(friend)
+                    }
+                    .contextMenu {
+                        Button(action: {
+                            friendToEdit = friend
+                        }) {
+                            Label("Edit", systemImage: "pencil")
+                        }
                     }
                 }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    if let index = selectedFriends.firstIndex(where: { $0.id == friend.id }) {
-                        selectedFriends.remove(at: index)
-                    } else {
-                        selectedFriends.append(friend)
-                    }
-                }
+                .onDelete(perform: deleteFriends)
             }
             .navigationTitle("Friends List")
             .navigationBarItems(trailing: Button(action: {
+                friendToEdit = nil
                 showingAddFriendSheet.toggle()
             }) {
                 Image(systemName: "plus")
             })
-            .sheet(isPresented: $showingAddFriendSheet) {
-                CreateGolferView(golfers: $selectedFriends, golferToEdit: .constant(nil))
-            }
-
+            
             if !selectedFriends.isEmpty {
                 Button(action: {
                     onDone()
@@ -59,11 +69,32 @@ struct FriendsListView: View {
                 .padding()
             }
         }
+        .sheet(isPresented: $showingAddFriendSheet) {
+            CreateFriendView(viewModel: viewModel, friendToEdit: $friendToEdit)
+        }
+        .onChange(of: friendToEdit) { _ in
+            showingAddFriendSheet = friendToEdit != nil
+        }
         .onAppear {
             if let user = authViewModel.currentUser {
                 viewModel.setUserId(user.id)
                 viewModel.fetchFriends()
             }
+        }
+    }
+
+    private func toggleFriendSelection(_ friend: Golfer) {
+        if let index = selectedFriends.firstIndex(where: { $0.id == friend.id }) {
+            selectedFriends.remove(at: index)
+        } else {
+            selectedFriends.append(friend)
+        }
+    }
+
+    private func deleteFriends(at offsets: IndexSet) {
+        for index in offsets {
+            let friend = viewModel.friends[index]
+            viewModel.removeFriend(friend)
         }
     }
 }

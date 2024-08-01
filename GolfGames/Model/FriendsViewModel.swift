@@ -44,8 +44,11 @@ class FriendsViewModel: ObservableObject {
         }
     }
 
-    func addFriend(fullName: String, ghinNumber: Int?, handicap: Float) {
-        guard let userId = userId else { return }
+    func addFriend(fullName: String, ghinNumber: Int?, handicap: Float, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let userId = userId else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User ID not set"])))
+            return
+        }
 
         let newFriend = Golfer(fullName: fullName, handicap: handicap, ghinNumber: ghinNumber)
         
@@ -53,13 +56,16 @@ class FriendsViewModel: ObservableObject {
             try db.collection("users").document(userId).collection("friends").document(newFriend.id).setData(from: newFriend) { error in
                 if let error = error {
                     print("Error adding friend: \(error.localizedDescription)")
+                    completion(.failure(error))
                 } else {
                     self.friends.append(newFriend)
                     print("Friend added successfully: \(newFriend.fullName)")
+                    completion(.success(()))
                 }
             }
         } catch {
             print("Error adding friend: \(error.localizedDescription)")
+            completion(.failure(error))
         }
     }
 
@@ -75,4 +81,31 @@ class FriendsViewModel: ObservableObject {
             }
         }
     }
+    
+    func updateFriend(_ friend: Golfer, fullName: String, ghinNumber: Int?, handicap: Float, completion: @escaping (Result<Void, Error>) -> Void) {
+            guard let userId = userId else {
+                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User ID not set"])))
+                return
+            }
+
+            let updatedFriend = Golfer(id: friend.id, fullName: fullName, handicap: handicap, ghinNumber: ghinNumber)
+            
+            do {
+                try db.collection("users").document(userId).collection("friends").document(friend.id).setData(from: updatedFriend) { error in
+                    if let error = error {
+                        print("Error updating friend: \(error.localizedDescription)")
+                        completion(.failure(error))
+                    } else {
+                        if let index = self.friends.firstIndex(where: { $0.id == friend.id }) {
+                            self.friends[index] = updatedFriend
+                        }
+                        print("Friend updated successfully: \(updatedFriend.fullName)")
+                        completion(.success(()))
+                    }
+                }
+            } catch {
+                print("Error updating friend: \(error.localizedDescription)")
+                completion(.failure(error))
+            }
+        }
 }
