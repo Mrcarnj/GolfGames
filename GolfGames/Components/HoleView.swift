@@ -181,14 +181,15 @@ struct HoleView: View {
                                     .keyboardType(.numberPad)
                                     .focused($focusedGolferId, equals: golfer.id)
                                     .frame(width: 50, height: 50)
-                                    .background(Color.gray.opacity(0.2))
+                                    .background(colorScheme == .dark ? Color.white : Color.gray.opacity(0.2))
+                                    .foregroundColor(colorScheme == .dark ? .black : .primary)
                                     .cornerRadius(5)
                                     .multilineTextAlignment(.center)
 
                                     let isStrokeHole = roundViewModel.strokeHoles[golfer.id]?.contains(hole?.holeNumber ?? 0) ?? false
                                     if isStrokeHole {
                                         Circle()
-                                            .fill(colorScheme == .dark ? Color.white : Color.black)
+                                            .fill(Color.black)
                                             .frame(width: 6, height: 6)
                                             .offset(x: -20, y: -17)
                                     }
