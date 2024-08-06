@@ -315,12 +315,40 @@ struct HoleView: View {
             roundViewModel.updateStrokePlayNetScores()
             
             let netStrokePlayScore = roundViewModel.netStrokePlayScores[currentHoleNumber]?[golferId] ?? scoreInt
-            let isStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            let isStrokePlayStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
             
-             print("Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.fullName ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Stroke Play Net Score: \(netStrokePlayScore), Stroke Play Stroke Hole: \(isStrokeHole)")
+            var logMessage = "Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.fullName ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Stroke Play Net Score: \(netStrokePlayScore), Stroke Play Stroke Hole: \(isStrokePlayStrokeHole)"
+            
+            if roundViewModel.isMatchPlay {
+                let isMatchPlayStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+                let matchPlayNetScore = isMatchPlayStrokeHole ? scoreInt - 1 : scoreInt
+                
+                roundViewModel.matchPlayNetScores[currentHoleNumber, default: [:]][golferId] = matchPlayNetScore
+                
+                logMessage += ", Match Play Net Score: \(matchPlayNetScore), Match Play Stroke Hole: \(isMatchPlayStrokeHole)"
+                
+                // Update match play status
+                roundViewModel.updateMatchPlayStatus(for: currentHoleNumber)
+            }
+            
+            print(logMessage)
+            
+            // Update the match play view model if it exists
+            if let matchPlayVM = roundViewModel.matchPlayViewModel {
+                matchPlayVM.updateScore(
+                    for: currentHoleNumber,
+                    player1Score: roundViewModel.grossScores[currentHoleNumber]?[roundViewModel.golfers[0].id] ?? 0,
+                    player2Score: roundViewModel.grossScores[currentHoleNumber]?[roundViewModel.golfers[1].id] ?? 0,
+                    player1HoleHandicap: roundViewModel.getHoleHandicap(for: currentHoleNumber, teeId: roundViewModel.golfers[0].tee?.id ?? ""),
+                    player2HoleHandicap: roundViewModel.getHoleHandicap(for: currentHoleNumber, teeId: roundViewModel.golfers[1].tee?.id ?? "")
+                )
+            }
         } else {
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
             roundViewModel.netStrokePlayScores[currentHoleNumber, default: [:]][golferId] = nil
+            if roundViewModel.isMatchPlay {
+                roundViewModel.matchPlayNetScores[currentHoleNumber, default: [:]][golferId] = nil
+            }
         }
     }
 

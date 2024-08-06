@@ -29,6 +29,7 @@ class RoundViewModel: ObservableObject {
     @Published var isMatchPlay: Bool = false // Track whether it's a match play game
     @Published var matchPlayStrokeHoles: [String: [Int]] = [:]
     @Published var matchPlayHandicap: Int = 0
+    @Published var matchPlayNetScores: [Int: [String: Int]] = [:]
 
     func beginRound(for user: User, additionalGolfers: [Golfer], isMatchPlay: Bool, completion: @escaping (String?, Error?, [String: Any]?) -> Void) {
         self.isMatchPlay = isMatchPlay
