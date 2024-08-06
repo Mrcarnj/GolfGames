@@ -16,13 +16,12 @@ class RoundViewModel: ObservableObject {
     @Published var grossScores: [Int: [String: Int]] = [:] // Nested dictionary to hold gross scores keyed by hole number and golfer ID
     @Published var netStrokePlayScores: [Int: [String: Int]] = [:] // Nested dictionary to hold net scores keyed by hole number and golfer ID
     @Published var pars: [Int: Int] = [:] // Dictionary to hold pars keyed by hole number
-    @Published var playingHandicaps: [String: Int] = [:] // Dictionary to hold playing handicaps keyed by golfer ID
+    @Published var courseHandicaps: [String: Int] = [:] // Dictionary to hold playing handicaps keyed by golfer ID
     @Published var strokeHoles: [String: [Int]] = [:] // Dictionary to hold stroke holes keyed by golfer ID
     @Published var roundId: String?
     @Published var recentRounds: [Round] = []
     @Published var golfers: [Golfer] = []
     @Published var currentHole: Int = 1 // Track the current hole
-    @Published var courseHandicaps: [String: Int] = [:] // Dictionary to hold course handicaps keyed by golfer ID
     @Published var holes: [String: [Hole]] = [:] // Dictionary with teeId as key and array of Holes as value
     @Published var matchPlayViewModel: MatchPlayViewModel?
     @Published var matchPlayStatus: String?
@@ -60,7 +59,7 @@ class RoundViewModel: ObservableObject {
         )
 
         if isMatchPlay && golfers.count >= 2 {
-            initializeMatchPlayGame()
+            initializeMatchPlay()
         }
 
         do {
@@ -125,7 +124,7 @@ class RoundViewModel: ObservableObject {
                     courseRating: self.selectedTee?.course_rating ?? 72.0,
                     par: self.selectedTee?.course_par ?? 72
                 )
-                self.playingHandicaps[golfer.id] = golferHandicap
+                self.courseHandicaps[golfer.id] = golferHandicap
 
                 let golferStrokeHoles = holeHandicaps.sorted { $0.value < $1.value }.prefix(golferHandicap).map { $0.key }
                 self.strokeHoles[golfer.id] = golferStrokeHoles
@@ -306,11 +305,11 @@ class RoundViewModel: ObservableObject {
         let golfer1 = golfers[0]
         let golfer2 = golfers[1]
         
-        print("Debug: Golfer 1 - \(golfer1.fullName), Handicap: \(golfer1.handicap), Playing Handicap: \(golfer1.playingHandicap ?? 0)")
-        print("Debug: Golfer 2 - \(golfer2.fullName), Handicap: \(golfer2.handicap), Playing Handicap: \(golfer2.playingHandicap ?? 0)")
+        print("Debug: Golfer 1 - \(golfer1.fullName), Handicap: \(golfer1.handicap), Course Handicap: \(golfer1.courseHandicap ?? 0)")
+        print("Debug: Golfer 2 - \(golfer2.fullName), Handicap: \(golfer2.handicap), Course Handicap: \(golfer2.courseHandicap ?? 0)")
         
-        let handicap1 = golfer1.playingHandicap ?? Int(golfer1.handicap)
-        let handicap2 = golfer2.playingHandicap ?? Int(golfer2.handicap)
+        let handicap1 = golfer1.courseHandicap ?? Int(golfer1.handicap)
+        let handicap2 = golfer2.courseHandicap ?? Int(golfer2.handicap)
         
         let matchPlayHandicap = abs(handicap1 - handicap2)
         
@@ -319,19 +318,40 @@ class RoundViewModel: ObservableObject {
         return matchPlayHandicap
     }
     
-    private func initializeMatchPlayGame() {
-        guard golfers.count >= 2 else { return }
-        
-        let player1 = golfers[0]
-        let player2 = golfers[1]
-        let matchPlayHandicap = calculateMatchPlayHandicap()
-        
-        matchPlayViewModel = MatchPlayViewModel(
-            player1Id: player1.id,
-            player2Id: player2.id,
-            matchPlayHandicap: matchPlayHandicap
-        )
-    }
+    func initializeMatchPlay() {
+    guard isMatchPlay && golfers.count == 2 else { return }
+    
+    let player1 = golfers[0]
+    let player2 = golfers[1]
+    
+    // Ensure we're using the correct playing handicaps
+    let player1Handicap = courseHandicaps[player1.id] ?? 0
+    let player2Handicap = courseHandicaps[player2.id] ?? 0
+    
+    print("Debug: Initializing Match Play")
+    print("Debug: \(player1.fullName) - Playing Handicap: \(player1Handicap)")
+    print("Debug: \(player2.fullName) - Playing Handicap: \(player2Handicap)")
+    
+    let matchPlayHandicap = abs(player1Handicap - player2Handicap)
+    
+    print("Debug: Calculated Match Play Handicap: \(matchPlayHandicap)")
+    
+    matchPlayViewModel = MatchPlayViewModel(
+        player1Id: player1.id,
+        player2Id: player2.id,
+        matchPlayHandicap: matchPlayHandicap
+    )
+    
+    // Set up match play stroke holes
+    let lowerHandicapPlayer = player1Handicap < player2Handicap ? player1 : player2
+    let higherHandicapPlayer = player1Handicap < player2Handicap ? player2 : player1
+    
+    matchPlayStrokeHoles[lowerHandicapPlayer.id] = []
+    matchPlayStrokeHoles[higherHandicapPlayer.id] = strokeHoles[higherHandicapPlayer.id]?.prefix(matchPlayHandicap).map { $0 } ?? []
+    
+    print("Debug: Match Play Stroke Holes - \(lowerHandicapPlayer.fullName): \(matchPlayStrokeHoles[lowerHandicapPlayer.id] ?? [])")
+    print("Debug: Match Play Stroke Holes - \(higherHandicapPlayer.fullName): \(matchPlayStrokeHoles[higherHandicapPlayer.id] ?? [])")
+}
     
     func updateMatchPlayStatus(for holeNumber: Int) {
         guard isMatchPlay, let matchPlayVM = matchPlayViewModel, golfers.count >= 2 else { return }
@@ -349,6 +369,6 @@ class RoundViewModel: ObservableObject {
             player1HoleHandicap: player1HoleHandicap,
             player2HoleHandicap: player2HoleHandicap
         )
-        matchPlayVM.updateMatchStatus(for: holeNumber)
+        matchPlayVM.updateMatchStatus()
     }
 }

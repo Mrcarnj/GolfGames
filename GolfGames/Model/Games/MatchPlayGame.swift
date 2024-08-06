@@ -16,6 +16,7 @@ struct MatchPlayGame: Identifiable, Codable {
     var isComplete: Bool
     var finalScore: String?
     var holeResults: [Int: HoleResult] // Store the result of each hole
+    var currentHole: Int = 1
     
     struct HoleResult: Codable {
         let winner: String? // "player1", "player2", or nil for halved
@@ -33,9 +34,9 @@ struct MatchPlayGame: Identifiable, Codable {
         self.holeResults = [:]
     }
     
-    mutating func updateScore(for hole: Int, player1Score: Int, player2Score: Int) {
-        let player1NetScore = player1Score - (hole <= matchPlayHandicap ? 1 : 0)
-        let player2NetScore = player2Score
+    mutating func updateScore(for hole: Int, player1Score: Int, player2Score: Int, player1HoleHandicap: Int, player2HoleHandicap: Int) {
+        let player1NetScore = player1Score - (player1HoleHandicap <= matchPlayHandicap ? 1 : 0)
+        let player2NetScore = player2Score - (player2HoleHandicap <= -matchPlayHandicap ? 1 : 0)
         
         let winner: String?
         if player1NetScore < player2NetScore {
@@ -50,6 +51,7 @@ struct MatchPlayGame: Identifiable, Codable {
         
         holeResults[hole] = HoleResult(winner: winner, player1NetScore: player1NetScore, player2NetScore: player2NetScore)
         
+        currentHole = hole + 1
         checkForWin(hole: hole)
     }
     
@@ -59,5 +61,32 @@ struct MatchPlayGame: Identifiable, Codable {
             isComplete = true
             finalScore = "\(abs(currentScore))&\(holesRemaining)"
         }
+    }
+    
+    func isStrokeHole(for playerId: String, holeHandicap: Int) -> Bool {
+        if playerId == player1Id {
+            return holeHandicap <= matchPlayHandicap
+        } else if playerId == player2Id {
+            return holeHandicap <= -matchPlayHandicap
+        }
+        return false
+    }
+    
+    func getMatchStatus() -> (String?, Int) {
+        if currentScore > 0 {
+            return ("Player 1", currentScore)
+        } else if currentScore < 0 {
+            return ("Player 2", -currentScore)
+        } else {
+            return (nil, 0)
+        }
+    }
+    
+    var player1Score: Int {
+        return max(currentScore, 0)
+    }
+    
+    var player2Score: Int {
+        return max(-currentScore, 0)
     }
 }

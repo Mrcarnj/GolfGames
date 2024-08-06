@@ -18,8 +18,12 @@ struct GameSelectionView: View {
         VStack {
             Toggle("Match Play", isOn: $sharedViewModel.isMatchPlay)
                 .padding()
-                .onChange(of: sharedViewModel.isMatchPlay) { _ in
-                    printDebugInfo()
+                .onChange(of: sharedViewModel.isMatchPlay) { newValue in
+                    if newValue {
+                        roundViewModel.initializeMatchPlay()
+                    } else {
+                        roundViewModel.matchPlayViewModel = nil
+                    }
                 }
 
             if sharedViewModel.isMatchPlay && sharedViewModel.golfers.count == 2 {
@@ -58,6 +62,6 @@ struct GameSelectionView: View {
     private func printDebugInfo() {
         print("Debug: GameSelectionView - Match Play: \(sharedViewModel.isMatchPlay)")
         print("Debug: GameSelectionView - Match Play Handicap: \(sharedViewModel.matchPlayHandicap)")
-        print("Debug: GameSelectionView - Golfers: \(sharedViewModel.golfers.map { "\($0.fullName) (Handicap: \($0.handicap), Playing Handicap: \($0.playingHandicap ?? 0))" })")
+        print("Debug: GameSelectionView - Golfers: \(sharedViewModel.golfers.map { "\($0.fullName) (Handicap: \($0.handicap), Course Handicap: \($0.courseHandicap ?? 0))" })")
     }
 }

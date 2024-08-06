@@ -36,11 +36,11 @@ struct TeeSelectionView: View {
                                 .fontWeight(.regular)
                             Text("\(String(format: "%.1f", golfer.handicap))")
                                 .font(.headline)
-                            if let playingHandicap = sharedViewModel.playingHandicaps[golfer.id] {
+                            if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
                                 Text(" CH:")
                                     .font(.headline)
                                     .fontWeight(.regular)
-                                Text("\(playingHandicap)")
+                                Text("\(courseHandicap)")
                                     .font(.headline)
                             }
                         }
@@ -64,21 +64,21 @@ struct TeeSelectionView: View {
                                             courseRating: tee.course_rating,
                                             par: tee.course_par
                                         )
-                                        sharedViewModel.playingHandicaps[golfer.id] = courseHandicap
+                                        sharedViewModel.courseHandicaps[golfer.id] = courseHandicap
                                         
-                                        // Update the golfer's tee and playingHandicap
+                                        // Update the golfer's tee and courseHandicap
                                         if let index = sharedViewModel.golfers.firstIndex(where: { $0.id == golfer.id }) {
                                             sharedViewModel.golfers[index].tee = tee
-                                            sharedViewModel.golfers[index].playingHandicap = courseHandicap
+                                            sharedViewModel.golfers[index].courseHandicap = courseHandicap
                                         }
                                     }
                                   //  print("\(golfer.fullName) selected \(tee.tee_name)")
                                 }
                             ),
-                            playingHandicap: Binding(
-                                get: { sharedViewModel.playingHandicaps[golfer.id] ?? 0 },
+                            courseHandicap: Binding(
+                                get: { sharedViewModel.courseHandicaps[golfer.id] ?? 0 },
                                 set: { newValue in
-                                    sharedViewModel.playingHandicaps[golfer.id] = newValue
+                                    sharedViewModel.courseHandicaps[golfer.id] = newValue
                                 }
                             ),
                             currentGolfer: $golfer
@@ -194,7 +194,7 @@ struct TeeSelectionView: View {
     private func calculateMatchPlayStrokeHoles() {
         guard roundViewModel.golfers.count == 2 else { return }
         
-        let sortedGolfers = roundViewModel.golfers.sorted { ($0.playingHandicap ?? 0) < ($1.playingHandicap ?? 0) }
+        let sortedGolfers = roundViewModel.golfers.sorted { ($0.courseHandicap ?? 0) < ($1.courseHandicap ?? 0) }
         let lowerHandicapGolfer = sortedGolfers[0]
         let higherHandicapGolfer = sortedGolfers[1]
         
@@ -243,12 +243,12 @@ struct TeeSelectionView: View {
                     courseRating: firstTee.course_rating,
                     par: firstTee.course_par
                 )
-                sharedViewModel.playingHandicaps[golfer.id] = courseHandicap
+                sharedViewModel.courseHandicaps[golfer.id] = courseHandicap
                 
-                // Update the golfer's tee and playingHandicap in the sharedViewModel
+                // Update the golfer's tee and courseHandicap in the sharedViewModel
                 if let index = sharedViewModel.golfers.firstIndex(where: { $0.id == golfer.id }) {
                     sharedViewModel.golfers[index].tee = firstTee
-                    sharedViewModel.golfers[index].playingHandicap = courseHandicap
+                    sharedViewModel.golfers[index].courseHandicap = courseHandicap
                 }
             }
         }
@@ -273,7 +273,7 @@ struct TeeSelectionView: View {
                     par: tee.course_par
                 )
                 roundViewModel.golfers[index].tee = tee
-                roundViewModel.golfers[index].playingHandicap = courseHandicap
+                roundViewModel.golfers[index].courseHandicap = courseHandicap // Changed from playingHandicap to courseHandicap
                 roundViewModel.courseHandicaps[golfer.id] = courseHandicap
                 
                 print("Debug: Set course handicap for \(golfer.fullName): \(courseHandicap)")

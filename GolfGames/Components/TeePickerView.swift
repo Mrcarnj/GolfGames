@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TeePickerView: View {
     @Binding var selectedTee: Tee?
-    @Binding var playingHandicap: Int
+    @Binding var courseHandicap: Int
     @Binding var currentGolfer: Golfer
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @EnvironmentObject var sharedViewModel: SharedViewModel
@@ -28,19 +28,20 @@ struct TeePickerView: View {
         .font(.headline)
         .onChange(of: selectedTee) { newValue in
             if let tee = newValue {
-                playingHandicap = HandicapCalculator.calculateCourseHandicap(
+                courseHandicap = HandicapCalculator.calculateCourseHandicap(
                     handicapIndex: currentGolfer.handicap,
                     slopeRating: tee.slope_rating,
                     courseRating: tee.course_rating,
                     par: tee.course_par
                 )
                 sharedViewModel.golferTeeSelections[currentGolfer.id] = tee.id
-                sharedViewModel.playingHandicaps[currentGolfer.id] = playingHandicap
-               // print("Selected tee for golfer \(currentGolfer.fullName): \(tee.tee_name)")
+                sharedViewModel.courseHandicaps[currentGolfer.id] = courseHandicap
+                print("Debug: Set course handicap for \(currentGolfer.fullName): \(courseHandicap)")
+                // print("Selected tee for golfer \(currentGolfer.fullName): \(tee.tee_name)")
             } else {
-                playingHandicap = 0
+                courseHandicap = 0
                 sharedViewModel.golferTeeSelections.removeValue(forKey: currentGolfer.id)
-                sharedViewModel.playingHandicaps.removeValue(forKey: currentGolfer.id)
+                sharedViewModel.courseHandicaps.removeValue(forKey: currentGolfer.id)
             }
         }
     }

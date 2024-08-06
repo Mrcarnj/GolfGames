@@ -10,7 +10,7 @@ import SwiftUI
 class SharedViewModel: ObservableObject {
     @Published var golfers: [Golfer] = []
     @Published var selectedTees: [String: Tee?] = [:]
-    @Published var playingHandicaps: [String: Int] = [:]
+    @Published var courseHandicaps: [String: Int] = [:]
     @Published var selectedCourse: Course?
     @Published var roundId: String?
     @Published var currentUserGolfer: Golfer?
@@ -43,7 +43,7 @@ class SharedViewModel: ObservableObject {
     func resetForNewRound() {
         golfers = []
         selectedTees = [:]
-        playingHandicaps = [:]
+        courseHandicaps = [:]
         selectedCourse = nil
         roundId = nil
         golferTeeSelections = [:]
@@ -63,7 +63,7 @@ class SharedViewModel: ObservableObject {
             matchPlayHandicap = 0
             return
         }
-        let handicaps = golfers.compactMap { $0.playingHandicap }
+        let handicaps = golfers.compactMap { $0.courseHandicap }
         guard handicaps.count == 2 else {
             matchPlayHandicap = 0
             return

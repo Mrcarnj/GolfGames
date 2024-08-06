@@ -16,16 +16,16 @@ struct Golfer: Identifiable, Equatable, Codable, Hashable {
     var tee: Tee?
     var ghinNumber: Int?
     var isChecked: Bool
-    var playingHandicap: Int?
+    var courseHandicap: Int?
 
-    init(id: String = UUID().uuidString, fullName: String, handicap: Float, tee: Tee? = nil, ghinNumber: Int? = nil, isChecked: Bool = false, playingHandicap: Int? = nil) {
+    init(id: String = UUID().uuidString, fullName: String, handicap: Float, tee: Tee? = nil, ghinNumber: Int? = nil, isChecked: Bool = false, courseHandicap: Int? = nil) {
         self.id = id
         self.fullName = fullName
         self.handicap = handicap
         self.tee = tee
         self.ghinNumber = ghinNumber
         self.isChecked = isChecked
-        self.playingHandicap = playingHandicap
+        self.courseHandicap = courseHandicap
     }
 
     static func == (lhs: Golfer, rhs: Golfer) -> Bool {
