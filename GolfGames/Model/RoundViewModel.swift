@@ -36,6 +36,8 @@ class RoundViewModel: ObservableObject {
     @Published var holesPlayed: Int = 0
     private var lastUpdatedHole: Int = 0
     private var talliedHoles: Set<Int> = []
+    @Published var matchWinner: String?
+    @Published var winningScore: String?
     
     func beginRound(for user: User, additionalGolfers: [Golfer], isMatchPlay: Bool, completion: @escaping (String?, Error?, [String: Any]?) -> Void) {
         self.isMatchPlay = isMatchPlay
@@ -90,7 +92,7 @@ class RoundViewModel: ObservableObject {
             print("Error saving round: \(error.localizedDescription)")
             completion(nil, error, nil)
         }
-
+        
         holeWinners = [:]
         holeTallies = [:]
         talliedHoles = []
@@ -337,10 +339,10 @@ class RoundViewModel: ObservableObject {
     }
     
     func updateMatchPlayStatus(for currentHoleNumber: Int) {
-        guard isMatchPlay, 
-              matchPlayViewModel != nil, 
-              golfers.count >= 2, 
-              currentHoleNumber > 0,
+        guard isMatchPlay,
+                matchPlayViewModel != nil,
+                golfers.count >= 2,
+                currentHoleNumber > 0,
               currentHoleNumber > lastUpdatedHole,
               allScoresEntered(for: currentHoleNumber) else {
             print("Debug: Guard condition failed in updateMatchPlayStatus")
@@ -380,9 +382,9 @@ class RoundViewModel: ObservableObject {
         print("Match Status: \(matchStatus)")
         print("Current Hole: \(currentHoleNumber + 1)")
         print("-----------------------------")
-
+        
         lastUpdatedHole = currentHoleNumber
-
+        
         if player1NetScore < player2NetScore {
             holeWinners[currentHoleNumber] = player1.fullName
         } else if player2NetScore < player1NetScore {
@@ -406,20 +408,27 @@ class RoundViewModel: ObservableObject {
         print("Current Hole: 1")
         print("-----------------------------")
     }
-
+    
     func updateTallies(for holeNumber: Int) {
-        guard !talliedHoles.contains(holeNumber), let winner = holeWinners[holeNumber] else { return }
-        
-        if winner == "Halved" {
-            holeTallies["Halved", default: 0] += 1
-        } else {
-            holeTallies[winner, default: 0] += 1
+        guard let player1Score = matchPlayNetScores[holeNumber]?[golfers[0].id],
+              let player2Score = matchPlayNetScores[holeNumber]?[golfers[1].id] else {
+            return
         }
-        talliedHoles.insert(holeNumber)
         
-        updateMatchStatus()
+        if player1Score < player2Score {
+            holeTallies[golfers[0].fullName, default: 0] += 1
+            holeWinners[holeNumber] = golfers[0].fullName
+        } else if player2Score < player1Score {
+            holeTallies[golfers[1].fullName, default: 0] += 1
+            holeWinners[holeNumber] = golfers[1].fullName
+        } else {
+            holeTallies["Halved", default: 0] += 1
+            holeWinners[holeNumber] = "Halved"
+        }
+        
+        talliedHoles.insert(holeNumber)
     }
-
+    
     func resetTallyForHole(_ holeNumber: Int) {
         guard talliedHoles.contains(holeNumber), let winner = holeWinners[holeNumber] else { return }
         
@@ -430,9 +439,14 @@ class RoundViewModel: ObservableObject {
         }
         talliedHoles.remove(holeNumber)
     }
-
+    
     func updateMatchStatus() {
         guard isMatchPlay && golfers.count >= 2 else { return }
+        
+        // If a winner has already been determined, don't update anything
+        if matchWinner != nil {
+            return
+        }
         
         let player1 = golfers[0]
         let player2 = golfers[1]
@@ -442,6 +456,37 @@ class RoundViewModel: ObservableObject {
         let halvedHoles = holeTallies["Halved", default: 0]
         
         matchScore = player1Wins - player2Wins
-        holesPlayed = player1Wins + player2Wins + halvedHoles
+        holesPlayed = min(player1Wins + player2Wins + halvedHoles, 18)
+        
+        let remainingHoles = 18 - holesPlayed
+        
+        if abs(matchScore) > remainingHoles {
+            matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
+            winningScore = "\(abs(matchScore))&\(remainingHoles)"
+        } else if holesPlayed == 18 {
+            if matchScore > 0 {
+                matchWinner = player1.fullName
+                winningScore = "\(matchScore)UP"
+            } else if matchScore < 0 {
+                matchWinner = player2.fullName
+                winningScore = "\(abs(matchScore))UP"
+            } else {
+                matchWinner = "Tie"
+                winningScore = "All Square"
+            }
+        }
+    }
+    
+    func recalculateTallies(upToHole: Int) {
+        guard isMatchPlay && golfers.count >= 2 else { return }
+        
+        holeTallies = [:]
+        talliedHoles = []
+        
+        for holeNumber in 1...upToHole {
+            updateTallies(for: holeNumber)
+        }
+        
+        updateMatchStatus()
     }
 }

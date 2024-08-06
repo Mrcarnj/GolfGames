@@ -102,8 +102,7 @@ struct HoleView: View {
             HStack {
                 if currentHoleIndex > 0 {
                     Button(action: {
-                        let previousHoleIndex = currentHoleIndex - 1
-                        currentHoleIndex = previousHoleIndex
+                        currentHoleIndex -= 1
                         updateScoresForCurrentHole()
                     }) {
                         HStack {
@@ -119,9 +118,8 @@ struct HoleView: View {
                 
                 if currentHoleIndex < singleRoundViewModel.holes.count - 1 {
                     Button(action: {
-                        if roundViewModel.isMatchPlay && roundViewModel.allScoresEntered(for: currentHoleIndex + 1) {
-                            roundViewModel.updateMatchPlayStatus(for: currentHoleIndex + 1)
-                            roundViewModel.updateTallies(for: currentHoleIndex + 1)
+                        if roundViewModel.isMatchPlay {
+                            roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
                         }
                         currentHoleIndex += 1
                         updateScoresForCurrentHole()
@@ -237,7 +235,7 @@ struct HoleView: View {
                     checkScores()
                 }
                 .padding()
-
+                
                 if showMissingScores && roundViewModel.allScoresEntered(for: currentHoleIndex + 1) {
                     NavigationLink(destination: ScorecardView()
                         .environmentObject(roundViewModel)
@@ -252,40 +250,41 @@ struct HoleView: View {
                         .padding()
                 }
             }
-            
-            if roundViewModel.isMatchPlay {
-                HStack {
-                    ForEach(roundViewModel.golfers.prefix(2)) { golfer in
-                        VStack {
-                            Text(golfer.fullName)
-                                .font(.subheadline)
-                            Text("\(roundViewModel.holeTallies[golfer.fullName, default: 0])")
-                                .font(.headline)
-                        }
-                        .padding(.horizontal)
-                    }
-                    VStack {
-                        Text("Halved")
-                            .font(.subheadline)
-                        Text("\(roundViewModel.holeTallies["Halved", default: 0])")
-                            .font(.headline)
-                    }
-                    .padding(.horizontal)
-                }
-                .padding()
-            }
+// THIS SECTION IS FOR DEBUGGING TALLY COUNT FOR MATCH PLAY VERSION 1
+//            if roundViewModel.isMatchPlay {
+//                HStack {
+//                    ForEach(roundViewModel.golfers.prefix(2)) { golfer in
+//                        VStack {
+//                            Text(golfer.fullName)
+//                                .font(.subheadline)
+//                            Text("\(roundViewModel.holeTallies[golfer.fullName, default: 0])")
+//                                .font(.headline)
+//                        }
+//                        .padding(.horizontal)
+//                    }
+//                    VStack {
+//                        Text("Halved")
+//                            .font(.subheadline)
+//                        Text("\(roundViewModel.holeTallies["Halved", default: 0])")
+//                            .font(.headline)
+//                    }
+//                    .padding(.horizontal)
+//                }
+//                .padding()
+//            }
         }
         .gesture(
             DragGesture()
                 .onEnded { gesture in
                     let threshold: CGFloat = 50
                     if gesture.translation.width > threshold && currentHoleIndex > 0 {
+                        // Swipe right (previous hole)
                         currentHoleIndex -= 1
                         updateScoresForCurrentHole()
                     } else if gesture.translation.width < -threshold && currentHoleIndex < singleRoundViewModel.holes.count - 1 {
-                        if roundViewModel.isMatchPlay && roundViewModel.allScoresEntered(for: currentHoleIndex + 1) {
-                            roundViewModel.updateMatchPlayStatus(for: currentHoleIndex + 1)
-                            roundViewModel.updateTallies(for: currentHoleIndex + 1)
+                        // Swipe left (next hole)
+                        if roundViewModel.isMatchPlay {
+                            roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
                         }
                         currentHoleIndex += 1
                         updateScoresForCurrentHole()
@@ -371,7 +370,7 @@ struct HoleView: View {
                 roundViewModel.resetTallyForHole(currentHoleNumber)
             }
         }
-
+        
         if roundViewModel.isMatchPlay && roundViewModel.allScoresEntered(for: currentHoleNumber) {
             roundViewModel.updateMatchPlayStatus(for: currentHoleNumber)
         }
@@ -421,6 +420,10 @@ struct HoleView: View {
             return ""
         }
         
+        if let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore {
+            return "\(winner) has won \(score)"
+        }
+        
         let player1 = roundViewModel.golfers[0]
         let player2 = roundViewModel.golfers[1]
         
@@ -429,7 +432,13 @@ struct HoleView: View {
         } else {
             let leadingPlayer = roundViewModel.matchScore > 0 ? player1.fullName : player2.fullName
             let absScore = abs(roundViewModel.matchScore)
-            return "\(leadingPlayer) \(absScore)UP thru \(roundViewModel.holesPlayed)"
+            let remainingHoles = 18 - roundViewModel.holesPlayed
+            
+            if absScore == remainingHoles {
+                return "\(leadingPlayer) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+            } else {
+                return "\(leadingPlayer) \(absScore)UP thru \(roundViewModel.holesPlayed)"
+            }
         }
     }
 }
