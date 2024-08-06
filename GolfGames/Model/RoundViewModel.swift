@@ -29,7 +29,14 @@ class RoundViewModel: ObservableObject {
     @Published var matchPlayStrokeHoles: [String: [Int]] = [:]
     @Published var matchPlayHandicap: Int = 0
     @Published var matchPlayNetScores: [Int: [String: Int]] = [:]
-
+    @Published var previousHoleWinner: String?
+    @Published var holeWinners: [Int: String] = [:]
+    @Published var holeTallies: [String: Int] = [:]
+    @Published var matchScore: Int = 0
+    @Published var holesPlayed: Int = 0
+    private var lastUpdatedHole: Int = 0
+    private var talliedHoles: Set<Int> = []
+    
     func beginRound(for user: User, additionalGolfers: [Golfer], isMatchPlay: Bool, completion: @escaping (String?, Error?, [String: Any]?) -> Void) {
         self.isMatchPlay = isMatchPlay
         print("Beginning round...")
@@ -40,16 +47,16 @@ class RoundViewModel: ObservableObject {
             completion(nil, nil, nil)
             return
         }
-
+        
         print("Course and tee selected: \(course.name), \(tee.tee_name)")
-
+        
         self.golfers = [Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)] + additionalGolfers
         print("Golfers for this round: \(self.golfers.map { $0.fullName })")
-
+        
         let roundGolfers = self.golfers.map { golfer in
             Round.Golfer(id: golfer.id, fullName: golfer.fullName, handicap: golfer.handicap)
         }
-
+        
         let round = Round(
             courseId: courseId,
             courseName: course.name,
@@ -57,16 +64,17 @@ class RoundViewModel: ObservableObject {
             golfers: roundGolfers,
             date: Date()
         )
-
+        
         if isMatchPlay && golfers.count >= 2 {
             initializeMatchPlay()
+            initializeMatchPlayStatus() // Call this here
         }
-
+        
         do {
             let db = Firestore.firestore()
             let roundsRef = db.collection("users").document(user.id).collection("rounds")
             let roundRef = try roundsRef.addDocument(from: round)
-
+            
             roundRef.getDocument { (document, error) in
                 if let document = document, document.exists {
                     print("Round saved with ID: \(document.documentID)")
@@ -82,27 +90,31 @@ class RoundViewModel: ObservableObject {
             print("Error saving round: \(error.localizedDescription)")
             completion(nil, error, nil)
         }
-    }
 
+        holeWinners = [:]
+        holeTallies = [:]
+        talliedHoles = []
+    }
+    
     func fetchPars(for courseId: String, teeId: String, user: User, completion: @escaping ([Int: Int]) -> Void) {
         let db = Firestore.firestore()
         let holesRef = db.collection("courses").document(courseId).collection("Tees").document(teeId).collection("Holes")
-
+        
         print("Fetching pars for course: \(courseId), tee: \(teeId)")
-
+        
         holesRef.getDocuments { (snapshot, error) in
             if let error = error {
                 print("Error fetching hole data: \(error.localizedDescription)")
                 completion([:])
                 return
             }
-
+            
             guard let documents = snapshot?.documents else {
                 print("No hole documents found")
                 completion([:])
                 return
             }
-
+            
             var pars = [Int: Int]()
             var holeHandicaps = [Int: Int]()
             for document in documents {
@@ -116,7 +128,7 @@ class RoundViewModel: ObservableObject {
             print("Fetched pars: \(pars)")
             self.pars = pars
             completion(pars)
-
+            
             for golfer in self.golfers {
                 let golferHandicap = HandicapCalculator.calculateCourseHandicap(
                     handicapIndex: golfer.handicap,
@@ -125,15 +137,15 @@ class RoundViewModel: ObservableObject {
                     par: self.selectedTee?.course_par ?? 72
                 )
                 self.courseHandicaps[golfer.id] = golferHandicap
-
+                
                 let golferStrokeHoles = holeHandicaps.sorted { $0.value < $1.value }.prefix(golferHandicap).map { $0.key }
                 self.strokeHoles[golfer.id] = golferStrokeHoles
-
+                
                 print("Golfer: \(golfer.fullName), Playing Handicap: \(golferHandicap), Stroke Holes: \(golferStrokeHoles)")
             }
         }
     }
-
+    
     func calculateStrokePlayStrokeHoles(holes: [Hole]) {
         for golfer in golfers {
             guard let courseHandicap = courseHandicaps[golfer.id] else {
@@ -148,7 +160,7 @@ class RoundViewModel: ObservableObject {
             print("Course Handicap: \(courseHandicap)")
         }
     }
-
+    
     func updateStrokePlayNetScores() {
         for (holeNumber, scores) in grossScores {
             for (golferId, grossScore) in scores {
@@ -162,13 +174,13 @@ class RoundViewModel: ObservableObject {
     }
     
     func printDebugInfo() {
-            print("RoundViewModel Debug Info:")
-            print("Number of golfers: \(golfers.count)")
-            print("Golfers: \(golfers)")
-            print("Scores: \(grossScores)")
-            print("Stroke Holes: \(strokeHoles)")
-        }
-
+        print("RoundViewModel Debug Info:")
+        print("Number of golfers: \(golfers.count)")
+        print("Golfers: \(golfers)")
+        print("Scores: \(grossScores)")
+        print("Stroke Holes: \(strokeHoles)")
+    }
+    
     func fetchRecentRounds(for user: User) {
         let db = Firestore.firestore()
         db.collection("users").document(user.id).collection("rounds")
@@ -187,7 +199,7 @@ class RoundViewModel: ObservableObject {
                 print("Fetched recent rounds: \(self.recentRounds)")
             }
     }
-
+    
     func resetScoresForCurrentHole() {
         for golfer in golfers {
             let par = pars[currentHole] ?? 0
@@ -198,7 +210,7 @@ class RoundViewModel: ObservableObject {
             }
         }
     }
-
+    
     func nextHole() {
         saveScores()
         if currentHole < 18 {
@@ -206,7 +218,7 @@ class RoundViewModel: ObservableObject {
             resetScoresForCurrentHole()
         }
     }
-
+    
     func previousHole() {
         saveScores()
         if currentHole > 1 {
@@ -214,14 +226,14 @@ class RoundViewModel: ObservableObject {
             resetScoresForCurrentHole()
         }
     }
-
+    
     func saveScores() {
         guard let roundId = roundId else { return }
-
+        
         let db = Firestore.firestore()
         let grossScoresData = grossScores.mapValues { $0.mapValues { $0 } }
         let netScoresData = netStrokePlayScores.mapValues { $0.mapValues { $0 } }
-
+        
         db.collection("users").document("user_id").collection("rounds").document(roundId).setData(["gross_scores": grossScoresData, "net_scores": netScoresData], merge: true) { error in
             if let error = error {
                 print("Error saving scores: \(error.localizedDescription)")
@@ -230,45 +242,38 @@ class RoundViewModel: ObservableObject {
             }
         }
     }
-
+    
     func getMissingScores(for golferId: String) -> [Int] {
         return (1...18).filter { holeNumber in
             grossScores[holeNumber]?[golferId] == nil
         }
     }
-
-    func allScoresEntered() -> Bool {
-        for golfer in golfers {
-            if !getMissingScores(for: golfer.id).isEmpty {
-                return false
+    
+    func allScoresEntered(for holeNumber: Int? = nil) -> Bool {
+        if let hole = holeNumber {
+            // Check for a specific hole
+            return golfers.allSatisfy { golfer in
+                grossScores[hole]?[golfer.id] != nil
+            }
+        } else {
+            // Check all holes
+            return (1...18).allSatisfy { hole in
+                golfers.allSatisfy { golfer in
+                    grossScores[hole]?[golfer.id] != nil
+                }
             }
         }
-        return true
     }
     
     func updateScore(for hole: Int, golferId: String, score: Int) {
         grossScores[hole, default: [:]][golferId] = score
         updateStrokePlayNetScores()
         
-        if let matchPlayVM = matchPlayViewModel, golfers.count >= 2 {
-            let player1 = golfers[0]
-            let player2 = golfers[1]
-            let player1Score = grossScores[hole]?[player1.id] ?? 0
-            let player2Score = grossScores[hole]?[player2.id] ?? 0
-            
-            let player1HoleHandicap = getHoleHandicap(for: hole, teeId: player1.tee?.id ?? "")
-            let player2HoleHandicap = getHoleHandicap(for: hole, teeId: player2.tee?.id ?? "")
-            
-            matchPlayVM.updateScore(
-                for: hole,
-                player1Score: player1Score,
-                player2Score: player2Score,
-                player1HoleHandicap: player1HoleHandicap,
-                player2HoleHandicap: player2HoleHandicap
-            )
+        if isMatchPlay && allScoresEntered(for: hole) {
+            updateMatchPlayStatus(for: hole)
         }
     }
-
+    
     func getHoleHandicap(for hole: Int, teeId: String) -> Int {
         if let holes = self.holes[teeId],
            let holeData = holes.first(where: { $0.holeNumber == hole }) {
@@ -276,99 +281,167 @@ class RoundViewModel: ObservableObject {
         }
         return 0  // Default value if hole data is not found
     }
-
+    
     func isMatchPlayStrokeHole(for golferId: String, teeId: String, holeNumber: Int) -> Bool {
         guard let holesForTee = holes[teeId],
               let hole = holesForTee.first(where: { $0.holeNumber == holeNumber }),
               let matchPlayVM = matchPlayViewModel else { return false }
         return matchPlayVM.isStrokeHole(for: golferId, holeHandicap: hole.handicap)
     }
-
+    
     func getMatchPlayStatus() -> String? {
         return matchPlayViewModel?.matchStatus
     }
-
+    
     func isMatchPlayComplete() -> Bool {
         return matchPlayViewModel?.isMatchComplete() ?? false
     }
-
+    
     func getMatchPlayFinalScore() -> String? {
         return matchPlayViewModel?.getFinalScore()
     }
-
-    public func calculateMatchPlayHandicap() -> Int {
-        guard golfers.count == 2 else {
-            print("Debug: Not enough golfers for match play")
-            return 0
-        }
+    
+    func initializeMatchPlay() {
+        guard isMatchPlay && golfers.count == 2 else { return }
         
-        let golfer1 = golfers[0]
-        let golfer2 = golfers[1]
+        let player1 = golfers[0]
+        let player2 = golfers[1]
         
-        print("Debug: Golfer 1 - \(golfer1.fullName), Handicap: \(golfer1.handicap), Course Handicap: \(golfer1.courseHandicap ?? 0)")
-        print("Debug: Golfer 2 - \(golfer2.fullName), Handicap: \(golfer2.handicap), Course Handicap: \(golfer2.courseHandicap ?? 0)")
+        // Ensure we're using the correct playing handicaps
+        let player1Handicap = courseHandicaps[player1.id] ?? 0
+        let player2Handicap = courseHandicaps[player2.id] ?? 0
         
-        let handicap1 = golfer1.courseHandicap ?? Int(golfer1.handicap)
-        let handicap2 = golfer2.courseHandicap ?? Int(golfer2.handicap)
+        print("Debug: Initializing Match Play")
+        print("Debug: \(player1.fullName) - Playing Handicap: \(player1Handicap)")
+        print("Debug: \(player2.fullName) - Playing Handicap: \(player2Handicap)")
         
-        let matchPlayHandicap = abs(handicap1 - handicap2)
+        let matchPlayHandicap = abs(player1Handicap - player2Handicap)
         
         print("Debug: Calculated Match Play Handicap: \(matchPlayHandicap)")
         
-        return matchPlayHandicap
+        matchPlayViewModel = MatchPlayViewModel(
+            player1Id: player1.id,
+            player2Id: player2.id,
+            matchPlayHandicap: matchPlayHandicap
+        )
+        
+        // Set up match play stroke holes
+        let lowerHandicapPlayer = player1Handicap < player2Handicap ? player1 : player2
+        let higherHandicapPlayer = player1Handicap < player2Handicap ? player2 : player1
+        
+        matchPlayStrokeHoles[lowerHandicapPlayer.id] = []
+        matchPlayStrokeHoles[higherHandicapPlayer.id] = strokeHoles[higherHandicapPlayer.id]?.prefix(matchPlayHandicap).map { $0 } ?? []
+        
+        print("Debug: Match Play Stroke Holes - \(lowerHandicapPlayer.fullName): \(matchPlayStrokeHoles[lowerHandicapPlayer.id] ?? [])")
+        print("Debug: Match Play Stroke Holes - \(higherHandicapPlayer.fullName): \(matchPlayStrokeHoles[higherHandicapPlayer.id] ?? [])")
     }
     
-    func initializeMatchPlay() {
-    guard isMatchPlay && golfers.count == 2 else { return }
-    
-    let player1 = golfers[0]
-    let player2 = golfers[1]
-    
-    // Ensure we're using the correct playing handicaps
-    let player1Handicap = courseHandicaps[player1.id] ?? 0
-    let player2Handicap = courseHandicaps[player2.id] ?? 0
-    
-    print("Debug: Initializing Match Play")
-    print("Debug: \(player1.fullName) - Playing Handicap: \(player1Handicap)")
-    print("Debug: \(player2.fullName) - Playing Handicap: \(player2Handicap)")
-    
-    let matchPlayHandicap = abs(player1Handicap - player2Handicap)
-    
-    print("Debug: Calculated Match Play Handicap: \(matchPlayHandicap)")
-    
-    matchPlayViewModel = MatchPlayViewModel(
-        player1Id: player1.id,
-        player2Id: player2.id,
-        matchPlayHandicap: matchPlayHandicap
-    )
-    
-    // Set up match play stroke holes
-    let lowerHandicapPlayer = player1Handicap < player2Handicap ? player1 : player2
-    let higherHandicapPlayer = player1Handicap < player2Handicap ? player2 : player1
-    
-    matchPlayStrokeHoles[lowerHandicapPlayer.id] = []
-    matchPlayStrokeHoles[higherHandicapPlayer.id] = strokeHoles[higherHandicapPlayer.id]?.prefix(matchPlayHandicap).map { $0 } ?? []
-    
-    print("Debug: Match Play Stroke Holes - \(lowerHandicapPlayer.fullName): \(matchPlayStrokeHoles[lowerHandicapPlayer.id] ?? [])")
-    print("Debug: Match Play Stroke Holes - \(higherHandicapPlayer.fullName): \(matchPlayStrokeHoles[higherHandicapPlayer.id] ?? [])")
-}
-    
-    func updateMatchPlayStatus(for holeNumber: Int) {
-        guard isMatchPlay, let matchPlayVM = matchPlayViewModel, golfers.count >= 2 else { return }
+    func updateMatchPlayStatus(for currentHoleNumber: Int) {
+        guard isMatchPlay, 
+              matchPlayViewModel != nil, 
+              golfers.count >= 2, 
+              currentHoleNumber > 0,
+              currentHoleNumber > lastUpdatedHole,
+              allScoresEntered(for: currentHoleNumber) else {
+            print("Debug: Guard condition failed in updateMatchPlayStatus")
+            print("isMatchPlay: \(isMatchPlay)")
+            print("matchPlayViewModel: \(matchPlayViewModel != nil)")
+            print("golfers count: \(golfers.count)")
+            print("currentHoleNumber: \(currentHoleNumber)")
+            print("lastUpdatedHole: \(lastUpdatedHole)")
+            print("allScoresEntered: \(allScoresEntered(for: currentHoleNumber))")
+            return
+        }
         
-        let player1Score = grossScores[holeNumber]?[golfers[0].id] ?? 0
-        let player2Score = grossScores[holeNumber]?[golfers[1].id] ?? 0
+        let player1 = golfers[0]
+        let player2 = golfers[1]
+        let player1GrossScore = grossScores[currentHoleNumber]?[player1.id] ?? 0
+        let player2GrossScore = grossScores[currentHoleNumber]?[player2.id] ?? 0
+        let player1NetScore = matchPlayNetScores[currentHoleNumber]?[player1.id] ?? player1GrossScore
+        let player2NetScore = matchPlayNetScores[currentHoleNumber]?[player2.id] ?? player2GrossScore
         
-        let player1HoleHandicap = getHoleHandicap(for: holeNumber, teeId: golfers[0].tee?.id ?? "")
-        let player2HoleHandicap = getHoleHandicap(for: holeNumber, teeId: golfers[1].tee?.id ?? "")
+        let player1HoleHandicap = getHoleHandicap(for: currentHoleNumber, teeId: player1.tee?.id ?? "")
+        let player2HoleHandicap = getHoleHandicap(for: currentHoleNumber, teeId: player2.tee?.id ?? "")
         
-        matchPlayVM.updateScore(
-            for: holeNumber,
-            player1Score: player1Score,
-            player2Score: player2Score,
+        matchPlayViewModel?.updateScore(
+            for: currentHoleNumber,
+            player1Score: player1NetScore,
+            player2Score: player2NetScore,
             player1HoleHandicap: player1HoleHandicap,
             player2HoleHandicap: player2HoleHandicap
         )
-        matchPlayVM.updateMatchStatus()
+        
+        let matchStatus = matchPlayViewModel?.calculateMatchStatus() ?? "Unknown"
+        
+        print("Debug: Match Play Status Update")
+        print("Previous Hole \(currentHoleNumber):")
+        print("  \(player1.fullName): Gross \(player1GrossScore), Net \(player1NetScore)")
+        print("  \(player2.fullName): Gross \(player2GrossScore), Net \(player2NetScore)")
+        print("Match Status: \(matchStatus)")
+        print("Current Hole: \(currentHoleNumber + 1)")
+        print("-----------------------------")
+
+        lastUpdatedHole = currentHoleNumber
+
+        if player1NetScore < player2NetScore {
+            holeWinners[currentHoleNumber] = player1.fullName
+        } else if player2NetScore < player1NetScore {
+            holeWinners[currentHoleNumber] = player2.fullName
+        } else {
+            holeWinners[currentHoleNumber] = "Halved"
+        }
+    }
+    
+    func initializeMatchPlayStatus() {
+        guard isMatchPlay, let matchPlayVM = matchPlayViewModel, golfers.count >= 2 else { return }
+        
+        let player1 = golfers[0]
+        let player2 = golfers[1]
+        
+        print("Debug: Match Play Status Update")
+        print("Match Play Status Initialized")
+        print("  \(player1.fullName): No Score Entered Yet")
+        print("  \(player2.fullName): No Score Entered Yet")
+        print("Match Status: All Square")
+        print("Current Hole: 1")
+        print("-----------------------------")
+    }
+
+    func updateTallies(for holeNumber: Int) {
+        guard !talliedHoles.contains(holeNumber), let winner = holeWinners[holeNumber] else { return }
+        
+        if winner == "Halved" {
+            holeTallies["Halved", default: 0] += 1
+        } else {
+            holeTallies[winner, default: 0] += 1
+        }
+        talliedHoles.insert(holeNumber)
+        
+        updateMatchStatus()
+    }
+
+    func resetTallyForHole(_ holeNumber: Int) {
+        guard talliedHoles.contains(holeNumber), let winner = holeWinners[holeNumber] else { return }
+        
+        if winner == "Halved" {
+            holeTallies["Halved", default: 0] -= 1
+        } else {
+            holeTallies[winner, default: 0] -= 1
+        }
+        talliedHoles.remove(holeNumber)
+    }
+
+    func updateMatchStatus() {
+        guard isMatchPlay && golfers.count >= 2 else { return }
+        
+        let player1 = golfers[0]
+        let player2 = golfers[1]
+        
+        let player1Wins = holeTallies[player1.fullName, default: 0]
+        let player2Wins = holeTallies[player2.fullName, default: 0]
+        let halvedHoles = holeTallies["Halved", default: 0]
+        
+        matchScore = player1Wins - player2Wins
+        holesPlayed = player1Wins + player2Wins + halvedHoles
     }
 }

@@ -17,20 +17,28 @@ class MatchPlayViewModel: ObservableObject {
     }
 
     func updateScore(for hole: Int, player1Score: Int, player2Score: Int, player1HoleHandicap: Int, player2HoleHandicap: Int) {
-        matchPlayGame.updateScore(for: hole, player1Score: player1Score, player2Score: player2Score, player1HoleHandicap: player1HoleHandicap, player2HoleHandicap: player2HoleHandicap)
-        updateMatchStatus()
+        let player1NetScore = player1Score - (isStrokeHole(for: matchPlayGame.player1Id, holeHandicap: player1HoleHandicap) ? 1 : 0)
+        let player2NetScore = player2Score - (isStrokeHole(for: matchPlayGame.player2Id, holeHandicap: player2HoleHandicap) ? 1 : 0)
+        
+        matchPlayGame.updateScore(for: hole, player1Score: player1NetScore, player2Score: player2NetScore, player1HoleHandicap: player1HoleHandicap, player2HoleHandicap: player2HoleHandicap)
     }
 
     func updateMatchStatus() {
-        let (leadingPlayer, leadAmount) = matchPlayGame.getMatchStatus()
-        if let leadingPlayer = leadingPlayer {
-            matchStatus = "\(leadingPlayer) \(leadAmount) UP"
-        } else {
-            matchStatus = "All Square"
-        }
-
+        matchStatus = calculateMatchStatus()
         if matchPlayGame.isComplete {
             matchStatus += " (Match Over)"
+        }
+    }
+
+    func calculateMatchStatus() -> String {
+        let (status, leadAmount) = matchPlayGame.getMatchStatus()
+        print("Debug: MatchPlayViewModel - Calculate Status")
+        print("Status: \(status), Lead Amount: \(leadAmount)")
+        
+        if status == "All Square" {
+            return "Match is All Square"
+        } else {
+            return "\(status) is \(leadAmount) UP"
         }
     }
 

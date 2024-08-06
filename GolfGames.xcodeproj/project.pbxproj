@@ -28,6 +28,7 @@
 		05198A832C35E5060016F576 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 05198A822C35E5060016F576 /* GoogleService-Info.plist */; };
 		05198A872C3753E90016F576 /* InitialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A862C3753E90016F576 /* InitialView.swift */; };
 		051DBA0D2C617858007FB2C5 /* GameSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE22E2C5DAA210060EB23 /* GameSelectionView.swift */; };
+		053D7AFD2C62B955007D2D30 /* TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D7AFC2C62B955007D2D30 /* TestData.swift */; };
 		05480CD02C51B68F0082E638 /* ScorecardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480CCF2C51B68F0082E638 /* ScorecardView.swift */; };
 		05480CF32C51BC7C0082E638 /* RecentRoundsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480CF22C51BC7C0082E638 /* RecentRoundsListView.swift */; };
 		05480CF42C51CA940082E638 /* RoundViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */; };
@@ -80,6 +81,7 @@
 		05198A7E2C35C2930016F576 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		05198A822C35E5060016F576 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		05198A862C3753E90016F576 /* InitialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialView.swift; sourceTree = "<group>"; };
+		053D7AFC2C62B955007D2D30 /* TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestData.swift; sourceTree = "<group>"; };
 		05480CCD2C51B5290082E638 /* TeeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeSelectionView.swift; sourceTree = "<group>"; };
 		05480CCF2C51B68F0082E638 /* ScorecardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardView.swift; sourceTree = "<group>"; };
 		05480CF22C51BC7C0082E638 /* RecentRoundsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentRoundsListView.swift; sourceTree = "<group>"; };
@@ -299,6 +301,7 @@
 				05480CF62C52B94C0082E638 /* example.swift */,
 				05480D072C5C0C610082E638 /* ViewExtensions.swift */,
 				050BE2332C5EBBFA0060EB23 /* DebugUtilities.swift */,
+				053D7AFC2C62B955007D2D30 /* TestData.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -434,6 +437,7 @@
 				054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */,
 				05198A872C3753E90016F576 /* InitialView.swift in Sources */,
 				054E96232C4063A20036165A /* Golfer.swift in Sources */,
+				053D7AFD2C62B955007D2D30 /* TestData.swift in Sources */,
 				05480D082C5C0C610082E638 /* ViewExtensions.swift in Sources */,
 				054E960D2C3F64D20036165A /* HandicapCalculator.swift in Sources */,
 				054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */,
