@@ -8,24 +8,26 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var viewModel: AuthViewModel
-    
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var matchPlayViewModel: MatchPlayViewModel
+
     var body: some View {
         Group {
-            if viewModel.userSession != nil {
-                InititalView()
-                    .environmentObject(SingleRoundViewModel()) // Provide environment objects here if needed
-            } else {
+            if authViewModel.userSession == nil {
                 LoginView()
+            } else {
+                InititalView()
             }
         }
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-            .environmentObject(AuthViewModel()) // Provide a mock or test instance here
-    }
-}
-
+       static var previews: some View {
+           ContentView()
+               .environmentObject(AuthViewModel())
+               .environmentObject(SharedViewModel())
+               .environmentObject(MatchPlayViewModel(player1Id: "", player2Id: "", matchPlayHandicap: 0))
+       }
+   }

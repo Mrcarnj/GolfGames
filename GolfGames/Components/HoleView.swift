@@ -25,16 +25,25 @@ struct HoleView: View {
     @State private var missingScores: [String: [Int]] = [:]
     @State private var holesLoaded = false
     @State private var orientation = UIDeviceOrientation.unknown
+    @State private var scores: [String: Int] = [:]
+    @State private var currentHole: Int
 
     init(teeId: String, holeNumber: Int) {
         self.teeId = teeId
         self.initialHoleIndex = holeNumber - 1
         self._currentHoleIndex = State(initialValue: holeNumber - 1)
+        self._scoreInputs = State(initialValue: [:])
+        self._showMissingScores = State(initialValue: false)
+        self._missingScores = State(initialValue: [:])
+        self._holesLoaded = State(initialValue: false)
+        self._orientation = State(initialValue: .unknown)
+        self._scores = State(initialValue: [:])
+        self._currentHole = State(initialValue: holeNumber)
     }
 
     var hole: Hole? {
         guard currentHoleIndex < singleRoundViewModel.holes.count else {
-            print("Error: currentHoleIndex (\(currentHoleIndex)) is out of range. Total holes: \(singleRoundViewModel.holes.count)")
+            // print("Error: currentHoleIndex (\(currentHoleIndex)) is out of range. Total holes: \(singleRoundViewModel.holes.count)")
             return nil
         }
         return singleRoundViewModel.holes[currentHoleIndex]
@@ -56,19 +65,20 @@ struct HoleView: View {
             }
         }
         .onAppear {
-            print("HoleView appeared")
-            print("Round ID: \(roundViewModel.roundId ?? "nil")")
-            print("Selected Course: \(roundViewModel.selectedCourse?.name ?? "nil")")
-            print("Selected Tee: \(roundViewModel.selectedTee?.tee_name ?? "nil")")
-            print("Number of golfers: \(roundViewModel.golfers.count)")
-            print("Golfers: \(roundViewModel.golfers.map { $0.fullName })")
+            // print("HoleView appeared")
+            // print("Round ID: \(roundViewModel.roundId ?? "nil")")
+            // print("Selected Course: \(roundViewModel.selectedCourse?.name ?? "nil")")
+            // print("Selected Tee: \(roundViewModel.selectedTee?.tee_name ?? "nil")")
+            // print("Number of golfers: \(roundViewModel.golfers.count)")
+            // print("Golfers: \(roundViewModel.golfers.map { $0.fullName })")
             
             if roundViewModel.roundId == nil {
-                print("Warning: No round has been started yet!")
+                // print("Warning: No round has been started yet!")
             }
             
             loadHoleData()
             initializeScores()
+            loadScores()
         }
            .onRotate { newOrientation in
                orientation = newOrientation
@@ -186,14 +196,13 @@ struct HoleView: View {
                                     .cornerRadius(5)
                                     .multilineTextAlignment(.center)
 
-                                    let isStrokeHole = roundViewModel.strokeHoles[golfer.id]?.contains(hole?.holeNumber ?? 0) ?? false
-                                    if isStrokeHole {
+                                    if isStrokeHole(for: golfer.id) {
                                         Circle()
                                             .fill(Color.black)
                                             .frame(width: 6, height: 6)
                                             .offset(x: -20, y: -17)
                                     }
-                                    Text(isStrokeHole ? "Stroke" : "No Stroke")
+                                    Text(strokeHoleText(for: golfer.id))
                                         .font(.system(size: 10))
                                         .foregroundColor(.gray)
                                 }
@@ -232,6 +241,10 @@ struct HoleView: View {
                     .padding()
                 }
             }
+            
+            if sharedViewModel.isMatchPlay {
+                MatchPlayStatusView()
+            }
         }
         .gesture(
             DragGesture()
@@ -262,18 +275,18 @@ struct HoleView: View {
     }
 
     private func loadHoleData() {
-        print("loadHoleData called")
+        // print("loadHoleData called in HoleView")
         guard let courseId = roundViewModel.selectedCourse?.id,
               let teeId = roundViewModel.selectedTee?.id else {
-            print("Course or Tee not selected in RoundViewModel")
+            // print("Course or Tee not selected in RoundViewModel")
             return
         }
         
-        print("Loading holes for Course ID: \(courseId), Tee ID: \(teeId)")
+        // print("Loading holes for Course ID: \(courseId), Tee ID: \(teeId)")
         singleRoundViewModel.loadHoles(for: courseId, teeId: teeId) { loadedHoles in
             self.holesLoaded = true
-            print("Holes loaded in HoleView: \(loadedHoles.count)")
-            print("Holes: \(loadedHoles.map { "Hole \($0.holeNumber): Par \($0.par)" }.joined(separator: ", "))")
+         //   print("Holes loaded in HoleView: \(loadedHoles.count)")
+           // print("Holes: \(loadedHoles.map { "Hole \($0.holeNumber): Par \($0.par)" }.joined(separator: ", "))")
         }
     }
 
@@ -292,22 +305,22 @@ struct HoleView: View {
             }
         }
 
-        print("Updated scores for Hole \(currentHoleNumber): \(scoreInputs)")
+         print("Updated scores for Hole \(currentHoleNumber): \(scoreInputs)")
     }
 
     private func updateScore(for golferId: String, score: String) {
         let currentHoleNumber = currentHoleIndex + 1
         if let scoreInt = Int(score) {
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = scoreInt
-            roundViewModel.updateNetScores()
+            roundViewModel.updateStrokePlayNetScores()
             
-            let netScore = roundViewModel.netScores[currentHoleNumber]?[golferId] ?? scoreInt
+            let netStrokePlayScore = roundViewModel.netStrokePlayScores[currentHoleNumber]?[golferId] ?? scoreInt
             let isStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
             
-            print("Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.fullName ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Net Score: \(netScore), Stroke Hole: \(isStrokeHole)")
+             print("Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.fullName ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Stroke Play Net Score: \(netStrokePlayScore), Stroke Play Stroke Hole: \(isStrokeHole)")
         } else {
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
-            roundViewModel.netScores[currentHoleNumber, default: [:]][golferId] = nil
+            roundViewModel.netStrokePlayScores[currentHoleNumber, default: [:]][golferId] = nil
         }
     }
 
@@ -315,6 +328,52 @@ struct HoleView: View {
         showMissingScores = true
         for golfer in roundViewModel.golfers {
             missingScores[golfer.id] = roundViewModel.getMissingScores(for: golfer.id)
+        }
+    }
+    
+    private func saveScores() {
+        for (golferId, score) in scores {
+            roundViewModel.updateScore(for: currentHole, golferId: golferId, score: score)
+        }
+        if sharedViewModel.isMatchPlay {
+            let currentHoleNumber = currentHoleIndex + 1  // Convert zero-based index to one-based hole number
+            roundViewModel.updateMatchPlayStatus(for: currentHoleNumber)
+        }
+    }
+    
+    private func loadScores() {
+        for golfer in roundViewModel.golfers {
+            scores[golfer.id] = roundViewModel.grossScores[currentHole]?[golfer.id] ?? roundViewModel.pars[currentHole] ?? 0
+        }
+    }
+
+    private func isStrokeHole(for golferId: String) -> Bool {
+        let currentHoleNumber = currentHoleIndex + 1
+        if roundViewModel.isMatchPlay {
+            return roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+        } else {
+            return roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+        }
+    }
+
+    private func strokeHoleText(for golferId: String) -> String {
+        if roundViewModel.isMatchPlay {
+            return isStrokeHole(for: golferId) ? "Match Stroke" : "No Stroke"
+        } else {
+            return isStrokeHole(for: golferId) ? "Stroke" : "No Stroke"
+        }
+    }
+}
+
+struct MatchPlayStatusView: View {
+    @EnvironmentObject var roundViewModel: RoundViewModel
+
+    var body: some View {
+        if let status = roundViewModel.matchPlayViewModel?.getMatchStatus() {
+            Text(status)
+                .padding()
+                .background(Color.gray.opacity(0.2))
+                .cornerRadius(8)
         }
     }
 }

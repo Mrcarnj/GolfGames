@@ -72,8 +72,8 @@ struct RoundView: View {
         print("Loading holes for Course ID: \(courseId), Tee ID: \(teeId)")
         singleRoundViewModel.loadHoles(for: courseId, teeId: teeId) { loadedHoles in
             print("Holes loaded: \(loadedHoles.map { "Hole \($0.holeNumber): Par \($0.par)" }.joined(separator: ", "))")
-            self.roundViewModel.calculateStrokeHoles(holes: loadedHoles)
-            print("Holes loaded and stroke holes calculated")
+            self.roundViewModel.calculateStrokePlayStrokeHoles(holes: loadedHoles)
+            print("Holes loaded and Stroke Play stroke holes calculated")
         }
     }
 
@@ -116,7 +116,7 @@ struct RoundView: View {
 
     private func resetLocalData() {
         roundViewModel.grossScores = [:]
-        roundViewModel.netScores = [:]
+        roundViewModel.netStrokePlayScores = [:]
         roundViewModel.strokeHoles = [:]
         roundViewModel.selectedCourse = nil
         roundViewModel.selectedTee = nil

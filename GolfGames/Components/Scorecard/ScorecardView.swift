@@ -101,7 +101,7 @@ struct ScorecardView: View {
                     "name": golfer.fullName,
                     "handicap": golfer.handicap,
                     "grossTotal": roundViewModel.grossScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) },
-                    "netTotal": roundViewModel.netScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
+                    "netTotal": roundViewModel.netStrokePlayScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
                 ]
             }
         ]
@@ -112,7 +112,7 @@ struct ScorecardView: View {
             }
         }
 
-        for (hole, scores) in roundViewModel.netScores {
+        for (hole, scores) in roundViewModel.netStrokePlayScores {
             for (golferId, score) in scores {
                 roundData["net_hole_\(hole)_\(golferId)"] = score
             }
@@ -131,7 +131,7 @@ struct ScorecardView: View {
 
     private func resetLocalData() {
         roundViewModel.grossScores = [:]
-        roundViewModel.netScores = [:]
+        roundViewModel.netStrokePlayScores = [:]
         roundViewModel.strokeHoles = [:]
         roundViewModel.selectedCourse = nil
         roundViewModel.selectedTee = nil
@@ -235,7 +235,7 @@ struct ScorecardView: View {
                     .frame(width: 27, height: 27)
             }
             let totalScore = holes.reduce(0) { total, hole in
-                total + (isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netScores[hole]?[golfer.id] ?? 0)
+                total + (isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0)
             }
             Text("\(totalScore)")
                 .frame(width: 32, height: 27)
@@ -244,7 +244,7 @@ struct ScorecardView: View {
                 .fontWeight(.bold)
             if showTotal {
                 let grandTotal = singleRoundViewModel.holes.reduce(0) { total, hole in
-                    total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.netScores[hole.holeNumber]?[golfer.id] ?? 0)
+                    total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole.holeNumber]?[golfer.id] ?? 0)
                 }
                 Text("\(grandTotal)")
                     .frame(width: 32, height: 27)
@@ -261,7 +261,7 @@ struct ScorecardView: View {
     
     func scoreCell(for golfer: Golfer, hole: Int, isGross: Bool) -> some View {
         let par = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole })?.par ?? 0
-        let score = isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netScores[hole]?[golfer.id] ?? 0
+        let score = isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0
         let isStrokeHole = roundViewModel.strokeHoles[golfer.id]?.contains(hole) ?? false
         
         return ZStack {

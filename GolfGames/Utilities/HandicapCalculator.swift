@@ -30,7 +30,7 @@ struct HandicapCalculator {
         return roundedHandicap
     }
 
-    static func determineStrokeHoles(courseHandicap: Int, holes: [Hole]) -> [Int] {
+    static func determineStrokePlayStrokeHoles(courseHandicap: Int, holes: [Hole]) -> [Int] {
         // Sort holes by their handicap rating
         let sortedHoles = holes.sorted { $0.handicap < $1.handicap }
         
@@ -42,6 +42,16 @@ struct HandicapCalculator {
 //        for hole in sortedHoles {
 //            print("Hole \(hole.holeNumber): Handicap \(hole.handicap)")
 //        }
+        
+        return strokeHoles
+    }
+
+    static func determineMatchPlayStrokeHoles(matchPlayHandicap: Int, holes: [Hole]) -> [Int] {
+        // Sort holes by their handicap rating
+        let sortedHoles = holes.sorted { $0.handicap < $1.handicap }
+        
+        // Take the first 'matchPlayHandicap' number of holes
+        let strokeHoles = sortedHoles.prefix(matchPlayHandicap).map { $0.holeNumber }
         
         return strokeHoles
     }

@@ -130,7 +130,7 @@ class SingleRoundViewModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.holes = loadedHoles
-                print("Holes loaded in SingleRoundViewModel: \(self.holes.map { "Hole \($0.holeNumber): Par \($0.par), Handicap \($0.handicap), Yardage \($0.yardage)" }.joined(separator: ", "))")
+                //print("Holes loaded in SingleRoundViewModel: \(self.holes.map { "Hole \($0.holeNumber): Par \($0.par), Handicap \($0.handicap), Yardage \($0.yardage)" }.joined(separator: ", "))")
                 completion(loadedHoles)
             }
         }

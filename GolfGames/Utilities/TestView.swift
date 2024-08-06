@@ -1,79 +1,106 @@
-//
-//  LandscapeScorecardView.swift
-//  GolfGames
-//
-//  Created by Mike Dietrich on 7/31/24.
-//
-
 import SwiftUI
 import Firebase
 
-struct LandscapeScorecardView: View {
+struct ScorecardView: View {
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @EnvironmentObject var roundViewModel: RoundViewModel
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedGolferId: String?
-    @Binding var navigateToInitialView: Bool
+    @State private var navigateToInitialView = false
+    
+    private var isLandscape: Bool {
+        return horizontalSizeClass == .regular
+    }
     
     var body: some View {
         GeometryReader { geometry in
-            ScrollView {
-                VStack(spacing: 8) {
-                    if roundViewModel.golfers.count > 1 {
-                        golferPicker
-                            .padding(.bottom, 15)
-                    }
-                    
-                    if let golfer = selectedGolfer {
-                        scoreCardView(for: golfer)
-                            .scaleEffect(min(geometry.size.width / geometry.size.height, 1.2))
-                            .frame(width: geometry.size.width * 0.95)
-                        
-                        
-                        scoreLegend
-                            .padding(.top, 20)
-                    }
-                }
-                .frame(minHeight: geometry.size.height)
-                .frame(maxWidth: .infinity)
+            if isLandscape {
+                landscapeLayout(geometry: geometry)
+            } else {
+                portraitLayout(geometry: geometry)
             }
         }
-        .navigationBarItems(trailing: finishButton)
+        .navigationTitle("Round Review")
+        .navigationBarTitleDisplayMode(isLandscape ? .inline : .large)
+        .navigationBarItems(trailing: isLandscape ? finishButton : nil)
+        .navigationBarHidden(false)
         .onAppear {
             selectedGolferId = authViewModel.currentUser?.id
         }
-    }
-
-    private var golferPicker: some View {
-        Picker("Select Golfer", selection: $selectedGolferId) {
-            ForEach(roundViewModel.golfers) { golfer in
-                Text(golfer.fullName).tag(golfer.id as String?)
-            }
-        }
-        .pickerStyle(MenuPickerStyle())
-        .padding(.horizontal)
-    }
-    
-    private var allHolesHaveScores: Bool {
-        guard let golfer = selectedGolfer else { return false }
-        return (1...18).allSatisfy { hole in
-            roundViewModel.grossScores[hole]?[golfer.id] != nil
-        }
-    }
-
-    private var finishButton: some View {
-        Group {
-            if allHolesHaveScores {
-                Button("Finish") {
-                    finalizeRound()
-                }
-            } else {
+        .background(
+            NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(roundViewModel), isActive: $navigateToInitialView) {
                 EmptyView()
             }
+        )
+    }
+    
+    private func landscapeLayout(geometry: GeometryProxy) -> some View {
+        HStack(alignment: .top, spacing: 20) {
+            VStack(alignment: .leading, spacing: 5) {
+                scoreLegend
+                Spacer()
+            }
+            .frame(width: geometry.size.width * 0.2)
+            .padding(.top, 20)
+            
+            VStack(spacing: 10) {
+                if roundViewModel.golfers.count > 1 {
+                    golferPicker
+                }
+                
+                if let golfer = selectedGolfer {
+                    scoreCardView(for: golfer)
+                        .scaleEffect(1.1)
+                }
+                
+                Spacer()
+            }
+            .frame(width: geometry.size.width * 0.8)
+        }
+        .frame(width: geometry.size.width, height: geometry.size.height)
+    }
+    
+    private func portraitLayout(geometry: GeometryProxy) -> some View {
+        VStack(spacing: 10) {
+            if roundViewModel.golfers.count > 1 {
+                golferPicker
+            }
+            
+            if let golfer = selectedGolfer {
+                Spacer()
+                scoreCardView(for: golfer)
+                scoreLegend
+                Spacer()
+            }
+            
+            finalizeRoundButton
+                .padding(.vertical, 10)
+        }
+        .frame(width: geometry.size.width, height: geometry.size.height)
+    }
+    
+    private var finalizeRoundButton: some View {
+        GeometryReader { geometry in
+            Button(action: finalizeRound) {
+                Text("Finalize Round")
+                    .frame(width: min(geometry.size.width * 0.9, 400), height: 48)
+                    .foregroundColor(.white)
+                    .background(Color(.systemTeal))
+                    .cornerRadius(10)
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
+        .frame(height: 60)
+    }
+    
+    private var finishButton: some View {
+        Button("Finish") {
+            finalizeRound()
         }
     }
-
+    
     private func finalizeRound() {
         guard let user = authViewModel.currentUser,
               let course = roundViewModel.selectedCourse,
@@ -98,7 +125,7 @@ struct LandscapeScorecardView: View {
                     "name": golfer.fullName,
                     "handicap": golfer.handicap,
                     "grossTotal": roundViewModel.grossScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) },
-                    "netTotal": roundViewModel.netStrokePlayScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
+                    "netTotal": roundViewModel.netScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
                 ]
             }
         ]
@@ -109,7 +136,7 @@ struct LandscapeScorecardView: View {
             }
         }
 
-        for (hole, scores) in roundViewModel.netStrokePlayScores {
+        for (hole, scores) in roundViewModel.netScores {
             for (golferId, score) in scores {
                 roundData["net_hole_\(hole)_\(golferId)"] = score
             }
@@ -125,10 +152,10 @@ struct LandscapeScorecardView: View {
             }
         }
     }
-    
+
     private func resetLocalData() {
         roundViewModel.grossScores = [:]
-        roundViewModel.netStrokePlayScores = [:]
+        roundViewModel.netScores = [:]
         roundViewModel.strokeHoles = [:]
         roundViewModel.selectedCourse = nil
         roundViewModel.selectedTee = nil
@@ -149,6 +176,7 @@ struct LandscapeScorecardView: View {
         .background(colorScheme == .light ? Color.white : Color.black)
         .cornerRadius(10)
         .shadow(radius: 5)
+        .frame(maxWidth: .infinity)
     }
     
     func nineHoleView(for golfer: Golfer, holes: ClosedRange<Int>, title: String, showTotal: Bool = false) -> some View {
@@ -231,7 +259,7 @@ struct LandscapeScorecardView: View {
                     .frame(width: 27, height: 27)
             }
             let totalScore = holes.reduce(0) { total, hole in
-                total + (isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0)
+                total + (isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netScores[hole]?[golfer.id] ?? 0)
             }
             Text("\(totalScore)")
                 .frame(width: 32, height: 27)
@@ -240,7 +268,7 @@ struct LandscapeScorecardView: View {
                 .fontWeight(.bold)
             if showTotal {
                 let grandTotal = singleRoundViewModel.holes.reduce(0) { total, hole in
-                    total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole.holeNumber]?[golfer.id] ?? 0)
+                    total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.netScores[hole.holeNumber]?[golfer.id] ?? 0)
                 }
                 Text("\(grandTotal)")
                     .frame(width: 32, height: 27)
@@ -257,7 +285,7 @@ struct LandscapeScorecardView: View {
     
     func scoreCell(for golfer: Golfer, hole: Int, isGross: Bool) -> some View {
         let par = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole })?.par ?? 0
-        let score = isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0
+        let score = isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netScores[hole]?[golfer.id] ?? 0
         let isStrokeHole = roundViewModel.strokeHoles[golfer.id]?.contains(hole) ?? false
         
         return ZStack {
@@ -271,19 +299,15 @@ struct LandscapeScorecardView: View {
             
             if isGross && isStrokeHole {
                 Circle()
-                    .fill(strokeDotColor(score: score, par: par))
-                    .frame(width: 6, height: 6)
+                    .fill(strokeDotColor)
+                    .frame(width: 3, height: 3)
                     .offset(x: 7, y: -7)
             }
         }
     }
 
-    func strokeDotColor(score: Int, par: Int) -> Color {
-        if score == par + 1 {
-            return .white
-        } else {
-            return colorScheme == .dark ? .white : .black
-        }
+    var strokeDotColor: Color {
+        colorScheme == .light ? .black : .white
     }
     
     func scoreCellBackground(score: Int, par: Int) -> some View {
@@ -320,22 +344,33 @@ struct LandscapeScorecardView: View {
         }
     }
     
-    func dotColor(score: Int, par: Int) -> Color {
-        if colorScheme == .light {
-            return score == par ? .black : .white
-        } else {
-            return .white
+    var scoreLegend: some View {
+        Group {
+            if isLandscape {
+                VStack(alignment: .leading, spacing: 5) {
+                    legendItem(color: .yellow, shape: Circle(), text: "Eagle or better")
+                    legendItem(color: .red, shape: Circle(), text: "Birdie")
+                    legendItem(color: .black, shape: Rectangle(), text: "Bogey", addBorder: colorScheme == .dark)
+                    legendItem(color: .blue, shape: Rectangle(), text: "Double bogey +")
+                }
+            } else {
+                HStack(spacing: 10) {
+                    legendItem(color: .yellow, shape: Circle(), text: "Eagle or better")
+                    legendItem(color: .red, shape: Circle(), text: "Birdie")
+                    legendItem(color: .black, shape: Rectangle(), text: "Bogey", addBorder: colorScheme == .dark)
+                    legendItem(color: .blue, shape: Rectangle(), text: "Double bogey +")
+                }
+            }
+            .font(.caption)
         }
     }
-    
-    var scoreLegend: some View {
-        HStack(spacing: 15) {
-            legendItem(color: .yellow, shape: Circle(), text: "Eagle or better")
-            legendItem(color: .red, shape: Circle(), text: "Birdie")
-            legendItem(color: .black, shape: Rectangle(), text: "Bogey", addBorder: colorScheme == .dark)
-            legendItem(color: .blue, shape: Rectangle(), text: "Double bogey +")
+    private var golferPicker: some View {
+        Picker("Select Golfer", selection: $selectedGolferId) {
+            ForEach(roundViewModel.golfers) { golfer in
+                Text(golfer.fullName).tag(golfer.id as String?)
+            }
         }
-        .font(.caption)
+        .pickerStyle(MenuPickerStyle())
         .padding(.horizontal)
     }
     
@@ -343,7 +378,7 @@ struct LandscapeScorecardView: View {
         HStack(spacing: 4) {
             shape
                 .fill(color)
-                .frame(width: 10, height: 10)
+                .frame(width: 12, height: 12)
                 .if(addBorder) { view in
                     view.overlay(
                         RoundedRectangle(cornerRadius: 2)
@@ -351,6 +386,16 @@ struct LandscapeScorecardView: View {
                     )
                 }
             Text(text)
+        }
+    }
+}
+
+extension View {
+    @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
         }
     }
 }

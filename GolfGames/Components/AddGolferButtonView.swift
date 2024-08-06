@@ -15,6 +15,7 @@ struct AddGolferButtonView: View {
     @StateObject var roundViewModel: RoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
+    @EnvironmentObject var sharedViewModel: SharedViewModel
     @Binding var additionalGolfers: [Golfer]
 
     var body: some View {
@@ -43,7 +44,11 @@ struct AddGolferButtonView: View {
 
             Button(action: {
                 if let currentUser = authViewModel.currentUser {
-                    roundViewModel.beginRound(for: currentUser, additionalGolfers: additionalGolfers) { roundId, courseId, teeId in
+                    roundViewModel.beginRound(
+                        for: currentUser,
+                        additionalGolfers: additionalGolfers,
+                        isMatchPlay: sharedViewModel.isMatchPlay
+                    ) { roundId, courseId, teeId in
                         if let roundId = roundId {
                             self.roundId = roundId
                             self.navigateToRoundView = true
@@ -80,5 +85,6 @@ struct AddGolferButtonView_Previews: PreviewProvider {
         )
         .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
         .environmentObject(SingleRoundViewModel())
+        .environmentObject(SharedViewModel())
     }
 }

@@ -14,6 +14,7 @@ struct TeeSelectionView: View {
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @State private var navigateToRoundView = false
     @State private var currentHoleIndex = 0
+    @State private var showGameSelection = false
 
     var allTeesSelected: Bool {
         sharedViewModel.golfers.allSatisfy { golfer in
@@ -88,44 +89,33 @@ struct TeeSelectionView: View {
                 }
             }
 
+            if sharedViewModel.golfers.count > 1 {
+                Button(action: {
+                    showGameSelection = true
+                }) {
+                    Text("Add Games")
+                        .frame(minWidth: 0, maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemBlue))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .font(.headline)
+                }
+                .padding(.horizontal)
+            }
+
             Button(action: {
-                // Ensure all golfers have tees and playing handicaps set
-                for (index, golfer) in sharedViewModel.golfers.enumerated() {
-                    if golfer.tee == nil || golfer.playingHandicap == nil {
-                        if let teeId = sharedViewModel.golferTeeSelections[golfer.id],
-                           let tee = singleRoundViewModel.tees.first(where: { $0.id == teeId }) {
-                            let courseHandicap = HandicapCalculator.calculateCourseHandicap(
-                                handicapIndex: golfer.handicap,
-                                slopeRating: tee.slope_rating,
-                                courseRating: tee.course_rating,
-                                par: tee.course_par
-                            )
-                            sharedViewModel.golfers[index].tee = tee
-                            sharedViewModel.golfers[index].playingHandicap = courseHandicap
-                        }
-                    }
-                }
-                
-                // Set the selected course and tee in roundViewModel
-                roundViewModel.selectedCourse = sharedViewModel.selectedCourse
-                if let firstGolfer = sharedViewModel.golfers.first,
-                   let firstGolferTeeId = sharedViewModel.golferTeeSelections[firstGolfer.id],
-                   let firstGolferTee = singleRoundViewModel.tees.first(where: { $0.id == firstGolferTeeId }) {
-                    roundViewModel.selectedTee = firstGolferTee
-                }
-                
-                // Initialize roundViewModel with selected golfers
-                roundViewModel.golfers = sharedViewModel.golfers
-                print("Initializing roundViewModel with golfers: \(roundViewModel.golfers.map { "\($0.fullName) (Tee: \($0.tee?.tee_name ?? "N/A"), CH: \($0.playingHandicap ?? 0))" })")
-                loadHolesData()
+                beginRound()
             }) {
                 Text("Begin Round")
-                    .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-                    .foregroundColor(.white)
+                    .frame(minWidth: 0, maxWidth: .infinity)
+                    .padding()
                     .background(Color(.systemTeal))
+                    .foregroundColor(.white)
                     .cornerRadius(10)
+                    .font(.headline)
             }
-            .padding(.top)
+            .padding(.horizontal)
             .disabled(!allTeesSelected)
 
             NavigationLink(
@@ -142,6 +132,12 @@ struct TeeSelectionView: View {
                 EmptyView()
             }
         }
+        .sheet(isPresented: $showGameSelection) {
+            GameSelectionView(onBeginRound: beginRound)
+                .environmentObject(sharedViewModel)
+                .environmentObject(roundViewModel)
+                .environmentObject(authViewModel)
+        }
         .onAppear {
             setDefaultTees()
            // print("Default tees set: \(sharedViewModel.golfers.map { "\($0.fullName) (Tee: \($0.tee?.tee_name ?? "N/A"), CH: \($0.playingHandicap ?? 0))" })")
@@ -152,72 +148,88 @@ struct TeeSelectionView: View {
         guard let courseId = sharedViewModel.selectedCourse?.id else { return }
         
         let group = DispatchGroup()
-        for (_, teeId) in sharedViewModel.golferTeeSelections {
-            group.enter()
-            singleRoundViewModel.loadHoles(for: courseId, teeId: teeId) { loadedHoles in
-                // Store the loaded holes in roundViewModel
-                roundViewModel.holes[teeId] = loadedHoles
-                group.leave()
+        
+        for golfer in roundViewModel.golfers {
+            if let teeId = sharedViewModel.golferTeeSelections[golfer.id] {
+                group.enter()
+                singleRoundViewModel.loadHoles(for: courseId, teeId: teeId) { holes in
+                    DispatchQueue.main.async {
+                        self.roundViewModel.holes[teeId] = holes
+                        print("Loaded \(holes.count) holes for golfer \(golfer.fullName), tee ID: \(teeId)")
+                    }
+                    group.leave()
+                }
+            } else {
+                print("Warning: No tee selected for golfer \(golfer.fullName)")
             }
         }
         
         group.notify(queue: .main) {
-            calculateHandicapsAndStrokeHoles()
-            
-            // Set the selected course and tee in roundViewModel
-            roundViewModel.selectedCourse = sharedViewModel.selectedCourse
-            if let firstGolfer = sharedViewModel.golfers.first,
-               let firstGolferTeeId = sharedViewModel.golferTeeSelections[firstGolfer.id],
-               let firstGolferTee = singleRoundViewModel.tees.first(where: { $0.id == firstGolferTeeId }) {
-                roundViewModel.selectedTee = firstGolferTee
-            }
-            
-            // Start the round in roundViewModel
-            roundViewModel.beginRound(
-                for: authViewModel.currentUser!,
-                additionalGolfers: sharedViewModel.golfers.filter { $0.id != authViewModel.currentUser?.id }
-            ) { roundId, _, _ in
-                if roundId != nil {
-                    self.navigateToRoundView = true
-                } else {
-                    // Handle error
-                    print("Failed to start round")
-                }
-            }
+            self.calculateHandicapsAndStrokeHoles()
+            self.createRound()
         }
     }
 
     private func calculateHandicapsAndStrokeHoles() {
-        // Calculate course handicaps
         for golfer in roundViewModel.golfers {
-            if let tee = golfer.tee {
-                let courseHandicap = HandicapCalculator.calculateCourseHandicap(
-                    handicapIndex: golfer.handicap,
-                    slopeRating: tee.slope_rating,
-                    courseRating: tee.course_rating,
-                    par: tee.course_par
-                )
-                roundViewModel.courseHandicaps[golfer.id] = courseHandicap
-             //   print("Calculated course handicap for \(golfer.fullName): \(courseHandicap)")
+            if let tee = golfer.tee,
+               let teeId = tee.id,
+               let courseHandicap = roundViewModel.courseHandicaps[golfer.id],
+               let holes = roundViewModel.holes[teeId] {
+                let strokeHoles = HandicapCalculator.determineStrokePlayStrokeHoles(courseHandicap: courseHandicap, holes: holes)
+                roundViewModel.strokeHoles[golfer.id] = strokeHoles
+                print("Calculated stroke holes for \(golfer.fullName): \(strokeHoles)")
             } else {
-              //  print("Warning: No tee selected for golfer \(golfer.fullName)")
+                print("Warning: Missing data for calculating stroke holes for \(golfer.fullName)")
             }
         }
+        
+        print("Stroke play stroke holes after calculation: \(roundViewModel.strokeHoles)")
+        
+        if sharedViewModel.isMatchPlay {
+            calculateMatchPlayStrokeHoles()
+        }
+    }
 
-        // Calculate stroke holes
-        for golfer in roundViewModel.golfers {
-            guard let courseHandicap = roundViewModel.courseHandicaps[golfer.id] else {
-                print("Warning: No course handicap found for golfer \(golfer.fullName)")
-                continue
-            }
-            let strokeHoles = HandicapCalculator.determineStrokeHoles(courseHandicap: courseHandicap, holes: singleRoundViewModel.holes)
-            roundViewModel.strokeHoles[golfer.id] = strokeHoles
+    private func calculateMatchPlayStrokeHoles() {
+        guard roundViewModel.golfers.count == 2 else { return }
+        
+        let sortedGolfers = roundViewModel.golfers.sorted { ($0.playingHandicap ?? 0) < ($1.playingHandicap ?? 0) }
+        let lowerHandicapGolfer = sortedGolfers[0]
+        let higherHandicapGolfer = sortedGolfers[1]
+        
+        if let lowerHandicapTeeId = lowerHandicapGolfer.tee?.id,
+           let holes = roundViewModel.holes[lowerHandicapTeeId] {
+            let matchPlayHandicap = sharedViewModel.matchPlayHandicap
+            let matchPlayStrokeHoles = HandicapCalculator.determineMatchPlayStrokeHoles(matchPlayHandicap: matchPlayHandicap, holes: holes)
+            roundViewModel.matchPlayStrokeHoles[lowerHandicapGolfer.id] = []
+            roundViewModel.matchPlayStrokeHoles[higherHandicapGolfer.id] = matchPlayStrokeHoles
             
-//            print("Calculated stroke holes for \(golfer.fullName): \(strokeHoles)")
+            print("Debug: Match Play Stroke Holes - \(lowerHandicapGolfer.fullName): [], \(higherHandicapGolfer.fullName): \(matchPlayStrokeHoles)")
+        } else {
+            print("Warning: Unable to calculate match play stroke holes")
         }
+    }
 
-//        print("Course handicaps after calculation: \(roundViewModel.courseHandicaps)")
-//        print("Stroke holes after calculation: \(roundViewModel.strokeHoles)")
+    private func createRound() {
+        if let user = authViewModel.currentUser {
+            roundViewModel.beginRound(
+                for: user,
+                additionalGolfers: Array(roundViewModel.golfers.dropFirst()),
+                isMatchPlay: sharedViewModel.isMatchPlay
+            ) { roundId, error, additionalInfo in
+                if let roundId = roundId {
+                    print("Round created with ID: \(roundId)")
+                    if let courseId = additionalInfo?["courseId"] as? String,
+                       let teeId = additionalInfo?["teeId"] as? String {
+                        print("Course ID: \(courseId), Tee ID: \(teeId)")
+                    }
+                    self.navigateToRoundView = true
+                } else if let error = error {
+                    print("Failed to create round: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     private func setDefaultTees() {
@@ -242,6 +254,40 @@ struct TeeSelectionView: View {
         }
         // Force a UI update
         sharedViewModel.objectWillChange.send()
+    }
+    
+    private func beginRound() {
+        // Update RoundViewModel with the latest golfer information
+        roundViewModel.golfers = sharedViewModel.golfers
+        roundViewModel.selectedCourse = sharedViewModel.selectedCourse
+        roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
+        
+        // Ensure all golfers have course handicaps and tees set
+        for (index, golfer) in roundViewModel.golfers.enumerated() {
+            if let teeId = sharedViewModel.golferTeeSelections[golfer.id],
+               let tee = singleRoundViewModel.tees.first(where: { $0.id == teeId }) {
+                let courseHandicap = HandicapCalculator.calculateCourseHandicap(
+                    handicapIndex: golfer.handicap,
+                    slopeRating: tee.slope_rating,
+                    courseRating: tee.course_rating,
+                    par: tee.course_par
+                )
+                roundViewModel.golfers[index].tee = tee
+                roundViewModel.golfers[index].playingHandicap = courseHandicap
+                roundViewModel.courseHandicaps[golfer.id] = courseHandicap
+                
+                print("Debug: Set course handicap for \(golfer.fullName): \(courseHandicap)")
+            } else {
+                print("Warning: No tee selected for golfer \(golfer.fullName)")
+            }
+        }
+        
+        if let firstGolfer = roundViewModel.golfers.first,
+           let firstGolferTee = firstGolfer.tee {
+            roundViewModel.selectedTee = firstGolferTee
+        }
+
+        loadHolesData()
     }
 }
 

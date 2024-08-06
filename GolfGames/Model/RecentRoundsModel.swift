@@ -36,7 +36,7 @@ class RecentRoundsModel: ObservableObject {
                 
                 // Check if roundResultID exists in the document
                 guard let roundResultID = data["roundResultID"] as? String else {
-                    print("No roundResultID found for document: \(document.documentID)")
+                   // print("No roundResultID found for document: \(document.documentID)")
                     group.leave()
                     continue
                 }

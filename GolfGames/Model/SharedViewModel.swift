@@ -15,6 +15,17 @@ class SharedViewModel: ObservableObject {
     @Published var roundId: String?
     @Published var currentUserGolfer: Golfer?
     @Published var golferTeeSelections: [String: String] = [:]  // [GolferID: TeeID]
+    @Published var isMatchPlay: Bool = false {
+        didSet {
+            if isMatchPlay {
+                calculateMatchPlayHandicap()
+            } else {
+                matchPlayHandicap = 0
+            }
+        }
+    }
+    @Published var holes: [String: [Hole]] = [:] // Tee ID : [Hole]
+    @Published var matchPlayHandicap: Int = 0
 
     func addGolfer(_ golfer: Golfer) {
         if !golfers.contains(where: { $0.id == golfer.id }) {
@@ -36,6 +47,27 @@ class SharedViewModel: ObservableObject {
         selectedCourse = nil
         roundId = nil
         golferTeeSelections = [:]
-        // Note: We don't reset currentUserGolfer here
+        isMatchPlay = false
+    }
+
+    func createNewRound(isMatchPlay: Bool) {
+        self.isMatchPlay = isMatchPlay
+    }
+
+    func updateHoles(_ newHoles: [String: [Hole]]) {
+        holes = newHoles
+    }
+
+    private func calculateMatchPlayHandicap() {
+        guard golfers.count == 2 else {
+            matchPlayHandicap = 0
+            return
+        }
+        let handicaps = golfers.compactMap { $0.playingHandicap }
+        guard handicaps.count == 2 else {
+            matchPlayHandicap = 0
+            return
+        }
+        matchPlayHandicap = abs(handicaps[0] - handicaps[1])
     }
 }

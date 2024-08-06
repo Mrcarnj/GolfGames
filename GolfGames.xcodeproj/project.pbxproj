@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		050BE2342C5EBBFA0060EB23 /* DebugUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE2332C5EBBFA0060EB23 /* DebugUtilities.swift */; };
+		050BE2362C5FF9370060EB23 /* MatchPlayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE2352C5FF9370060EB23 /* MatchPlayViewModel.swift */; };
+		050BE2382C6170A00060EB23 /* MatchPlayGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE2372C6170A00060EB23 /* MatchPlayGame.swift */; };
 		05198A512C35BA530016F576 /* GolfGamesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A502C35BA530016F576 /* GolfGamesApp.swift */; };
 		05198A532C35BA530016F576 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A522C35BA530016F576 /* ContentView.swift */; };
 		05198A552C35BA550016F576 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 05198A542C35BA550016F576 /* Assets.xcassets */; };
@@ -23,7 +26,8 @@
 		05198A7D2C35C2840016F576 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A7C2C35C2840016F576 /* User.swift */; };
 		05198A7F2C35C2930016F576 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A7E2C35C2930016F576 /* ProfileView.swift */; };
 		05198A832C35E5060016F576 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 05198A822C35E5060016F576 /* GoogleService-Info.plist */; };
-		05198A872C3753E90016F576 /* InititalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A862C3753E90016F576 /* InititalView.swift */; };
+		05198A872C3753E90016F576 /* InitialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A862C3753E90016F576 /* InitialView.swift */; };
+		051DBA0D2C617858007FB2C5 /* GameSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE22E2C5DAA210060EB23 /* GameSelectionView.swift */; };
 		05480CD02C51B68F0082E638 /* ScorecardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480CCF2C51B68F0082E638 /* ScorecardView.swift */; };
 		05480CF32C51BC7C0082E638 /* RecentRoundsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480CF22C51BC7C0082E638 /* RecentRoundsListView.swift */; };
 		05480CF42C51CA940082E638 /* RoundViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */; };
@@ -58,6 +62,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		050BE22E2C5DAA210060EB23 /* GameSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectionView.swift; sourceTree = "<group>"; };
+		050BE2332C5EBBFA0060EB23 /* DebugUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugUtilities.swift; sourceTree = "<group>"; };
+		050BE2352C5FF9370060EB23 /* MatchPlayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayViewModel.swift; sourceTree = "<group>"; };
+		050BE2372C6170A00060EB23 /* MatchPlayGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayGame.swift; sourceTree = "<group>"; };
 		05198A4D2C35BA530016F576 /* GolfGames.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GolfGames.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		05198A502C35BA530016F576 /* GolfGamesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfGamesApp.swift; sourceTree = "<group>"; };
 		05198A522C35BA530016F576 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -71,7 +79,7 @@
 		05198A7C2C35C2840016F576 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		05198A7E2C35C2930016F576 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		05198A822C35E5060016F576 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		05198A862C3753E90016F576 /* InititalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InititalView.swift; sourceTree = "<group>"; };
+		05198A862C3753E90016F576 /* InitialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialView.swift; sourceTree = "<group>"; };
 		05480CCD2C51B5290082E638 /* TeeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeSelectionView.swift; sourceTree = "<group>"; };
 		05480CCF2C51B68F0082E638 /* ScorecardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardView.swift; sourceTree = "<group>"; };
 		05480CF22C51BC7C0082E638 /* RecentRoundsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentRoundsListView.swift; sourceTree = "<group>"; };
@@ -121,6 +129,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		050BE22D2C5DAA0F0060EB23 /* Games */ = {
+			isa = PBXGroup;
+			children = (
+				050BE22E2C5DAA210060EB23 /* GameSelectionView.swift */,
+			);
+			path = Games;
+			sourceTree = "<group>";
+		};
+		050BE2302C5DAA410060EB23 /* Games */ = {
+			isa = PBXGroup;
+			children = (
+				050BE2352C5FF9370060EB23 /* MatchPlayViewModel.swift */,
+				050BE2372C6170A00060EB23 /* MatchPlayGame.swift */,
+			);
+			path = Games;
+			sourceTree = "<group>";
+		};
 		05198A442C35BA520016F576 = {
 			isa = PBXGroup;
 			children = (
@@ -163,6 +188,7 @@
 		05198A5E2C35BD4B0016F576 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				050BE2302C5DAA410060EB23 /* Games */,
 				05198A7C2C35C2840016F576 /* User.swift */,
 				054EB85A2C37601100E44F97 /* SingleRound.swift */,
 				054EB85C2C37625200E44F97 /* CourseTee.swift */,
@@ -181,6 +207,7 @@
 		05198A5F2C35BD4D0016F576 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				050BE22D2C5DAA0F0060EB23 /* Games */,
 				054E960E2C3F654C0036165A /* Scorecard */,
 				05198A782C35C26B0016F576 /* InputView.swift */,
 				05198A7A2C35C2770016F576 /* SettingsRowView.swift */,
@@ -247,7 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				05198A7E2C35C2930016F576 /* ProfileView.swift */,
-				05198A862C3753E90016F576 /* InititalView.swift */,
+				05198A862C3753E90016F576 /* InitialView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -271,6 +298,7 @@
 				054E962E2C4991820036165A /* CheckboxToggleStyle.swift */,
 				05480CF62C52B94C0082E638 /* example.swift */,
 				05480D072C5C0C610082E638 /* ViewExtensions.swift */,
+				050BE2332C5EBBFA0060EB23 /* DebugUtilities.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -379,14 +407,17 @@
 				05198A7F2C35C2930016F576 /* ProfileView.swift in Sources */,
 				05480CFB2C597F250082E638 /* SharedViewModel.swift in Sources */,
 				054E962F2C4991820036165A /* CheckboxToggleStyle.swift in Sources */,
+				050BE2362C5FF9370060EB23 /* MatchPlayViewModel.swift in Sources */,
 				05480CF72C52B94C0082E638 /* example.swift in Sources */,
 				05198A512C35BA530016F576 /* GolfGamesApp.swift in Sources */,
 				054E962B2C498A630036165A /* CreateFriendView.swift in Sources */,
+				051DBA0D2C617858007FB2C5 /* GameSelectionView.swift in Sources */,
 				05198A6A2C35BDDF0016F576 /* LoginView.swift in Sources */,
 				05198A792C35C26B0016F576 /* InputView.swift in Sources */,
 				054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */,
 				05198A7D2C35C2840016F576 /* User.swift in Sources */,
 				05480CFC2C5A9A850082E638 /* HoleView.swift in Sources */,
+				050BE2382C6170A00060EB23 /* MatchPlayGame.swift in Sources */,
 				054E96212C4054180036165A /* OrientationObserver.swift in Sources */,
 				054E96252C4063D30036165A /* CreateGolferView.swift in Sources */,
 				054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */,
@@ -401,7 +432,7 @@
 				05480D062C5B360C0082E638 /* LandscapeScorecardView.swift in Sources */,
 				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,
 				054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */,
-				05198A872C3753E90016F576 /* InititalView.swift in Sources */,
+				05198A872C3753E90016F576 /* InitialView.swift in Sources */,
 				054E96232C4063A20036165A /* Golfer.swift in Sources */,
 				05480D082C5C0C610082E638 /* ViewExtensions.swift in Sources */,
 				054E960D2C3F64D20036165A /* HandicapCalculator.swift in Sources */,
@@ -413,6 +444,7 @@
 				054EB8632C3C6A2600E44F97 /* Round.swift in Sources */,
 				05480CD02C51B68F0082E638 /* ScorecardView.swift in Sources */,
 				054E96352C4B21A20036165A /* AddGolferButtonView.swift in Sources */,
+				050BE2342C5EBBFA0060EB23 /* DebugUtilities.swift in Sources */,
 				054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
