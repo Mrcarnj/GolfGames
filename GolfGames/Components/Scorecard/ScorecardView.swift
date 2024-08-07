@@ -9,6 +9,7 @@ struct ScorecardView: View {
     @State private var selectedGolferId: String?
     @State private var navigateToInitialView = false
     @State private var orientation = UIDeviceOrientation.unknown
+    @State private var selectedScorecardType: ScorecardType = .strokePlay
     
     private var isLandscape: Bool {
         return orientation.isLandscape
@@ -17,7 +18,10 @@ struct ScorecardView: View {
     var body: some View {
         Group {
             if isLandscape {
-                LandscapeScorecardView(navigateToInitialView: $navigateToInitialView)
+                LandscapeScorecardView(
+                    navigateToInitialView: $navigateToInitialView,
+                    selectedScorecardType: $selectedScorecardType
+                )
             } else {
                 portraitLayout
             }
@@ -41,13 +45,22 @@ struct ScorecardView: View {
     
     private var portraitLayout: some View {
         VStack(spacing: 10) {
+            if roundViewModel.isMatchPlay {
+                scorecardTypePicker
+            }
+            
             if roundViewModel.golfers.count > 1 {
                 golferPicker
             }
             
             if let golfer = selectedGolfer {
                 Spacer()
-                scoreCardView(for: golfer)
+                if selectedScorecardType == .strokePlay {
+                    scoreCardView(for: golfer)
+                } else {
+                    MatchPlaySCView(selectedGolferId: $selectedGolferId)
+                        .environmentObject(roundViewModel)
+                }
                 scoreLegend
                 Spacer()
             }
@@ -55,6 +68,15 @@ struct ScorecardView: View {
             finalizeRoundButton
                 .padding(.vertical, 10)
         }
+    }
+    
+    private var scorecardTypePicker: some View {
+        Picker("Scorecard Type", selection: $selectedScorecardType) {
+            Text("Stroke Play").tag(ScorecardType.strokePlay)
+            Text("Match Play").tag(ScorecardType.matchPlay)
+        }
+        .pickerStyle(SegmentedPickerStyle())
+        .padding(.horizontal)
     }
     
     private var finalizeRoundButton: some View {
@@ -69,12 +91,6 @@ struct ScorecardView: View {
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .frame(height: 60)
-    }
-    
-    private var finishButton: some View {
-        Button("Finish") {
-            finalizeRound()
-        }
     }
     
     private func finalizeRound() {
@@ -325,18 +341,18 @@ struct ScorecardView: View {
     }
     
     var scoreLegend: some View {
-    HStack(spacing: 10) {
-        ForEach([
-            (color: Color.yellow, shape: AnyShape(Circle()), text: "Eagle or better"),
-            (color: Color.red, shape: AnyShape(Circle()), text: "Birdie"),
-            (color: Color.black, shape: AnyShape(Rectangle()), text: "Bogey"),
-            (color: Color.blue, shape: AnyShape(Rectangle()), text: "Double bogey +")
-        ], id: \.text) { item in
-            legendItem(color: item.color, shape: item.shape, text: item.text, addBorder: item.color == .black && colorScheme == .dark)
+        HStack(spacing: 10) {
+            ForEach([
+                (color: Color.yellow, shape: AnyShape(Circle()), text: "Eagle or better"),
+                (color: Color.red, shape: AnyShape(Circle()), text: "Birdie"),
+                (color: Color.black, shape: AnyShape(Rectangle()), text: "Bogey"),
+                (color: Color.blue, shape: AnyShape(Rectangle()), text: "Double bogey +")
+            ], id: \.text) { item in
+                legendItem(color: item.color, shape: item.shape, text: item.text, addBorder: item.color == .black && colorScheme == .dark)
+            }
         }
+        .font(.caption)
     }
-    .font(.caption)
-}
     
     private var golferPicker: some View {
         Picker("Select Golfer", selection: $selectedGolferId) {
@@ -371,13 +387,6 @@ extension View {
         } else {
             self
         }
-    }
-}
-
-extension Shape {
-    func fillAndStroke(fillColor: Color, strokeColor: Color, strokeWidth: CGFloat) -> some View {
-        self.fill(fillColor)
-            .overlay(self.stroke(strokeColor, lineWidth: strokeWidth))
     }
 }
 

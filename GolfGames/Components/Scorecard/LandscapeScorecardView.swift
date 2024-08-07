@@ -15,34 +15,68 @@ struct LandscapeScorecardView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedGolferId: String?
     @Binding var navigateToInitialView: Bool
+    @Binding var selectedScorecardType: ScorecardType
+    
+    private var isLandscape: Bool {
+        return UIDevice.current.orientation.isLandscape
+    }
     
     var body: some View {
         GeometryReader { geometry in
-            ScrollView {
-                VStack(spacing: 8) {
+            VStack(spacing: 0) {
+                HStack {
+                    scorecardTypePicker
                     if roundViewModel.golfers.count > 1 {
                         golferPicker
-                            .padding(.bottom, 15)
-                    }
-                    
-                    if let golfer = selectedGolfer {
-                        scoreCardView(for: golfer)
-                            .scaleEffect(min(geometry.size.width / geometry.size.height, 1.2))
-                            .frame(width: geometry.size.width * 0.95)
-                        
-                        
-                        scoreLegend
-                            .padding(.top, 20)
                     }
                 }
-                .frame(minHeight: geometry.size.height)
+                .padding(.horizontal)
+                .padding(.top, 8)
+                
+                ScrollView {
+                    VStack {
+                        if let golfer = selectedGolfer {
+                            Group {
+                                if selectedScorecardType == .strokePlay {
+                                    strokePlayScorecard(for: golfer, geometry: geometry)
+                                } else {
+                                    matchPlayScorecard(for: golfer, geometry: geometry)
+                                }
+                            }
+                            .frame(width: geometry.size.width * 0.95)
+                            
+                            scoreLegend
+                                .padding(.top, 10)
+                        }
+                    }
+                    .padding(.top, 10)
+                }
                 .frame(maxWidth: .infinity)
             }
+            .frame(maxHeight: .infinity, alignment: .top)
         }
         .navigationBarItems(trailing: finishButton)
         .onAppear {
             selectedGolferId = authViewModel.currentUser?.id
         }
+    }
+    
+    private var scorecardTypePicker: some View {
+        Picker("Scorecard Type", selection: $selectedScorecardType) {
+            Text("Stroke Play").tag(ScorecardType.strokePlay)
+            Text("Match Play").tag(ScorecardType.matchPlay)
+        }
+        .pickerStyle(SegmentedPickerStyle())
+    }
+    
+    private func strokePlayScorecard(for golfer: Golfer, geometry: GeometryProxy) -> some View {
+        scoreCardView(for: golfer)
+            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    }
+
+    private func matchPlayScorecard(for golfer: Golfer, geometry: GeometryProxy) -> some View {
+        MatchPlaySCView(selectedGolferId: $selectedGolferId)
+            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
 
     private var golferPicker: some View {
@@ -328,29 +362,24 @@ struct LandscapeScorecardView: View {
         }
     }
     
-    var scoreLegend: some View {
-        HStack(spacing: 15) {
-            legendItem(color: .yellow, shape: Circle(), text: "Eagle or better")
-            legendItem(color: .red, shape: Circle(), text: "Birdie")
-            legendItem(color: .black, shape: Rectangle(), text: "Bogey", addBorder: colorScheme == .dark)
-            legendItem(color: .blue, shape: Rectangle(), text: "Double bogey +")
+    private var scoreLegend: some View {
+        HStack(spacing: 20) {
+            legendItem(color: .yellow, text: "Eagle or better")
+            legendItem(color: .red, text: "Birdie")
+            legendItem(color: .black, text: "Bogey")
+            legendItem(color: .blue, text: "Double bogey +")
         }
-        .font(.caption)
         .padding(.horizontal)
+        .background(Color(UIColor.systemBackground).opacity(0.8))
     }
     
-    func legendItem<S: Shape>(color: Color, shape: S, text: String, addBorder: Bool = false) -> some View {
-        HStack(spacing: 4) {
-            shape
+    private func legendItem(color: Color, text: String) -> some View {
+        HStack {
+            Circle()
                 .fill(color)
                 .frame(width: 10, height: 10)
-                .if(addBorder) { view in
-                    view.overlay(
-                        RoundedRectangle(cornerRadius: 2)
-                            .stroke(Color.white, lineWidth: 1)
-                    )
-                }
             Text(text)
+                .font(.caption)
         }
     }
 }

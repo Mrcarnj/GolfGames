@@ -29,6 +29,8 @@
 		05198A872C3753E90016F576 /* InitialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A862C3753E90016F576 /* InitialView.swift */; };
 		051DBA0D2C617858007FB2C5 /* GameSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE22E2C5DAA210060EB23 /* GameSelectionView.swift */; };
 		053D7AFD2C62B955007D2D30 /* TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D7AFC2C62B955007D2D30 /* TestData.swift */; };
+		053D7AFF2C62EE40007D2D30 /* MatchPlaySCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */; };
+		053D7B012C6312D0007D2D30 /* ScorecardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D7B002C6312CF007D2D30 /* ScorecardType.swift */; };
 		05480CD02C51B68F0082E638 /* ScorecardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480CCF2C51B68F0082E638 /* ScorecardView.swift */; };
 		05480CF32C51BC7C0082E638 /* RecentRoundsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480CF22C51BC7C0082E638 /* RecentRoundsListView.swift */; };
 		05480CF42C51CA940082E638 /* RoundViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */; };
@@ -82,6 +84,8 @@
 		05198A822C35E5060016F576 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		05198A862C3753E90016F576 /* InitialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialView.swift; sourceTree = "<group>"; };
 		053D7AFC2C62B955007D2D30 /* TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestData.swift; sourceTree = "<group>"; };
+		053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlaySCView.swift; sourceTree = "<group>"; };
+		053D7B002C6312CF007D2D30 /* ScorecardType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardType.swift; sourceTree = "<group>"; };
 		05480CCD2C51B5290082E638 /* TeeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeSelectionView.swift; sourceTree = "<group>"; };
 		05480CCF2C51B68F0082E638 /* ScorecardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardView.swift; sourceTree = "<group>"; };
 		05480CF22C51BC7C0082E638 /* RecentRoundsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentRoundsListView.swift; sourceTree = "<group>"; };
@@ -202,6 +206,7 @@
 				054E96222C4063A20036165A /* Golfer.swift */,
 				054E962C2C498E2D0036165A /* FriendsViewModel.swift */,
 				05480CFA2C597F250082E638 /* SharedViewModel.swift */,
+				053D7B002C6312CF007D2D30 /* ScorecardType.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -311,6 +316,7 @@
 			children = (
 				05480CCF2C51B68F0082E638 /* ScorecardView.swift */,
 				05480D052C5B360C0082E638 /* LandscapeScorecardView.swift */,
+				053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */,
 			);
 			path = Scorecard;
 			sourceTree = "<group>";
@@ -426,6 +432,7 @@
 				054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */,
 				054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */,
 				054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */,
+				053D7B012C6312D0007D2D30 /* ScorecardType.swift in Sources */,
 				05198A682C35BDD00016F576 /* AuthViewModel.swift in Sources */,
 				054E961D2C403BEF0036165A /* OrientationUtility.swift in Sources */,
 				05480CF92C52C7BB0082E638 /* TeePickerView.swift in Sources */,
@@ -436,6 +443,7 @@
 				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,
 				054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */,
 				05198A872C3753E90016F576 /* InitialView.swift in Sources */,
+				053D7AFF2C62EE40007D2D30 /* MatchPlaySCView.swift in Sources */,
 				054E96232C4063A20036165A /* Golfer.swift in Sources */,
 				053D7AFD2C62B955007D2D30 /* TestData.swift in Sources */,
 				05480D082C5C0C610082E638 /* ViewExtensions.swift in Sources */,

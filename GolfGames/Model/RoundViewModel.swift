@@ -38,6 +38,8 @@ class RoundViewModel: ObservableObject {
     private var talliedHoles: Set<Int> = []
     @Published var matchWinner: String?
     @Published var winningScore: String?
+    @Published var selectedScorecardType: ScorecardType = .strokePlay
+    @Published var matchStatus: [Int: [String: Int]] = [:]
     
     func beginRound(for user: User, additionalGolfers: [Golfer], isMatchPlay: Bool, completion: @escaping (String?, Error?, [String: Any]?) -> Void) {
         self.isMatchPlay = isMatchPlay
@@ -340,9 +342,9 @@ class RoundViewModel: ObservableObject {
     
     func updateMatchPlayStatus(for currentHoleNumber: Int) {
         guard isMatchPlay,
-                matchPlayViewModel != nil,
-                golfers.count >= 2,
-                currentHoleNumber > 0,
+              matchPlayViewModel != nil,
+              golfers.count >= 2,
+              currentHoleNumber > 0,
               currentHoleNumber > lastUpdatedHole,
               allScoresEntered(for: currentHoleNumber) else {
             print("Debug: Guard condition failed in updateMatchPlayStatus")
@@ -386,11 +388,25 @@ class RoundViewModel: ObservableObject {
         lastUpdatedHole = currentHoleNumber
         
         if player1NetScore < player2NetScore {
-            holeWinners[currentHoleNumber] = player1.fullName
+            self.holeWinners[currentHoleNumber] = player1.fullName
+            self.matchStatus[currentHoleNumber] = [player1.id: 1, player2.id: -1]
         } else if player2NetScore < player1NetScore {
-            holeWinners[currentHoleNumber] = player2.fullName
+            self.holeWinners[currentHoleNumber] = player2.fullName
+            self.matchStatus[currentHoleNumber] = [player1.id: -1, player2.id: 1]
         } else {
-            holeWinners[currentHoleNumber] = "Halved"
+            self.holeWinners[currentHoleNumber] = "Halved"
+            self.matchStatus[currentHoleNumber] = [player1.id: 0, player2.id: 0]
+        }
+        
+        // Calculate cumulative match status
+        var cumulativeStatus = 0
+        for hole in 1...currentHoleNumber {
+            if var holeStatus = self.matchStatus[hole] {
+                cumulativeStatus += holeStatus[player1.id] ?? 0
+                holeStatus[player1.id] = cumulativeStatus
+                holeStatus[player2.id] = -cumulativeStatus
+                self.matchStatus[hole] = holeStatus
+            }
         }
     }
     
@@ -451,11 +467,30 @@ class RoundViewModel: ObservableObject {
         let player1 = golfers[0]
         let player2 = golfers[1]
         
+        var cumulativeStatus = 0
+        matchStatus.removeAll() // Clear previous match status
+        
+        for holeNumber in 1...18 {
+            if let winner = holeWinners[holeNumber] {
+                if winner == player1.fullName {
+                    cumulativeStatus += 1
+                } else if winner == player2.fullName {
+                    cumulativeStatus -= 1
+                }
+                // If halved, cumulativeStatus doesn't change
+                
+                matchStatus[holeNumber] = [player1.id: cumulativeStatus, player2.id: -cumulativeStatus]
+            } else {
+                // If the hole hasn't been played yet, use the previous status
+                matchStatus[holeNumber] = [player1.id: cumulativeStatus, player2.id: -cumulativeStatus]
+            }
+        }
+        
         let player1Wins = holeTallies[player1.fullName, default: 0]
         let player2Wins = holeTallies[player2.fullName, default: 0]
         let halvedHoles = holeTallies["Halved", default: 0]
         
-        matchScore = player1Wins - player2Wins
+        matchScore = cumulativeStatus // Use the final cumulative status as the match score
         holesPlayed = min(player1Wins + player2Wins + halvedHoles, 18)
         
         let remainingHoles = 18 - holesPlayed
@@ -474,6 +509,17 @@ class RoundViewModel: ObservableObject {
                 matchWinner = "Tie"
                 winningScore = "All Square"
             }
+        }
+        
+        // Update matchPlayStatus string
+        if matchWinner != nil {
+            matchPlayStatus = winningScore
+        } else if matchScore > 0 {
+            matchPlayStatus = "\(player1.fullName) \(matchScore)UP thru \(holesPlayed)"
+        } else if matchScore < 0 {
+            matchPlayStatus = "\(player2.fullName) \(abs(matchScore))UP thru \(holesPlayed)"
+        } else {
+            matchPlayStatus = "All Square thru \(holesPlayed)"
         }
     }
     

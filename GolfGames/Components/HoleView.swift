@@ -15,6 +15,7 @@ struct HoleView: View {
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @EnvironmentObject var sharedViewModel: SharedViewModel
     @State private var navigateToInitialView = false
+    @State private var selectedScorecardType: ScorecardType = .strokePlay
     
     let teeId: String
     let initialHoleIndex: Int
@@ -53,10 +54,13 @@ struct HoleView: View {
     var body: some View {
         Group {
             if orientation.isLandscape {
-                LandscapeScorecardView(navigateToInitialView: $navigateToInitialView)
-                    .environmentObject(roundViewModel)
-                    .environmentObject(singleRoundViewModel)
-                    .environmentObject(authViewModel)
+                LandscapeScorecardView(
+                    navigateToInitialView: $navigateToInitialView,
+                    selectedScorecardType: $selectedScorecardType
+                )
+                .environmentObject(roundViewModel)
+                .environmentObject(singleRoundViewModel)
+                .environmentObject(authViewModel)
             } else {
                 if holesLoaded {
                     portraitHoleContent
@@ -80,6 +84,9 @@ struct HoleView: View {
             loadHoleData()
             initializeScores()
             loadScores()
+            
+            // Sync the local state with the ViewModel when the view appears
+            selectedScorecardType = roundViewModel.selectedScorecardType
         }
         .onRotate { newOrientation in
             orientation = newOrientation
@@ -250,28 +257,6 @@ struct HoleView: View {
                         .padding()
                 }
             }
-// THIS SECTION IS FOR DEBUGGING TALLY COUNT FOR MATCH PLAY VERSION 1
-//            if roundViewModel.isMatchPlay {
-//                HStack {
-//                    ForEach(roundViewModel.golfers.prefix(2)) { golfer in
-//                        VStack {
-//                            Text(golfer.fullName)
-//                                .font(.subheadline)
-//                            Text("\(roundViewModel.holeTallies[golfer.fullName, default: 0])")
-//                                .font(.headline)
-//                        }
-//                        .padding(.horizontal)
-//                    }
-//                    VStack {
-//                        Text("Halved")
-//                            .font(.subheadline)
-//                        Text("\(roundViewModel.holeTallies["Halved", default: 0])")
-//                            .font(.headline)
-//                    }
-//                    .padding(.horizontal)
-//                }
-//                .padding()
-//            }
         }
         .gesture(
             DragGesture()
