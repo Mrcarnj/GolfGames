@@ -39,14 +39,15 @@ struct LandscapeScorecardView: View {
                             Group {
                                 if selectedScorecardType == .strokePlay {
                                     strokePlayScorecard(for: golfer, geometry: geometry)
+                                    scoreLegend
+                                        .padding(.top, 10)
                                 } else {
                                     matchPlayScorecard(for: golfer, geometry: geometry)
+                                    scoreLegend
+                                        .padding(.top, -10)
                                 }
                             }
                             .frame(width: geometry.size.width * 0.95)
-                            
-                            scoreLegend
-                                .padding(.top, 10)
                         }
                     }
                     .padding(.top, 10)
@@ -73,12 +74,12 @@ struct LandscapeScorecardView: View {
         scoreCardView(for: golfer)
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
-
+    
     private func matchPlayScorecard(for golfer: Golfer, geometry: GeometryProxy) -> some View {
         MatchPlaySCView(selectedGolferId: $selectedGolferId)
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
-
+    
     private var golferPicker: some View {
         Picker("Select Golfer", selection: $selectedGolferId) {
             ForEach(roundViewModel.golfers) { golfer in
@@ -95,7 +96,7 @@ struct LandscapeScorecardView: View {
             roundViewModel.grossScores[hole]?[golfer.id] != nil
         }
     }
-
+    
     private var finishButton: some View {
         Group {
             if allHolesHaveScores {
@@ -107,17 +108,17 @@ struct LandscapeScorecardView: View {
             }
         }
     }
-
+    
     private func finalizeRound() {
         guard let user = authViewModel.currentUser,
               let course = roundViewModel.selectedCourse,
               let tee = roundViewModel.selectedTee else { return }
-
+        
         let db = Firestore.firestore()
         let roundRef = db.collection("users").document(user.id).collection("rounds").document(roundViewModel.roundId ?? "")
-
+        
         let roundResultID = roundRef.collection("results").document().documentID
-
+        
         var roundData: [String: Any] = [
             "date": Timestamp(date: Date()),
             "courseId": course.id,
@@ -136,19 +137,19 @@ struct LandscapeScorecardView: View {
                 ]
             }
         ]
-
+        
         for (hole, scores) in roundViewModel.grossScores {
             for (golferId, score) in scores {
                 roundData["gross_hole_\(hole)_\(golferId)"] = score
             }
         }
-
+        
         for (hole, scores) in roundViewModel.netStrokePlayScores {
             for (golferId, score) in scores {
                 roundData["net_hole_\(hole)_\(golferId)"] = score
             }
         }
-
+        
         roundRef.setData(roundData) { error in
             if let error = error {
                 print("Error saving round: \(error.localizedDescription)")
@@ -311,7 +312,7 @@ struct LandscapeScorecardView: View {
             }
         }
     }
-
+    
     func strokeDotColor(score: Int, par: Int) -> Color {
         if score == par + 1 {
             return .white
@@ -363,23 +364,33 @@ struct LandscapeScorecardView: View {
     }
     
     private var scoreLegend: some View {
-        HStack(spacing: 20) {
-            legendItem(color: .yellow, text: "Eagle or better")
-            legendItem(color: .red, text: "Birdie")
-            legendItem(color: .black, text: "Bogey")
-            legendItem(color: .blue, text: "Double bogey +")
+        HStack(spacing: 10) {
+            ForEach([
+                (color: Color.yellow, shape: AnyShape(Circle()), text: "Eagle or better"),
+                (color: Color.red, shape: AnyShape(Circle()), text: "Birdie"),
+                (color: Color.black, shape: AnyShape(Rectangle()), text: "Bogey"),
+                (color: Color.blue, shape: AnyShape(Rectangle()), text: "Double bogey +")
+            ], id: \.text) { item in
+                legendItem(color: item.color, shape: item.shape, text: item.text, addBorder: item.color == .black && colorScheme == .dark)
+            }
         }
         .padding(.horizontal)
         .background(Color(UIColor.systemBackground).opacity(0.8))
+        .font(.caption)
     }
     
-    private func legendItem(color: Color, text: String) -> some View {
-        HStack {
-            Circle()
+    private func legendItem<S: Shape>(color: Color, shape: S, text: String, addBorder: Bool = false) -> some View {
+        HStack(spacing: 4) {
+            shape
                 .fill(color)
-                .frame(width: 10, height: 10)
+                .frame(width: 12, height: 12)
+                .if(addBorder) { view in
+                    view.overlay(
+                        RoundedRectangle(cornerRadius: 2)
+                            .stroke(Color.white, lineWidth: 1)
+                    )
+                }
             Text(text)
-                .font(.caption)
         }
     }
 }

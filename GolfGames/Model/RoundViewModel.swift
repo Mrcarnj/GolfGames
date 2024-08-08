@@ -40,7 +40,10 @@ class RoundViewModel: ObservableObject {
     @Published var winningScore: String?
     @Published var selectedScorecardType: ScorecardType = .strokePlay
     @Published var matchStatus: [Int: [String: Int]] = [:]
-    
+    @Published var matchStatusArray: [Int] = Array(repeating: 0, count: 18)
+    @Published var finalMatchStatusArray: [Int]?
+    @Published var matchWinningHole: Int?
+
     func beginRound(for user: User, additionalGolfers: [Golfer], isMatchPlay: Bool, completion: @escaping (String?, Error?, [String: Any]?) -> Void) {
         self.isMatchPlay = isMatchPlay
         print("Beginning round...")
@@ -456,71 +459,68 @@ class RoundViewModel: ObservableObject {
         talliedHoles.remove(holeNumber)
     }
     
-    func updateMatchStatus() {
+    func updateMatchStatus(for currentHoleNumber: Int) {
         guard isMatchPlay && golfers.count >= 2 else { return }
-        
-        // If a winner has already been determined, don't update anything
-        if matchWinner != nil {
-            return
-        }
         
         let player1 = golfers[0]
         let player2 = golfers[1]
         
-        var cumulativeStatus = 0
-        matchStatus.removeAll() // Clear previous match status
-        
-        for holeNumber in 1...18 {
-            if let winner = holeWinners[holeNumber] {
+        if matchWinner == nil {
+            if let winner = holeWinners[currentHoleNumber] {
                 if winner == player1.fullName {
-                    cumulativeStatus += 1
+                    matchStatusArray[currentHoleNumber - 1] = 1
                 } else if winner == player2.fullName {
-                    cumulativeStatus -= 1
+                    matchStatusArray[currentHoleNumber - 1] = -1
+                } else {
+                    matchStatusArray[currentHoleNumber - 1] = 0
                 }
-                // If halved, cumulativeStatus doesn't change
-                
-                matchStatus[holeNumber] = [player1.id: cumulativeStatus, player2.id: -cumulativeStatus]
+            }
+            
+            // Calculate cumulative status
+            var cumulativeStatus = 0
+            for i in 0..<currentHoleNumber {
+                cumulativeStatus += matchStatusArray[i]
+            }
+            
+            matchScore = cumulativeStatus
+            holesPlayed = currentHoleNumber
+            
+            // Update matchPlayStatus string
+            if matchScore == 0 {
+                matchPlayStatus = "All Square thru \(holesPlayed)"
             } else {
-                // If the hole hasn't been played yet, use the previous status
-                matchStatus[holeNumber] = [player1.id: cumulativeStatus, player2.id: -cumulativeStatus]
+                let leadingPlayer = matchScore > 0 ? player1.fullName : player2.fullName
+                let absScore = abs(matchScore)
+                matchPlayStatus = "\(leadingPlayer) \(absScore)UP thru \(holesPlayed)"
+            }
+            
+            // Check for match win conditions
+            let remainingHoles = 18 - holesPlayed
+            if abs(matchScore) > remainingHoles {
+                matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
+                winningScore = "\(abs(matchScore))&\(remainingHoles)"
+                matchWinningHole = currentHoleNumber
+                finalMatchStatusArray = matchStatusArray
+            } else if holesPlayed == 18 {
+                if matchScore > 0 {
+                    matchWinner = player1.fullName
+                    winningScore = "\(matchScore)UP"
+                } else if matchScore < 0 {
+                    matchWinner = player2.fullName
+                    winningScore = "\(abs(matchScore))UP"
+                } else {
+                    matchWinner = "Tie"
+                    winningScore = "All Square"
+                }
+                matchWinningHole = 18
+                finalMatchStatusArray = matchStatusArray
             }
         }
         
-        let player1Wins = holeTallies[player1.fullName, default: 0]
-        let player2Wins = holeTallies[player2.fullName, default: 0]
-        let halvedHoles = holeTallies["Halved", default: 0]
+        holesPlayed = currentHoleNumber
         
-        matchScore = cumulativeStatus // Use the final cumulative status as the match score
-        holesPlayed = min(player1Wins + player2Wins + halvedHoles, 18)
-        
-        let remainingHoles = 18 - holesPlayed
-        
-        if abs(matchScore) > remainingHoles {
-            matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
-            winningScore = "\(abs(matchScore))&\(remainingHoles)"
-        } else if holesPlayed == 18 {
-            if matchScore > 0 {
-                matchWinner = player1.fullName
-                winningScore = "\(matchScore)UP"
-            } else if matchScore < 0 {
-                matchWinner = player2.fullName
-                winningScore = "\(abs(matchScore))UP"
-            } else {
-                matchWinner = "Tie"
-                winningScore = "All Square"
-            }
-        }
-        
-        // Update matchPlayStatus string
-        if matchWinner != nil {
-            matchPlayStatus = winningScore
-        } else if matchScore > 0 {
-            matchPlayStatus = "\(player1.fullName) \(matchScore)UP thru \(holesPlayed)"
-        } else if matchScore < 0 {
-            matchPlayStatus = "\(player2.fullName) \(abs(matchScore))UP thru \(holesPlayed)"
-        } else {
-            matchPlayStatus = "All Square thru \(holesPlayed)"
-        }
+        print("Updated match status for hole \(currentHoleNumber): \(matchStatusArray)")
+        objectWillChange.send()
     }
     
     func recalculateTallies(upToHole: Int) {
@@ -528,11 +528,11 @@ class RoundViewModel: ObservableObject {
         
         holeTallies = [:]
         talliedHoles = []
+        matchStatusArray = Array(repeating: 0, count: 18)
         
         for holeNumber in 1...upToHole {
             updateTallies(for: holeNumber)
+            updateMatchStatus(for: holeNumber)
         }
-        
-        updateMatchStatus()
     }
 }

@@ -127,6 +127,7 @@ struct HoleView: View {
                     Button(action: {
                         if roundViewModel.isMatchPlay {
                             roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
+                            roundViewModel.updateMatchStatus(for: currentHoleIndex + 1)
                         }
                         currentHoleIndex += 1
                         updateScoresForCurrentHole()
@@ -270,6 +271,7 @@ struct HoleView: View {
                         // Swipe left (next hole)
                         if roundViewModel.isMatchPlay {
                             roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
+                            roundViewModel.updateMatchStatus(for: currentHoleIndex + 1)
                         }
                         currentHoleIndex += 1
                         updateScoresForCurrentHole()
@@ -357,7 +359,7 @@ struct HoleView: View {
         }
         
         if roundViewModel.isMatchPlay && roundViewModel.allScoresEntered(for: currentHoleNumber) {
-            roundViewModel.updateMatchPlayStatus(for: currentHoleNumber)
+            roundViewModel.updateTallies(for: currentHoleNumber)
         }
     }
     
