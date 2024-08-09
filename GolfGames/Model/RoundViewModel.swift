@@ -276,8 +276,9 @@ class RoundViewModel: ObservableObject {
         grossScores[hole, default: [:]][golferId] = score
         updateStrokePlayNetScores()
         
-        if isMatchPlay && allScoresEntered(for: hole) {
-            updateMatchPlayStatus(for: hole)
+        // Recalculate match status for all holes from the changed hole onward
+        for currentHole in hole...18 {
+            updateMatchStatus(for: currentHole)
         }
     }
     
@@ -465,55 +466,67 @@ class RoundViewModel: ObservableObject {
         let player1 = golfers[0]
         let player2 = golfers[1]
         
-        if matchWinner == nil {
-            if let winner = holeWinners[currentHoleNumber] {
-                if winner == player1.fullName {
-                    matchStatusArray[currentHoleNumber - 1] = 1
-                } else if winner == player2.fullName {
-                    matchStatusArray[currentHoleNumber - 1] = -1
-                } else {
-                    matchStatusArray[currentHoleNumber - 1] = 0
+        // Reset match status array if recalculating from an earlier hole
+        if currentHoleNumber == 1 {
+            matchStatusArray = Array(repeating: 0, count: 18)
+            matchWinner = nil
+            winningScore = nil
+            matchWinningHole = nil
+            finalMatchStatusArray = nil
+        }
+        
+        // Update match status for each hole up to the current hole
+        for hole in 1...currentHoleNumber {
+            if matchWinner == nil {
+                if let winner = holeWinners[hole] {
+                    if winner == player1.fullName {
+                        matchStatusArray[hole - 1] = 1
+                    } else if winner == player2.fullName {
+                        matchStatusArray[hole - 1] = -1
+                    } else {
+                        matchStatusArray[hole - 1] = 0
+                    }
                 }
-            }
-            
-            // Calculate cumulative status
-            var cumulativeStatus = 0
-            for i in 0..<currentHoleNumber {
-                cumulativeStatus += matchStatusArray[i]
-            }
-            
-            matchScore = cumulativeStatus
-            holesPlayed = currentHoleNumber
-            
-            // Update matchPlayStatus string
-            if matchScore == 0 {
-                matchPlayStatus = "All Square thru \(holesPlayed)"
-            } else {
-                let leadingPlayer = matchScore > 0 ? player1.fullName : player2.fullName
-                let absScore = abs(matchScore)
-                matchPlayStatus = "\(leadingPlayer) \(absScore)UP thru \(holesPlayed)"
-            }
-            
-            // Check for match win conditions
-            let remainingHoles = 18 - holesPlayed
-            if abs(matchScore) > remainingHoles {
-                matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
-                winningScore = "\(abs(matchScore))&\(remainingHoles)"
-                matchWinningHole = currentHoleNumber
-                finalMatchStatusArray = matchStatusArray
-            } else if holesPlayed == 18 {
-                if matchScore > 0 {
-                    matchWinner = player1.fullName
-                    winningScore = "\(matchScore)UP"
-                } else if matchScore < 0 {
-                    matchWinner = player2.fullName
-                    winningScore = "\(abs(matchScore))UP"
-                } else {
-                    matchWinner = "Tie"
-                    winningScore = "All Square"
+                
+                // Calculate cumulative status
+                var cumulativeStatus = 0
+                for i in 0..<hole {
+                    cumulativeStatus += matchStatusArray[i]
                 }
-                matchWinningHole = 18
-                finalMatchStatusArray = matchStatusArray
+                
+                matchScore = cumulativeStatus
+                holesPlayed = hole
+                
+                // Update matchPlayStatus string
+                if matchScore == 0 {
+                    matchPlayStatus = "All Square thru \(holesPlayed)"
+                } else {
+                    let leadingPlayer = matchScore > 0 ? player1.fullName : player2.fullName
+                    let absScore = abs(matchScore)
+                    matchPlayStatus = "\(leadingPlayer) \(absScore)UP thru \(holesPlayed)"
+                }
+                
+                // Check for match win conditions
+                let remainingHoles = 18 - holesPlayed
+                if abs(matchScore) > remainingHoles {
+                    matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
+                    winningScore = "\(abs(matchScore))&\(remainingHoles)"
+                    matchWinningHole = hole
+                    finalMatchStatusArray = matchStatusArray
+                } else if holesPlayed == 18 {
+                    if matchScore > 0 {
+                        matchWinner = player1.fullName
+                        winningScore = "\(matchScore)UP"
+                    } else if matchScore < 0 {
+                        matchWinner = player2.fullName
+                        winningScore = "\(abs(matchScore))UP"
+                    } else {
+                        matchWinner = "Tie"
+                        winningScore = "All Square"
+                    }
+                    matchWinningHole = 18
+                    finalMatchStatusArray = matchStatusArray
+                }
             }
         }
         
