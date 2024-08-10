@@ -13,7 +13,9 @@ struct GameSelectionView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.presentationMode) var presentationMode
     var onBeginRound: () -> Void
-
+    
+    @State private var showingMatchPlayInfo = false
+    
     var body: some View {
         VStack(spacing: 20) {
             gameSelectionHeader
@@ -32,6 +34,13 @@ struct GameSelectionView: View {
         .background(Color(.systemBackground))
         .navigationTitle("Select Games")
         .onAppear { printDebugInfo() }
+        .alert(isPresented: $showingMatchPlayInfo) {
+            Alert(
+                title: Text("What is Match Play?"),
+                message: Text("Select this for 18-hole match play between 2 golfers. Match Play is a scoring format where players compete against each other hole-by-hole. The player with the lowest net score on a hole wins that hole. The match continues until one player is ahead by more holes than there are remaining to play."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
     
     private var gameSelectionHeader: some View {
@@ -46,12 +55,21 @@ struct GameSelectionView: View {
             Text("Available Games")
                 .font(.headline)
             
-            Toggle(isOn: $sharedViewModel.isMatchPlay) {
-                HStack {
-                    Image(systemName: "flag.fill")
+            HStack {
+                Toggle(isOn: $sharedViewModel.isMatchPlay) {
+                    HStack (alignment: .center) {
+                        Image(systemName: "flag.fill")
+                            .foregroundColor(.blue)
+                        Text("Match Play")
+                            .font(.subheadline)
+                    }
+                }
+                
+                Button(action: {
+                    showMatchPlayInfo()
+                }) {
+                    Image(systemName: "info.circle")
                         .foregroundColor(.blue)
-                    Text("Match Play")
-                        .font(.subheadline)
                 }
             }
             .padding()
@@ -74,22 +92,23 @@ struct GameSelectionView: View {
                 let golfer1 = sharedViewModel.golfers[0]
                 let golfer2 = sharedViewModel.golfers[1]
                 
-                VStack(alignment: .leading, spacing: 15) {
+                VStack(alignment: .center, spacing: 15) {
                     Text("Match Play Details")
                         .font(.headline)
                     
-                    HStack {
+                    HStack(spacing: 20) {
                         PlayerAvatar(name: golfer1.fullName)
                         Text("vs")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.primary)
                         PlayerAvatar(name: golfer2.fullName)
                     }
                     
                     Text("\(golfer2.fullName) gets \(matchPlayHandicap) stroke\(matchPlayHandicap == 1 ? "" : "s")")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(.primary)
                 }
+                .frame(maxWidth: .infinity)
                 .padding()
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(10)
@@ -120,6 +139,10 @@ struct GameSelectionView: View {
         print("Debug: GameSelectionView - Match Play: \(sharedViewModel.isMatchPlay)")
         print("Debug: GameSelectionView - Match Play Handicap: \(sharedViewModel.matchPlayHandicap)")
         print("Debug: GameSelectionView - Golfers: \(sharedViewModel.golfers.map { "\($0.fullName) (Handicap: \($0.handicap), Course Handicap: \($0.courseHandicap ?? 0))" })")
+    }
+    
+    private func showMatchPlayInfo() {
+        showingMatchPlayInfo = true
     }
 }
 

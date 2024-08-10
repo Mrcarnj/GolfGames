@@ -85,15 +85,15 @@ struct InititalView: View {
             .background(Color(.systemTeal))
             .cornerRadius(10)
         }
-
-        Button {
-            // Action for Multiple Rounds
-        } label: {
-            HStack {
-                Text("New Multiple Rounds")
-                Image(systemName: "plus")
-            }
-        }
+// MULTIPLE ROUND BUTTON
+//        Button {
+//            // Action for Multiple Rounds
+//        } label: {
+//            HStack {
+//                Text("New Multiple Rounds")
+//                Image(systemName: "plus")
+//            }
+//        }
         .frame(width: UIScreen.main.bounds.width - 32, height: 48)
         .foregroundColor(.white)
         .background(Color(.systemTeal))
