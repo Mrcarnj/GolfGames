@@ -120,7 +120,7 @@ struct RegistrationView: View {
                             isFocused = false
                         }
                         .foregroundColor(.blue)
-                    }
+                    }/
                 }
                 
                 // sign in button
