@@ -548,4 +548,24 @@ class RoundViewModel: ObservableObject {
             updateMatchStatus(for: holeNumber)
         }
     }
+
+    func clearRoundData() {
+        // Reset all round-related data
+        roundId = nil
+        selectedCourse = nil
+        selectedTee = nil
+        golfers = []
+        grossScores = [:]
+        netStrokePlayScores = [:]
+        matchPlayNetScores = [:]
+        strokeHoles = [:]
+        matchPlayStrokeHoles = [:]
+        holeWinners = [:]
+        matchScore = 0
+        holesPlayed = 0
+        matchWinner = nil
+        winningScore = nil
+        // ... reset any other properties related to the current round ...
+    }
+
 }

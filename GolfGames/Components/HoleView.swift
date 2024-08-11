@@ -31,6 +31,8 @@ struct HoleView: View {
     @State private var currentHole: Int
     
     @State private var isLandscape = false
+    @State private var showSideMenu = false
+    @State private var viewSize: CGSize = .zero
     
     init(teeId: String, holeNumber: Int) {
         self.teeId = teeId
@@ -54,20 +56,52 @@ struct HoleView: View {
     }
     
     var body: some View {
-        Group {
-            if isLandscape {
-                LandscapeScorecardView(
-                    navigateToInitialView: $navigateToInitialView,
-                    selectedScorecardType: $selectedScorecardType
-                )
-                .environmentObject(roundViewModel)
-                .environmentObject(singleRoundViewModel)
-                .environmentObject(authViewModel)
-            } else {
-                if holesLoaded {
-                    portraitHoleContent
-                } else {
-                    ProgressView("Loading hole data...")
+        GeometryReader { geometry in
+            ZStack {
+                Group {
+                    if isLandscape {
+                        LandscapeScorecardView(
+                            navigateToInitialView: $navigateToInitialView,
+                            selectedScorecardType: $selectedScorecardType
+                        )
+                        .environmentObject(roundViewModel)
+                        .environmentObject(singleRoundViewModel)
+                        .environmentObject(authViewModel)
+                    } else {
+                        VStack(spacing: 0) {
+                            customNavigationBar
+                            
+                            if holesLoaded {
+                                portraitHoleContent
+                                    .frame(width: viewSize.width, height: viewSize.height)
+                            } else {
+                                ProgressView("Loading hole data...")
+                            }
+                        }
+                    }
+                }
+
+                if showSideMenu && !isLandscape {
+                    Color.black.opacity(0.3)
+                        .edgesIgnoringSafeArea(.all)
+                        .onTapGesture {
+                            withAnimation {
+                                self.showSideMenu = false
+                            }
+                        }
+
+                    HStack {
+                        SideMenuView(isShowing: $showSideMenu, navigateToInitialView: $navigateToInitialView)
+                            .frame(width: 250)
+                            .transition(.move(edge: .leading))
+
+                        Spacer()
+                    }
+                }
+            }
+            .onChange(of: geometry.size) { newSize in
+                if !isLandscape {
+                    viewSize = newSize
                 }
             }
         }
@@ -99,11 +133,18 @@ struct HoleView: View {
             isLandscape = newOrientation.isLandscape
             if isLandscape {
                 OrientationHelper.setOrientation(to: .landscapeRight)
+                showSideMenu = false  // Hide side menu when rotating to landscape
             } else {
                 OrientationHelper.setOrientation(to: .portrait)
+                // Ensure the view size is updated when rotating back to portrait
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                        viewSize = windowScene.screen.bounds.size
+                    }
+                }
             }
         }
-        .navigationBarBackButtonHidden(true)
+        .navigationBarHidden(true)
         .background(
             NavigationLink(destination: InititalView()
                 .environmentObject(authViewModel)
@@ -114,46 +155,70 @@ struct HoleView: View {
         )
     }
     
-    
-    private var portraitHoleContent: some View {
-        VStack {
-            // Navigation Arrows at the Top
+    private var customNavigationBar: some View {
+        VStack(spacing: 0) {
             HStack {
-                if currentHoleIndex > 0 {
-                    Button(action: {
-                        currentHoleIndex -= 1
-                        updateScoresForCurrentHole()
-                    }) {
-                        HStack {
-                            Image(systemName: "arrow.left")
-                            Text("Hole \(currentHoleIndex)")
-                        }
-                        .fontWeight(.bold)
+                Button(action: {
+                    withAnimation {
+                        self.showSideMenu.toggle()
                     }
-                    .padding()
+                }) {
+                    Image(systemName: "line.horizontal.3")
+                        .imageScale(.large)
+                        .padding(.top)
+                        .padding(.horizontal)
                 }
                 
                 Spacer()
-                
-                if currentHoleIndex < singleRoundViewModel.holes.count - 1 {
-                    Button(action: {
-                        if roundViewModel.isMatchPlay {
-                            roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
-                            roundViewModel.updateMatchStatus(for: currentHoleIndex + 1)
-                        }
-                        currentHoleIndex += 1
-                        updateScoresForCurrentHole()
-                    }) {
-                        HStack {
-                            Text("Hole \(currentHoleIndex + 2)")
-                            Image(systemName: "arrow.right")
-                        }
-                        .fontWeight(.bold)
+            }
+            .background(Color(.systemBackground))
+            .shadow(radius: 1)
+            
+            holeNavigation
+        }
+    }
+
+    private var holeNavigation: some View {
+        HStack {
+            if currentHoleIndex > 0 {
+                Button(action: {
+                    currentHoleIndex -= 1
+                    updateScoresForCurrentHole()
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.left")
+                        Text("Hole \(currentHoleIndex)")
                     }
-                    .padding()
+                    .fontWeight(.bold)
                 }
+                .padding()
             }
             
+            Spacer()
+            
+            if currentHoleIndex < singleRoundViewModel.holes.count - 1 {
+                Button(action: {
+                    if roundViewModel.isMatchPlay {
+                        roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
+                        roundViewModel.updateMatchStatus(for: currentHoleIndex + 1)
+                    }
+                    currentHoleIndex += 1
+                    updateScoresForCurrentHole()
+                }) {
+                    HStack {
+                        Text("Hole \(currentHoleIndex + 2)")
+                        Image(systemName: "arrow.right")
+                    }
+                    .fontWeight(.bold)
+                }
+                .padding()
+            }
+        }
+        .background(Color(.systemBackground))
+    }
+    
+    private var portraitHoleContent: some View {
+        VStack {
             // Hole Details
             VStack {
                 Text("Hole \(hole?.holeNumber ?? 0)")
