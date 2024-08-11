@@ -13,7 +13,6 @@ struct MatchPlaySCView: View {
     @EnvironmentObject var roundViewModel: RoundViewModel
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
-    @Binding var selectedGolferId: String?
     @State private var orientation = UIDeviceOrientation.unknown
     @State private var matchStatusUpdateTrigger = false
     
@@ -21,17 +20,26 @@ struct MatchPlaySCView: View {
         return orientation.isLandscape
     }
     
+    private let nameCellWidth: CGFloat = 70
+    private let scoreCellWidth: CGFloat = 30
+    private let scoreCellHeight: CGFloat = 30
+    
     var body: some View {
-        VStack(spacing: 0) {            
-            if let golfer = selectedGolfer {
-                matchResultSummary(for: golfer)
+        VStack(spacing: 0) {
+            if roundViewModel.golfers.count >= 2 {
+                let golfer1 = roundViewModel.golfers[0]
+                let golfer2 = roundViewModel.golfers[1]
+                
+                matchResultSummary()
                     .padding(.vertical, 8)
                     .foregroundColor(.primary)
                     .font(.headline)
-                nineHoleView(for: golfer, holes: 1...9, title: "Out", addBlankColumn: true)
-                nineHoleView(for: golfer, holes: 10...18, title: "In", showTotal: true, addBlankColumn: false)
+                HStack(spacing: 0) { // Add spacing: 0 here
+                    nineHoleView(holes: 1...9, golfer1: golfer1, golfer2: golfer2, title: "Out", showLabels: true)
+                    nineHoleView(holes: 10...18, golfer1: golfer1, golfer2: golfer2, title: "In", showTotal: true, showLabels: false)
+                }
             } else {
-                Text("No golfer selected")
+                Text("Not enough golfers for match play")
             }
         }
         .background(colorScheme == .light ? Color.white : Color.black)
@@ -44,135 +52,126 @@ struct MatchPlaySCView: View {
         .id(matchStatusUpdateTrigger)
     }
     
-    var selectedGolfer: Golfer? {
-        if let id = selectedGolferId {
-            return roundViewModel.golfers.first { $0.id == id }
-        }
-        return roundViewModel.golfers.first
-    }
-    
-    func nineHoleView(for golfer: Golfer, holes: ClosedRange<Int>, title: String, showTotal: Bool = false, addBlankColumn: Bool = false) -> some View {
+    func nineHoleView(holes: ClosedRange<Int>, golfer1: Golfer, golfer2: Golfer, title: String, showTotal: Bool = false, showLabels: Bool = true) -> some View {
         VStack(spacing: 0) {
-            holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, addBlankColumn: addBlankColumn)
-            parRow(holes: holes, showTotal: showTotal, addBlankColumn: addBlankColumn)
-            scoreRow(for: golfer, holes: holes, isGross: true, showTotal: showTotal, addBlankColumn: addBlankColumn)
-            scoreRow(for: golfer, holes: holes, isGross: false, showTotal: showTotal, addBlankColumn: addBlankColumn)
-            matchStatusRow(for: golfer, holes: holes, showTotal: showTotal, addBlankColumn: true)
+            holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, showLabel: showLabels)
+            parRow(holes: holes, showTotal: showTotal, showLabel: showLabels)
+            playerRow(for: golfer1, holes: holes, showTotal: showTotal, showLabel: showLabels)
+            matchStatusRow(for: golfer1, holes: holes, showTotal: showTotal, showLabel: showLabels)
+            playerRow(for: golfer2, holes: holes, showTotal: showTotal, showLabel: showLabels)
+            matchStatusRow(for: golfer2, holes: holes, showTotal: showTotal, showLabel: showLabels)
         }
     }
     
-    func holeRow(title: String, holes: ClosedRange<Int>, total: String, showTotal: Bool = false, addBlankColumn: Bool = false) -> some View {
+    func holeRow(title: String, holes: ClosedRange<Int>, total: String, showTotal: Bool = false, showLabel: Bool = true) -> some View {
         HStack(spacing: 0) {
-            Text(title)
-                .frame(width: 40, height: 27, alignment: .leading)
-                .padding(.horizontal, 2)
-                .background(Color(UIColor.systemTeal))
+            if showLabel {
+                Text(title)
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
+                    .padding(.horizontal, 2)
+                    .background(Color(UIColor.systemTeal))
+            }
             ForEach(holes, id: \.self) { hole in
                 Text("\(hole)")
-                    .frame(width: 27, height: 27)
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemTeal))
             }
             Text(total)
-                .frame(width: 32, height: 27)
+                .frame(width: scoreCellWidth, height: scoreCellHeight)
                 .background(Color(UIColor.systemTeal))
             if showTotal {
                 Text("Tot")
-                    .frame(width: 32, height: 27)
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemTeal))
-            } else if addBlankColumn {
-                Color(UIColor.systemTeal)
-                    .frame(width: 32, height: 27)
             }
         }
         .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
         .font(.caption)
     }
     
-    func parRow(holes: ClosedRange<Int>, showTotal: Bool = false, addBlankColumn: Bool = false) -> some View {
+    func parRow(holes: ClosedRange<Int>, showTotal: Bool = false, showLabel: Bool = true) -> some View {
         HStack(spacing: 0) {
-            Text("Par")
-                .frame(width: 40, height: 27, alignment: .leading)
-                .padding(.horizontal, 2)
-                .background(Color(UIColor.systemTeal))
+            if showLabel {
+                Text("Par")
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
+                    .padding(.horizontal, 2)
+                    .background(Color(UIColor.systemTeal))
+            }
             ForEach(holes, id: \.self) { hole in
                 if let holeData = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole }) {
                     Text("\(holeData.par)")
-                        .frame(width: 27, height: 27)
+                        .frame(width: scoreCellWidth, height: scoreCellHeight)
                         .background(Color(UIColor.systemTeal))
                 }
             }
             let totalPar = singleRoundViewModel.holes.filter { holes.contains($0.holeNumber) }.reduce(0) { $0 + $1.par }
             Text("\(totalPar)")
-                .frame(width: 32, height: 27)
+                .frame(width: scoreCellWidth, height: scoreCellHeight)
                 .background(Color(UIColor.systemTeal))
             if showTotal {
                 let grandTotalPar = singleRoundViewModel.holes.reduce(0) { $0 + $1.par }
                 Text("\(grandTotalPar)")
-                    .frame(width: 32, height: 27)
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemTeal))
-            } else if addBlankColumn {
-                Color(UIColor.systemTeal)
-                    .frame(width: 32, height: 27)
             }
         }
         .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
         .font(.caption)
     }
-    
-    func scoreRow(for golfer: Golfer, holes: ClosedRange<Int>, isGross: Bool, showTotal: Bool = false, addBlankColumn: Bool = false) -> some View {
+
+    func playerRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool = false, showLabel: Bool = true) -> some View {
         HStack(spacing: 0) {
-            Text(isGross ? "Gross" : "Net")
-                .frame(width: 40, height: 27, alignment: .leading)
-                .padding(.horizontal, 2)
-                .background(Color(UIColor.systemGray4))
-                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
-                .fontWeight(.bold)
+            if showLabel {
+                Text(golfer.firstName)
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
+                    .padding(.horizontal, 2)
+                    .background(Color(UIColor.systemGray4))
+                    .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                    .fontWeight(.bold)
+            }
             ForEach(holes, id: \.self) { hole in
-                scoreCell(for: golfer, hole: hole, isGross: isGross)
-                    .frame(width: 27, height: 27)
+                scoreCell(for: golfer, hole: hole)
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
             }
-            let totalScore = holes.reduce(0) { total, hole in
-                total + (isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.matchPlayNetScores[hole]?[golfer.id] ?? 0)
+            let totalGrossScore = holes.reduce(0) { total, hole in
+                total + (roundViewModel.grossScores[hole]?[golfer.id] ?? 0)
             }
-            Text("\(totalScore)")
-                .frame(width: 32, height: 27)
+            Text("\(totalGrossScore)")
+                .frame(width: scoreCellWidth, height: scoreCellHeight)
                 .background(Color(UIColor.systemGray4))
                 .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
                 .fontWeight(.bold)
             if showTotal {
-                let grandTotal = singleRoundViewModel.holes.reduce(0) { total, hole in
-                    total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.matchPlayNetScores[hole.holeNumber]?[golfer.id] ?? 0)
+                let grandTotalGrossScore = singleRoundViewModel.holes.reduce(0) { total, hole in
+                    total + (roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0)
                 }
-                Text("\(grandTotal)")
-                    .frame(width: 32, height: 27)
+                Text("\(grandTotalGrossScore)")
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemGray4))
                     .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
                     .fontWeight(.bold)
-            } else if addBlankColumn {
-                Color(UIColor.systemGray4)
-                    .frame(width: 32, height: 27)
             }
         }
         .font(.caption)
-    }
+    }    
     
-    func scoreCell(for golfer: Golfer, hole: Int, isGross: Bool) -> some View {
+    func scoreCell(for golfer: Golfer, hole: Int) -> some View {
         let par = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole })?.par ?? 0
-        let score = isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.matchPlayNetScores[hole]?[golfer.id] ?? 0
+        let grossScore = roundViewModel.grossScores[hole]?[golfer.id] ?? 0
         let isMatchPlayStrokeHole = roundViewModel.matchPlayStrokeHoles[golfer.id]?.contains(hole) ?? false
         
         return ZStack {
-            scoreCellBackground(score: score, par: par)
+            scoreCellBackground(score: grossScore, par: par)
             
-            if score != 0 {
-                Text("\(score)")
-                    .foregroundColor(scoreCellTextColor(score: score, par: par))
+            if grossScore != 0 {
+                Text("\(grossScore)")
+                    .foregroundColor(scoreCellTextColor(score: grossScore, par: par))
                     .font(.subheadline)
             }
             
-            if isGross && isMatchPlayStrokeHole {
+            if isMatchPlayStrokeHole {
                 Circle()
-                    .fill(strokeDotColor(score: score, par: par))
+                    .fill(strokeDotColor(score: grossScore, par: par))
                     .frame(width: 6, height: 6)
                     .offset(x: 7, y: -7)
             }
@@ -221,27 +220,28 @@ struct MatchPlaySCView: View {
         }
     }
     
-    func matchStatusRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool = false, addBlankColumn: Bool = false) -> some View {
+    func matchStatusRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool = false, showLabel: Bool = true) -> some View {
         HStack(spacing: 0) {
-            Text("Match")
-                .frame(width: 40, height: 27, alignment: .leading)
-                .padding(.horizontal, 2)
-                .background(Color(UIColor.systemGray4))
-                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
-                .fontWeight(.bold)
+            if showLabel {
+                Text("Match")
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
+                    .padding(.horizontal, 2)
+                    .background(Color(UIColor.systemGray4))
+                    .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                    .fontWeight(.bold)
+            }
             
             ForEach(holes, id: \.self) { hole in
                 matchStatusCell(for: golfer, hole: hole)
-                    .frame(width: 27, height: 27)
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
             }
             
-            Text("")
-                .frame(width: 32, height: 27)
-                .background(Color(UIColor.systemGray4))
+            Color(UIColor.systemGray4)
+                .frame(width: scoreCellWidth, height: scoreCellHeight)
             
-            if addBlankColumn {
+            if showTotal {
                 Color(UIColor.systemGray4)
-                    .frame(width: 32, height: 27)
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
             }
         }
         .font(.caption)
@@ -251,11 +251,12 @@ struct MatchPlaySCView: View {
         let statusArray = roundViewModel.finalMatchStatusArray ?? roundViewModel.matchStatusArray
         let cumulativeStatus = statusArray[0..<hole].reduce(0, +)
         let absStatus = abs(cumulativeStatus)
+        let isFirstGolfer = golfer.id == roundViewModel.golfers[0].id
         
         return Group {
             if let winningHole = roundViewModel.matchWinningHole {
                 if hole < winningHole {
-                    displayMatchStatus(cumulativeStatus: cumulativeStatus, absStatus: absStatus, golfer: golfer)
+                    displayMatchStatus(cumulativeStatus: cumulativeStatus, absStatus: absStatus, isFirstGolfer: isFirstGolfer)
                 } else if hole == winningHole {
                     Text(roundViewModel.winningScore ?? "")
                         .font(.caption)
@@ -263,39 +264,35 @@ struct MatchPlaySCView: View {
                     Color.clear
                 }
             } else if hole <= roundViewModel.holesPlayed {
-                displayMatchStatus(cumulativeStatus: cumulativeStatus, absStatus: absStatus, golfer: golfer)
+                displayMatchStatus(cumulativeStatus: cumulativeStatus, absStatus: absStatus, isFirstGolfer: isFirstGolfer)
             } else {
                 Color.clear
             }
         }
-        .frame(width: 27, height: 27)
+        .frame(width: scoreCellWidth, height: scoreCellHeight)
         .background(Color(UIColor.systemGray4))
         .border(Color.black, width: 1)
     }
     
-    private func displayMatchStatus(cumulativeStatus: Int, absStatus: Int, golfer: Golfer) -> some View {
+    private func displayMatchStatus(cumulativeStatus: Int, absStatus: Int, isFirstGolfer: Bool) -> some View {
         Group {
-            if cumulativeStatus == 0 {
+            if cumulativeStatus == 0 && isFirstGolfer {
                 Text("AS")
-            } else {
+            } else if (cumulativeStatus > 0 && isFirstGolfer) || (cumulativeStatus < 0 && !isFirstGolfer) {
                 HStack(spacing: 2) {
                     Text("\(absStatus)")
-                    Image(systemName: (cumulativeStatus > 0 && golfer.id == roundViewModel.golfers[0].id) || 
-                              (cumulativeStatus < 0 && golfer.id == roundViewModel.golfers[1].id) 
-                              ? "arrow.up" : "arrow.down")
+                    Image(systemName: "arrow.up")
                 }
+            } else {
+                Color.clear
             }
         }
     }
 
-    private func matchResultSummary(for golfer: Golfer) -> some View {
+    private func matchResultSummary() -> some View {
         Group {
             if let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore {
-                if winner == golfer.fullName {
-                    Text("You won \(score)")
-                } else {
-                    Text("You lost \(score)")
-                }
+                Text("\(winner) won \(score)")
             } else {
                 Text("Match in progress")
             }
@@ -305,9 +302,15 @@ struct MatchPlaySCView: View {
 
 struct MatchPlaySCView_Previews: PreviewProvider {
     static var previews: some View {
-        MatchPlaySCView(selectedGolferId: .constant(nil))
+        MatchPlaySCView()
             .environmentObject(RoundViewModel())
             .environmentObject(SingleRoundViewModel())
             .environmentObject(AuthViewModel())
+    }
+}
+
+extension Golfer {
+    var firstName: String {
+        fullName.components(separatedBy: " ").first ?? fullName
     }
 }

@@ -10,6 +10,8 @@
 		050BE2342C5EBBFA0060EB23 /* DebugUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE2332C5EBBFA0060EB23 /* DebugUtilities.swift */; };
 		050BE2362C5FF9370060EB23 /* MatchPlayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE2352C5FF9370060EB23 /* MatchPlayViewModel.swift */; };
 		050BE2382C6170A00060EB23 /* MatchPlayGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE2372C6170A00060EB23 /* MatchPlayGame.swift */; };
+		050C9F7F2C69164F00FDE5EC /* OrientationControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050C9F7E2C69164F00FDE5EC /* OrientationControl.swift */; };
+		050C9F812C69581100FDE5EC /* OrientationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050C9F802C69581100FDE5EC /* OrientationHelper.swift */; };
 		05198A512C35BA530016F576 /* GolfGamesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A502C35BA530016F576 /* GolfGamesApp.swift */; };
 		05198A532C35BA530016F576 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A522C35BA530016F576 /* ContentView.swift */; };
 		05198A552C35BA550016F576 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 05198A542C35BA550016F576 /* Assets.xcassets */; };
@@ -40,12 +42,10 @@
 		05480CFB2C597F250082E638 /* SharedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480CFA2C597F250082E638 /* SharedViewModel.swift */; };
 		05480CFC2C5A9A850082E638 /* HoleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB86B2C3CB53000E44F97 /* HoleView.swift */; };
 		05480D062C5B360C0082E638 /* LandscapeScorecardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480D052C5B360C0082E638 /* LandscapeScorecardView.swift */; };
-		05480D082C5C0C610082E638 /* ViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05480D072C5C0C610082E638 /* ViewExtensions.swift */; };
 		054E960D2C3F64D20036165A /* HandicapCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E960C2C3F64D20036165A /* HandicapCalculator.swift */; };
 		054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96142C3F66F20036165A /* ScorecardViewType.swift */; };
 		054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96182C3FA3320036165A /* RecentRoundsModel.swift */; };
 		054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E961A2C403BAB0036165A /* AppDelegate.swift */; };
-		054E961D2C403BEF0036165A /* OrientationUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E961C2C403BEF0036165A /* OrientationUtility.swift */; };
 		054E96212C4054180036165A /* OrientationObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96202C4054180036165A /* OrientationObserver.swift */; };
 		054E96232C4063A20036165A /* Golfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96222C4063A20036165A /* Golfer.swift */; };
 		054E96252C4063D30036165A /* CreateGolferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054E96242C4063D30036165A /* CreateGolferView.swift */; };
@@ -69,6 +69,8 @@
 		050BE2332C5EBBFA0060EB23 /* DebugUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugUtilities.swift; sourceTree = "<group>"; };
 		050BE2352C5FF9370060EB23 /* MatchPlayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayViewModel.swift; sourceTree = "<group>"; };
 		050BE2372C6170A00060EB23 /* MatchPlayGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayGame.swift; sourceTree = "<group>"; };
+		050C9F7E2C69164F00FDE5EC /* OrientationControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationControl.swift; sourceTree = "<group>"; };
+		050C9F802C69581100FDE5EC /* OrientationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationHelper.swift; sourceTree = "<group>"; };
 		05198A4D2C35BA530016F576 /* GolfGames.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GolfGames.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		05198A502C35BA530016F576 /* GolfGamesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GolfGamesApp.swift; sourceTree = "<group>"; };
 		05198A522C35BA530016F576 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -92,12 +94,10 @@
 		05480CF62C52B94C0082E638 /* example.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = example.swift; sourceTree = "<group>"; };
 		05480CFA2C597F250082E638 /* SharedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViewModel.swift; sourceTree = "<group>"; };
 		05480D052C5B360C0082E638 /* LandscapeScorecardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandscapeScorecardView.swift; sourceTree = "<group>"; };
-		05480D072C5C0C610082E638 /* ViewExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewExtensions.swift; sourceTree = "<group>"; };
 		054E960C2C3F64D20036165A /* HandicapCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandicapCalculator.swift; sourceTree = "<group>"; };
 		054E96142C3F66F20036165A /* ScorecardViewType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardViewType.swift; sourceTree = "<group>"; };
 		054E96182C3FA3320036165A /* RecentRoundsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentRoundsModel.swift; sourceTree = "<group>"; };
 		054E961A2C403BAB0036165A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		054E961C2C403BEF0036165A /* OrientationUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationUtility.swift; sourceTree = "<group>"; };
 		054E96202C4054180036165A /* OrientationObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationObserver.swift; sourceTree = "<group>"; };
 		054E96222C4063A20036165A /* Golfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Golfer.swift; sourceTree = "<group>"; };
 		054E96242C4063D30036165A /* CreateGolferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGolferView.swift; sourceTree = "<group>"; };
@@ -300,13 +300,13 @@
 				054E960C2C3F64D20036165A /* HandicapCalculator.swift */,
 				054E96142C3F66F20036165A /* ScorecardViewType.swift */,
 				054E961A2C403BAB0036165A /* AppDelegate.swift */,
-				054E961C2C403BEF0036165A /* OrientationUtility.swift */,
 				054E96202C4054180036165A /* OrientationObserver.swift */,
 				054E962E2C4991820036165A /* CheckboxToggleStyle.swift */,
 				05480CF62C52B94C0082E638 /* example.swift */,
-				05480D072C5C0C610082E638 /* ViewExtensions.swift */,
 				050BE2332C5EBBFA0060EB23 /* DebugUtilities.swift */,
 				053D7AFC2C62B955007D2D30 /* TestData.swift */,
+				050C9F7E2C69164F00FDE5EC /* OrientationControl.swift */,
+				050C9F802C69581100FDE5EC /* OrientationHelper.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -431,10 +431,10 @@
 				054E96252C4063D30036165A /* CreateGolferView.swift in Sources */,
 				054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */,
 				054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */,
+				050C9F7F2C69164F00FDE5EC /* OrientationControl.swift in Sources */,
 				054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */,
 				053D7B012C6312D0007D2D30 /* ScorecardType.swift in Sources */,
 				05198A682C35BDD00016F576 /* AuthViewModel.swift in Sources */,
-				054E961D2C403BEF0036165A /* OrientationUtility.swift in Sources */,
 				05480CF92C52C7BB0082E638 /* TeePickerView.swift in Sources */,
 				054E96292C498A4F0036165A /* FriendsListView.swift in Sources */,
 				05198A6C2C35BDEA0016F576 /* RegistrationView.swift in Sources */,
@@ -443,10 +443,10 @@
 				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,
 				054EB8592C375FE200E44F97 /* SingleRoundSetupView.swift in Sources */,
 				05198A872C3753E90016F576 /* InitialView.swift in Sources */,
+				050C9F812C69581100FDE5EC /* OrientationHelper.swift in Sources */,
 				053D7AFF2C62EE40007D2D30 /* MatchPlaySCView.swift in Sources */,
 				054E96232C4063A20036165A /* Golfer.swift in Sources */,
 				053D7AFD2C62B955007D2D30 /* TestData.swift in Sources */,
-				05480D082C5C0C610082E638 /* ViewExtensions.swift in Sources */,
 				054E960D2C3F64D20036165A /* HandicapCalculator.swift in Sources */,
 				054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */,
 				05480CF42C51CA940082E638 /* RoundViewModel.swift in Sources */,

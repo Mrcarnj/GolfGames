@@ -57,10 +57,6 @@ struct InititalView: View {
                 }
                 .onAppear {
                     roundsViewModel.fetchRecentRounds(for: user)
-                    OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
-                }
-                .onDisappear {
-                    OrientationUtility.lockOrientation(.all)
                 }
                 .navigationBarBackButtonHidden(true)
             }

@@ -117,11 +117,7 @@ struct ProfileView: View {
                 }
             })
             .onAppear {
-                OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
                 initializeEditFields(with: user)
-            }
-            .onDisappear {
-                OrientationUtility.lockOrientation(.all)
             }
             .alert(isPresented: $showAlert) {
                 Alert(title: Text("Profile Update"), message: Text(alertMessage), dismissButton: .default(Text("OK")))

@@ -16,6 +16,8 @@ struct LandscapeScorecardView: View {
     @State private var selectedGolferId: String?
     @Binding var navigateToInitialView: Bool
     @Binding var selectedScorecardType: ScorecardType
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
     
     private var isLandscape: Bool {
         return UIDevice.current.orientation.isLandscape
@@ -23,38 +25,51 @@ struct LandscapeScorecardView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            VStack(spacing: 0) {
-                HStack {
-                    scorecardTypePicker
-                    if roundViewModel.golfers.count > 1 {
-                        golferPicker
+            ZStack {
+                VStack(spacing: 0) {
+                    HStack {
+                        scorecardTypePicker
+                        if selectedScorecardType == .strokePlay && roundViewModel.golfers.count > 1 {
+                            golferPicker
+                        }
                     }
-                }
-                .padding(.horizontal)
-                .padding(.top, 8)
-                
-                ScrollView {
-                    VStack {
-                        if let golfer = selectedGolfer {
-                            Group {
-                                if selectedScorecardType == .strokePlay {
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    
+                    ScrollView([.horizontal, .vertical]) {
+                        VStack {
+                            if selectedScorecardType == .strokePlay {
+                                if let golfer = selectedGolfer {
                                     strokePlayScorecard(for: golfer, geometry: geometry)
                                     scoreLegend
                                         .padding(.top, 10)
-                                } else {
-                                    matchPlayScorecard(for: golfer, geometry: geometry)
-                                    scoreLegend
-                                        .padding(.top, -10)
                                 }
+                            } else {
+                                matchPlayScorecard(geometry: geometry)
+                                scoreLegend
+                                    .padding(.top, -10)
                             }
-                            .frame(width: geometry.size.width * 0.95)
                         }
+                        .frame(width: geometry.size.width * 0.95 * scale)
+                        .padding(.top, 10)
                     }
-                    .padding(.top, 10)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .scaleEffect(scale)
+                .gesture(
+                    MagnificationGesture()
+                        .onChanged { value in
+                            let delta = value / self.lastScale
+                            self.lastScale = value
+                            let newScale = self.scale * delta
+                            self.scale = min(max(newScale, 1.0), 3.0)
+                        }
+                        .onEnded { _ in
+                            self.lastScale = 1.0
+                        }
+                )
             }
-            .frame(maxHeight: .infinity, alignment: .top)
         }
         .navigationBarItems(trailing: finishButton)
         .onAppear {
@@ -75,8 +90,8 @@ struct LandscapeScorecardView: View {
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
     
-    private func matchPlayScorecard(for golfer: Golfer, geometry: GeometryProxy) -> some View {
-        MatchPlaySCView(selectedGolferId: $selectedGolferId)
+    private func matchPlayScorecard(geometry: GeometryProxy) -> some View {
+        MatchPlaySCView()
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
     

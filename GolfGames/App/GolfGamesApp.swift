@@ -38,6 +38,10 @@ struct GolfGamesApp: App {
                 .environmentObject(roundViewModel)
                 .environmentObject(sharedViewModel)
                 .environmentObject(matchPlayViewModel)
+                .onAppear {
+                    // Set initial orientation lock to portrait
+                    AppDelegate.lockOrientation(.portrait)
+                }
         }
     }
 }

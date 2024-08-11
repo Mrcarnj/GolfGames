@@ -96,12 +96,6 @@ struct LoginView: View {
                     .font(.system(size: 14))
                 }
             }
-            .onAppear {
-                OrientationUtility.lockOrientation(.portrait, andRotateTo: .portrait)
-            }
-            .onDisappear {
-                OrientationUtility.lockOrientation(.all)
-            }
         }
     }
 }

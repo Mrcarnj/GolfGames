@@ -30,6 +30,8 @@ struct HoleView: View {
     @State private var scores: [String: Int] = [:]
     @State private var currentHole: Int
     
+    @State private var isLandscape = false
+    
     init(teeId: String, holeNumber: Int) {
         self.teeId = teeId
         self.initialHoleIndex = holeNumber - 1
@@ -53,7 +55,7 @@ struct HoleView: View {
     
     var body: some View {
         Group {
-            if orientation.isLandscape {
+            if isLandscape {
                 LandscapeScorecardView(
                     navigateToInitialView: $navigateToInitialView,
                     selectedScorecardType: $selectedScorecardType
@@ -87,9 +89,19 @@ struct HoleView: View {
             
             // Sync the local state with the ViewModel when the view appears
             selectedScorecardType = roundViewModel.selectedScorecardType
+            
+            unlockOrientation()
+        }
+        .onDisappear {
+            lockOrientation()
         }
         .onRotate { newOrientation in
-            orientation = newOrientation
+            isLandscape = newOrientation.isLandscape
+            if isLandscape {
+                OrientationHelper.setOrientation(to: .landscapeRight)
+            } else {
+                OrientationHelper.setOrientation(to: .portrait)
+            }
         }
         .navigationBarBackButtonHidden(true)
         .background(
@@ -427,6 +439,14 @@ struct HoleView: View {
                 return "\(leadingPlayer) \(absScore)UP thru \(roundViewModel.holesPlayed)"
             }
         }
+    }
+    
+    private func unlockOrientation() {
+        AppDelegate.lockOrientation(.allButUpsideDown)
+    }
+
+    private func lockOrientation() {
+        AppDelegate.lockOrientation(.portrait)
     }
 }
 

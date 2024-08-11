@@ -10,20 +10,27 @@ struct ScorecardView: View {
     @State private var navigateToInitialView = false
     @State private var orientation = UIDeviceOrientation.unknown
     @State private var selectedScorecardType: ScorecardType = .strokePlay
+    @State private var isOrientationLocked = false
+    @State private var isPortrait = true
     
     private var isLandscape: Bool {
-        return orientation.isLandscape
+        return !isPortrait || (selectedScorecardType == .matchPlay && !orientation.isPortrait)
     }
     
     var body: some View {
-        Group {
-            if isLandscape {
-                LandscapeScorecardView(
-                    navigateToInitialView: $navigateToInitialView,
-                    selectedScorecardType: $selectedScorecardType
-                )
-            } else {
-                portraitLayout
+        ZStack {
+            OrientationLockedControllerRepresentable()
+                .frame(width: 0, height: 0)
+            
+            Group {
+                if isLandscape {
+                    LandscapeScorecardView(
+                        navigateToInitialView: $navigateToInitialView,
+                        selectedScorecardType: $selectedScorecardType
+                    )
+                } else {
+                    portraitLayout
+                }
             }
         }
         .navigationTitle("Round Review")
@@ -32,15 +39,34 @@ struct ScorecardView: View {
         .onAppear {
             selectedGolferId = authViewModel.currentUser?.id
             orientation = UIDevice.current.orientation
+            isPortrait = orientation.isPortrait
         }
         .onRotate { newOrientation in
-            orientation = newOrientation
+            if !isOrientationLocked {
+                orientation = newOrientation
+                isPortrait = newOrientation.isPortrait
+            }
         }
         .background(
             NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(roundViewModel), isActive: $navigateToInitialView) {
                 EmptyView()
             }
         )
+        .onChange(of: selectedScorecardType) { newValue in
+            if newValue == .matchPlay {
+                AppDelegate.setOrientation(to: .landscapeRight)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    orientation = .landscapeRight
+                    isPortrait = false
+                }
+            } else {
+                AppDelegate.setOrientation(to: .portrait)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    orientation = .portrait
+                    isPortrait = true
+                }
+            }
+        }
     }
     
     private var portraitLayout: some View {
@@ -58,7 +84,7 @@ struct ScorecardView: View {
                 if selectedScorecardType == .strokePlay {
                     scoreCardView(for: golfer)
                 } else {
-                    MatchPlaySCView(selectedGolferId: $selectedGolferId)
+                    MatchPlaySCView()
                         .environmentObject(roundViewModel)
                 }
                 scoreLegend
@@ -97,12 +123,12 @@ struct ScorecardView: View {
         guard let user = authViewModel.currentUser,
               let course = roundViewModel.selectedCourse,
               let tee = roundViewModel.selectedTee else { return }
-
+        
         let db = Firestore.firestore()
         let roundRef = db.collection("users").document(user.id).collection("rounds").document(roundViewModel.roundId ?? "")
-
+        
         let roundResultID = roundRef.collection("results").document().documentID
-
+        
         var roundData: [String: Any] = [
             "date": Timestamp(date: Date()),
             "courseId": course.id,
@@ -121,19 +147,19 @@ struct ScorecardView: View {
                 ]
             }
         ]
-
+        
         for (hole, scores) in roundViewModel.grossScores {
             for (golferId, score) in scores {
                 roundData["gross_hole_\(hole)_\(golferId)"] = score
             }
         }
-
+        
         for (hole, scores) in roundViewModel.netStrokePlayScores {
             for (golferId, score) in scores {
                 roundData["net_hole_\(hole)_\(golferId)"] = score
             }
         }
-
+        
         roundRef.setData(roundData) { error in
             if let error = error {
                 print("Error saving round: \(error.localizedDescription)")
@@ -144,7 +170,7 @@ struct ScorecardView: View {
             }
         }
     }
-
+    
     private func resetLocalData() {
         roundViewModel.grossScores = [:]
         roundViewModel.netStrokePlayScores = [:]
@@ -297,7 +323,7 @@ struct ScorecardView: View {
             }
         }
     }
-
+    
     func strokeDotColor(score: Int, par: Int) -> Color {
         if score == par + 1 {
             return .white
@@ -392,11 +418,11 @@ extension View {
 
 struct AnyShape: Shape {
     private let _path: (CGRect) -> Path
-
+    
     init<S: Shape>(_ shape: S) {
         _path = shape.path(in:)
     }
-
+    
     func path(in rect: CGRect) -> Path {
         _path(rect)
     }
