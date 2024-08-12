@@ -47,6 +47,10 @@ class RoundViewModel: ObservableObject {
     @Published var presses: [(startHole: Int, matchStatusArray: [Int], winner: String?, winningScore: String?, winningHole: Int?)] = []
     @Published var pressStatuses: [String] = []
     @Published var currentPressStartHole: Int?
+
+    func formattedGolferName(for golfer: Golfer) -> String {
+        return golfer.formattedName(golfers: self.golfers)
+    }
     
     func beginRound(for user: User, additionalGolfers: [Golfer], isMatchPlay: Bool, completion: @escaping (String?, Error?, [String: Any]?) -> Void) {
         self.isMatchPlay = isMatchPlay
@@ -62,7 +66,7 @@ class RoundViewModel: ObservableObject {
         print("Course and tee selected: \(course.name), \(tee.tee_name)")
         
         self.golfers = [Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)] + additionalGolfers
-        print("Golfers for this round: \(self.golfers.map { $0.fullName })")
+        print("Golfers for this round: \(self.golfers.map { $0.formattedName(golfers: self.golfers) })")
         
         let roundGolfers = self.golfers.map { golfer in
             Round.Golfer(id: golfer.id, fullName: golfer.fullName, handicap: golfer.handicap)
@@ -151,7 +155,7 @@ class RoundViewModel: ObservableObject {
                 let golferStrokeHoles = holeHandicaps.sorted { $0.value < $1.value }.prefix(golferHandicap).map { $0.key }
                 self.strokeHoles[golfer.id] = golferStrokeHoles
                 
-                print("Golfer: \(golfer.fullName), Playing Handicap: \(golferHandicap), Stroke Holes: \(golferStrokeHoles)")
+                print("Golfer: \(golfer.formattedName(golfers: self.golfers)), Playing Handicap: \(golferHandicap), Stroke Holes: \(golferStrokeHoles)")
             }
         }
     }
@@ -166,7 +170,7 @@ class RoundViewModel: ObservableObject {
             let strokeHoles = HandicapCalculator.determineStrokePlayStrokeHoles(courseHandicap: courseHandicap, holes: holes)
             self.strokeHoles[golfer.id] = strokeHoles
             
-            print("Calculated stroke holes for \(golfer.fullName): \(strokeHoles)")
+            print("Calculated stroke holes for \(golfer.formattedName(golfers: self.golfers)): \(strokeHoles)")
             print("Course Handicap: \(courseHandicap)")
         }
     }
@@ -357,11 +361,11 @@ class RoundViewModel: ObservableObject {
         }
         
         if player1Score < player2Score {
-            holeTallies[player1.fullName, default: 0] += 1
-            holeWinners[holeNumber] = player1.fullName
+            holeTallies[player1.formattedName(golfers: self.golfers), default: 0] += 1
+            holeWinners[holeNumber] = player1.formattedName(golfers: self.golfers)
         } else if player2Score < player1Score {
-            holeTallies[player2.fullName, default: 0] += 1
-            holeWinners[holeNumber] = player2.fullName
+            holeTallies[player2.formattedName(golfers: self.golfers), default: 0] += 1
+            holeWinners[holeNumber] = player2.formattedName(golfers: self.golfers)
         } else {
             holeTallies["Halved", default: 0] += 1
             holeWinners[holeNumber] = "Halved"
@@ -404,9 +408,9 @@ class RoundViewModel: ObservableObject {
                 // Update match status for each hole up to the current hole
                 for hole in 1...currentHoleNumber {
                     if let winner = holeWinners[hole] {
-                        if winner == player1.fullName {
+                        if winner == player1.formattedName(golfers: self.golfers) {
                             matchStatusArray[hole - 1] = 1
-                        } else if winner == player2.fullName {
+                        } else if winner == player2.formattedName(golfers: self.golfers) {
                             matchStatusArray[hole - 1] = -1
                         } else {
                             matchStatusArray[hole - 1] = 0
@@ -421,7 +425,7 @@ class RoundViewModel: ObservableObject {
                     
                     // Check for match win conditions
                     if abs(matchScore) > remainingHoles {
-                        matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
+                        matchWinner = matchScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
                         winningScore = "\(abs(matchScore))&\(remainingHoles)"
                         matchWinningHole = hole
                         finalMatchStatusArray = matchStatusArray
@@ -429,10 +433,10 @@ class RoundViewModel: ObservableObject {
                         break
                     } else if holesPlayed == 18 {
                         if matchScore > 0 {
-                            matchWinner = player1.fullName
+                            matchWinner = player1.formattedName(golfers: self.golfers)
                             winningScore = "\(matchScore)UP"
                         } else if matchScore < 0 {
-                            matchWinner = player2.fullName
+                            matchWinner = player2.formattedName(golfers: self.golfers)
                             winningScore = "\(abs(matchScore))UP"
                         } else {
                             matchWinner = "Tie"
@@ -448,7 +452,7 @@ class RoundViewModel: ObservableObject {
                     if matchScore == 0 {
                         matchPlayStatus = "All Square thru \(holesPlayed)"
                     } else {
-                        let leadingPlayer = matchScore > 0 ? player1.fullName : player2.fullName
+                        let leadingPlayer = matchScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
                         let absScore = abs(matchScore)
                         
                         if absScore == remainingHoles {
@@ -518,14 +522,14 @@ class RoundViewModel: ObservableObject {
         
         // Check for press win conditions
         if abs(cumulativePressScore) > remainingHoles {
-            let winner = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+            let winner = cumulativePressScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
             let winningScore = "\(abs(cumulativePressScore))&\(remainingHoles)"
             presses[pressIndex].winner = winner
             presses[pressIndex].winningScore = winningScore
             return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
         } else if currentHole == 18 {
             if cumulativePressScore != 0 {
-                let winner = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+                let winner = cumulativePressScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
                 let winningScore = "\(abs(cumulativePressScore))UP"
                 presses[pressIndex].winner = winner
                 presses[pressIndex].winningScore = winningScore
@@ -539,7 +543,7 @@ class RoundViewModel: ObservableObject {
         
         // Dormie condition
         if abs(cumulativePressScore) == remainingHoles {
-            let leadingPlayer = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+            let leadingPlayer = cumulativePressScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
             return "Press \(pressIndex + 1): \(leadingPlayer) \(abs(cumulativePressScore))UP with \(remainingHoles) to play (Dormie)"
         }
         
@@ -547,7 +551,7 @@ class RoundViewModel: ObservableObject {
         if cumulativePressScore == 0 {
             return "Press \(pressIndex + 1): All Square thru \(holesPlayed)"
         } else {
-            let leadingPlayer = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+            let leadingPlayer = cumulativePressScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
             return "Press \(pressIndex + 1): \(leadingPlayer) \(abs(cumulativePressScore))UP thru \(holesPlayed)"
         }
     }
@@ -558,9 +562,9 @@ class RoundViewModel: ObservableObject {
         let pressStartHole = presses[pressIndex].startHole
         for hole in pressStartHole...currentHoleNumber {
             if let winner = holeWinners[hole] {
-                if winner == golfer1.fullName {
+                if winner == golfer1.formattedName(golfers: self.golfers) {
                     presses[pressIndex].matchStatusArray[hole - pressStartHole] = 1
-                } else if winner == golfer2.fullName {
+                } else if winner == golfer2.formattedName(golfers: self.golfers) {
                     presses[pressIndex].matchStatusArray[hole - pressStartHole] = -1
                 } else {
                     presses[pressIndex].matchStatusArray[hole - pressStartHole] = 0
@@ -572,7 +576,7 @@ class RoundViewModel: ObservableObject {
         let pressStatus = presses[pressIndex].matchStatusArray.reduce(0, +)
         let remainingHoles = 18 - currentHoleNumber
         if abs(pressStatus) > remainingHoles {
-            let winner = pressStatus > 0 ? golfer1.fullName : golfer2.fullName
+            let winner = pressStatus > 0 ? golfer1.formattedName(golfers: self.golfers) : golfer2.formattedName(golfers: self.golfers)
             let leadAmount = abs(pressStatus)
             presses[pressIndex].winner = winner
             presses[pressIndex].winningScore = "\(leadAmount) & \(remainingHoles)"

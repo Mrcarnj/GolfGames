@@ -28,10 +28,12 @@ struct LandscapeScorecardView: View {
             ZStack {
                 VStack(spacing: 0) {
                     HStack {
+                        if roundViewModel.golfers.count > 1 {
                         scorecardTypePicker
-                        if selectedScorecardType == .strokePlay && roundViewModel.golfers.count > 1 {
-                            golferPicker
-                        }
+                    }
+                    if selectedScorecardType == .strokePlay && roundViewModel.golfers.count > 1 {
+                        golferPicker
+                    }
                     }
                     .padding(.horizontal)
                     .padding(.top, 8)

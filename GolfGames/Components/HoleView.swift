@@ -274,7 +274,7 @@ struct HoleView: View {
                         Text("Golfer")
                         Spacer()
                         Text("Score")
-                        Text("Action")
+                        Text("Press")
                             .frame(width: 60)
                     }
                     .frame(maxWidth: .infinity)
@@ -285,7 +285,7 @@ struct HoleView: View {
                     
                     ForEach(roundViewModel.golfers, id: \.id) { golfer in
                         HStack {
-                            Text(golfer.fullName)
+                            Text(golfer.formattedName(golfers: roundViewModel.golfers))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             
                             TextField("", text: Binding(
@@ -302,55 +302,48 @@ struct HoleView: View {
                             .foregroundColor(colorScheme == .dark ? .black : .primary)
                             .cornerRadius(5)
                             .multilineTextAlignment(.center)
-                            
-                            if isStrokeHole(for: golfer.id) {
-                                Circle()
-                                    .fill(Color.black)
-                                    .frame(width: 6, height: 6)
-                                    .offset(x: -20, y: -17)
-                            }
+                            .overlay(
+                                Group {
+                                    if isStrokeHole(for: golfer.id) {
+                                        Circle()
+                                            .fill(Color.black)
+                                            .frame(width: 6, height: 6)
+                                            .offset(x: 20, y: -17)
+                                    }
+                                }
+                            )
                             
                             if roundViewModel.isMatchPlay {
                                 if let (leadingPlayer, trailingPlayer, score) = roundViewModel.getCurrentPressStatus() {
-                                    if score == 0 {
-                                        Text("All Square")
-                                            .font(.system(size: 10))
-                                            .foregroundColor(.gray)
-                                            .frame(width: 60)
-                                    } else if trailingPlayer?.id == golfer.id && roundViewModel.currentPressStartHole == nil && 
-                                              (roundViewModel.matchWinner == nil || !roundViewModel.presses.isEmpty) && 
-                                              !scoresChecked && currentHoleIndex < 17 {
-                                        Button("Press") {
-                                            showingPressConfirmation = true
+                                    ZStack {
+                                        if score == 0 {
+                                            Text("")
+                                                .font(.system(size: 10))
+                                                .foregroundColor(.gray)
+                                        } else if trailingPlayer?.id == golfer.id && roundViewModel.currentPressStartHole == nil && 
+                                                  (roundViewModel.matchWinner == nil || !roundViewModel.presses.isEmpty) && 
+                                                  !scoresChecked && currentHoleIndex < 17 {
+                                            Button(action: {
+                                                showingPressConfirmation = true
+                                            }) {
+                                                Text("Press")
+                                                    .font(.system(size: 12, weight: .semibold))
+                                                    .frame(width: 50, height: 24)
+                                                    .background(Color.blue)
+                                                    .foregroundColor(.white)
+                                                    .cornerRadius(12)
+                                                    .shadow(color: .gray.opacity(0.3), radius: 2, x: 0, y: 1)
+                                            }
                                         }
-                                        .frame(width: 60)
-                                        .padding(.vertical, 5)
-                                        .background(Color.blue)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(5)
-                                    } else {
-                                        Text("\(leadingPlayer?.id == golfer.id ? "Up" : "Down") \(score)")
-                                            .font(.system(size: 10))
-                                            .foregroundColor(leadingPlayer?.id == golfer.id ? .green : .red)
-                                            .frame(width: 60)
                                     }
-                                } else {
-                                    Text(strokeHoleText(for: golfer.id))
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.gray)
-                                        .frame(width: 60)
+                                    .frame(width: 60, height: 30) // Fixed size container
                                 }
-                            } else {
-                                Text(strokeHoleText(for: golfer.id))
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.gray)
-                                    .frame(width: 60)
                             }
                         }
                         .padding(.horizontal)
                         
                         if showMissingScores, let missingHoles = missingScores[golfer.id], !missingHoles.isEmpty {
-                            Text("Golfer \(golfer.fullName) is missing scores for holes: \(missingHoles.map(String.init).joined(separator: ", "))")
+                            Text("Golfer \(golfer.formattedName(golfers: roundViewModel.golfers)) is missing scores for holes: \(missingHoles.map(String.init).joined(separator: ", "))")
                                 .font(.caption)
                                 .foregroundColor(.red)
                         }
@@ -455,7 +448,7 @@ struct HoleView: View {
             let netStrokePlayScore = roundViewModel.netStrokePlayScores[currentHoleNumber]?[golferId] ?? scoreInt
             let isStrokePlayStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
             
-            var logMessage = "Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.fullName ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Stroke Play Net Score: \(netStrokePlayScore), Stroke Play Stroke Hole: \(isStrokePlayStrokeHole)"
+            var logMessage = "Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.formattedName(golfers: roundViewModel.golfers) ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Stroke Play Net Score: \(netStrokePlayScore), Stroke Play Stroke Hole: \(isStrokePlayStrokeHole)"
             
             if roundViewModel.isMatchPlay {
                 let isMatchPlayStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
@@ -522,14 +515,6 @@ struct HoleView: View {
         }
     }
     
-    private func strokeHoleText(for golferId: String) -> String {
-        if roundViewModel.isMatchPlay {
-            return isStrokeHole(for: golferId) ? "Match Stroke" : "No Stroke"
-        } else {
-            return isStrokeHole(for: golferId) ? "Stroke" : "No Stroke"
-        }
-    }
-    
     private func unlockOrientation() {
         AppDelegate.lockOrientation(.allButUpsideDown)
     }
@@ -537,6 +522,7 @@ struct HoleView: View {
     private func lockOrientation() {
         AppDelegate.lockOrientation(.portrait)
     }
+
 }
 
 struct MatchPlayStatusView: View {
@@ -545,7 +531,7 @@ struct MatchPlayStatusView: View {
     var body: some View {
         if let (player1, player2) = roundViewModel.matchPlayGolfers,
            let status = roundViewModel.matchPlayViewModel?.getMatchStatus() {
-            Text("\(player1.fullName) vs \(player2.fullName): \(status)")
+            Text("\(player1.formattedName(golfers: roundViewModel.golfers)) vs \(player2.formattedName(golfers: roundViewModel.golfers)): \(status)")
                 .padding()
                 .background(Color.gray.opacity(0.2))
                 .cornerRadius(8)
