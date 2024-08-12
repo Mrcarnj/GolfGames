@@ -26,20 +26,17 @@ struct MatchPlaySCView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if roundViewModel.golfers.count >= 2 {
-                let golfer1 = roundViewModel.golfers[0]
-                let golfer2 = roundViewModel.golfers[1]
-                
+            if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
                 matchResultSummary()
                     .padding(.vertical, 8)
                     .foregroundColor(.primary)
                     .font(.headline)
-                HStack(spacing: 0) { // Add spacing: 0 here
+                HStack(spacing: 0) {
                     nineHoleView(holes: 1...9, golfer1: golfer1, golfer2: golfer2, title: "Out", showLabels: true)
                     nineHoleView(holes: 10...18, golfer1: golfer1, golfer2: golfer2, title: "In", showTotal: true, showLabels: false)
                 }
             } else {
-                Text("Not enough golfers for match play")
+                Text("Match play golfers not selected")
             }
         }
         .background(colorScheme == .light ? Color.white : Color.black)
@@ -251,8 +248,8 @@ struct MatchPlaySCView: View {
         let statusArray = roundViewModel.finalMatchStatusArray ?? roundViewModel.matchStatusArray
         let cumulativeStatus = statusArray[0..<hole].reduce(0, +)
         let absStatus = abs(cumulativeStatus)
-        let isFirstGolfer = golfer.id == roundViewModel.golfers[0].id
-        
+        let isFirstGolfer = golfer.id == roundViewModel.matchPlayGolfers?.0.id
+
         return Group {
             if let winningHole = roundViewModel.matchWinningHole {
                 if hole < winningHole {
@@ -293,8 +290,10 @@ struct MatchPlaySCView: View {
         Group {
             if let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore {
                 Text("\(winner) won \(score)")
+            } else if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
+                Text("\(golfer1.fullName) vs \(golfer2.fullName)")
             } else {
-                Text("Match in progress")
+                Text("Match play not set up")
             }
         }
     }

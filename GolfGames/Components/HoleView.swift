@@ -480,7 +480,7 @@ struct HoleView: View {
     }
     
     private var matchStatusText: String {
-        guard roundViewModel.isMatchPlay && roundViewModel.golfers.count >= 2 else {
+        guard roundViewModel.isMatchPlay else {
             return ""
         }
         
@@ -488,22 +488,41 @@ struct HoleView: View {
             return "\(winner) has won \(score)"
         }
         
-        let player1 = roundViewModel.golfers[0]
-        let player2 = roundViewModel.golfers[1]
-        
-        if roundViewModel.matchScore == 0 {
-            return "All Square through \(roundViewModel.holesPlayed)"
-        } else {
-            let leadingPlayer = roundViewModel.matchScore > 0 ? player1.fullName : player2.fullName
-            let absScore = abs(roundViewModel.matchScore)
-            let remainingHoles = 18 - roundViewModel.holesPlayed
-            
-            if absScore == remainingHoles {
-                return "\(leadingPlayer) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+        if let (player1, player2) = roundViewModel.matchPlayGolfers {
+            if roundViewModel.matchScore == 0 {
+                return "All Square through \(roundViewModel.holesPlayed)"
             } else {
-                return "\(leadingPlayer) \(absScore)UP thru \(roundViewModel.holesPlayed)"
+                let leadingPlayer = roundViewModel.matchScore > 0 ? player1.fullName : player2.fullName
+                let absScore = abs(roundViewModel.matchScore)
+                let remainingHoles = 18 - roundViewModel.holesPlayed
+                
+                if absScore == remainingHoles {
+                    return "\(leadingPlayer) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+                } else {
+                    return "\(leadingPlayer) \(absScore)UP thru \(roundViewModel.holesPlayed)"
+                }
+            }
+        } else if roundViewModel.golfers.count >= 2 {
+            // Fallback to using the first two golfers if matchPlayGolfers is not set
+            let player1 = roundViewModel.golfers[0]
+            let player2 = roundViewModel.golfers[1]
+            
+            if roundViewModel.matchScore == 0 {
+                return "All Square through \(roundViewModel.holesPlayed)"
+            } else {
+                let leadingPlayer = roundViewModel.matchScore > 0 ? player1.fullName : player2.fullName
+                let absScore = abs(roundViewModel.matchScore)
+                let remainingHoles = 18 - roundViewModel.holesPlayed
+                
+                if absScore == remainingHoles {
+                    return "\(leadingPlayer) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+                } else {
+                    return "\(leadingPlayer) \(absScore)UP thru \(roundViewModel.holesPlayed)"
+                }
             }
         }
+        
+        return "Match play in progress"
     }
     
     private func unlockOrientation() {
@@ -519,8 +538,9 @@ struct MatchPlayStatusView: View {
     @EnvironmentObject var roundViewModel: RoundViewModel
     
     var body: some View {
-        if let status = roundViewModel.matchPlayViewModel?.getMatchStatus() {
-            Text(status)
+        if let (player1, player2) = roundViewModel.matchPlayGolfers,
+           let status = roundViewModel.matchPlayViewModel?.getMatchStatus() {
+            Text("\(player1.fullName) vs \(player2.fullName): \(status)")
                 .padding()
                 .background(Color.gray.opacity(0.2))
                 .cornerRadius(8)
