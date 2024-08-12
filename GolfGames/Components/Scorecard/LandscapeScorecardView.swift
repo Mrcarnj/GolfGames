@@ -86,7 +86,7 @@ struct LandscapeScorecardView: View {
     }
     
     private func strokePlayScorecard(for golfer: Golfer, geometry: GeometryProxy) -> some View {
-        scoreCardView(for: golfer)
+        LandscapeStrokePlayScorecardView(golfer: golfer)
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
     

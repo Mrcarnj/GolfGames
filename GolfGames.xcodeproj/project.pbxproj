@@ -30,6 +30,7 @@
 		05198A832C35E5060016F576 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 05198A822C35E5060016F576 /* GoogleService-Info.plist */; };
 		05198A872C3753E90016F576 /* InitialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05198A862C3753E90016F576 /* InitialView.swift */; };
 		051DBA0D2C617858007FB2C5 /* GameSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 050BE22E2C5DAA210060EB23 /* GameSelectionView.swift */; };
+		0522BBA22C6AA8C60033497F /* LandscapeStrokePlayScorecardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0522BBA12C6AA8C50033497F /* LandscapeStrokePlayScorecardView.swift */; };
 		053D7AFD2C62B955007D2D30 /* TestData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D7AFC2C62B955007D2D30 /* TestData.swift */; };
 		053D7AFF2C62EE40007D2D30 /* MatchPlaySCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */; };
 		053D7B012C6312D0007D2D30 /* ScorecardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 053D7B002C6312CF007D2D30 /* ScorecardType.swift */; };
@@ -86,6 +87,7 @@
 		05198A7E2C35C2930016F576 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		05198A822C35E5060016F576 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		05198A862C3753E90016F576 /* InitialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialView.swift; sourceTree = "<group>"; };
+		0522BBA12C6AA8C50033497F /* LandscapeStrokePlayScorecardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandscapeStrokePlayScorecardView.swift; sourceTree = "<group>"; };
 		053D7AFC2C62B955007D2D30 /* TestData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestData.swift; sourceTree = "<group>"; };
 		053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlaySCView.swift; sourceTree = "<group>"; };
 		053D7B002C6312CF007D2D30 /* ScorecardType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardType.swift; sourceTree = "<group>"; };
@@ -320,6 +322,7 @@
 				05480CCF2C51B68F0082E638 /* ScorecardView.swift */,
 				05480D052C5B360C0082E638 /* LandscapeScorecardView.swift */,
 				053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */,
+				0522BBA12C6AA8C50033497F /* LandscapeStrokePlayScorecardView.swift */,
 			);
 			path = Scorecard;
 			sourceTree = "<group>";
@@ -442,6 +445,7 @@
 				054E96212C4054180036165A /* OrientationObserver.swift in Sources */,
 				054E96252C4063D30036165A /* CreateGolferView.swift in Sources */,
 				054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */,
+				0522BBA22C6AA8C60033497F /* LandscapeStrokePlayScorecardView.swift in Sources */,
 				054EB85B2C37601100E44F97 /* SingleRound.swift in Sources */,
 				050C9F7F2C69164F00FDE5EC /* OrientationControl.swift in Sources */,
 				054E96152C3F66F20036165A /* ScorecardViewType.swift in Sources */,

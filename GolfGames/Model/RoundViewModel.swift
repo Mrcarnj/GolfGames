@@ -44,7 +44,10 @@ class RoundViewModel: ObservableObject {
     @Published var finalMatchStatusArray: [Int]?
     @Published var matchWinningHole: Int?
     @Published var matchPlayGolfers: (Golfer, Golfer)?
-
+    @Published var presses: [(startHole: Int, matchStatusArray: [Int], winner: String?, winningScore: String?, winningHole: Int?)] = []
+    @Published var pressStatuses: [String] = []
+    @Published var currentPressStartHole: Int?
+    
     func beginRound(for user: User, additionalGolfers: [Golfer], isMatchPlay: Bool, completion: @escaping (String?, Error?, [String: Any]?) -> Void) {
         self.isMatchPlay = isMatchPlay
         print("Beginning round...")
@@ -379,6 +382,7 @@ class RoundViewModel: ObservableObject {
     }
     
     func updateMatchStatus(for currentHoleNumber: Int) {
+        self.currentHole = currentHoleNumber
         guard isMatchPlay, let (player1, player2) = matchPlayGolfers else { return }
         
         // Reset match status array if recalculating from an earlier hole
@@ -390,69 +394,87 @@ class RoundViewModel: ObservableObject {
             finalMatchStatusArray = nil
         }
         
-        // Update match status for each hole up to the current hole
-        for hole in 1...currentHoleNumber {
-            if matchWinner == nil {
-                if let winner = holeWinners[hole] {
-                    if winner == player1.fullName {
-                        matchStatusArray[hole - 1] = 1
-                    } else if winner == player2.fullName {
-                        matchStatusArray[hole - 1] = -1
-                    } else {
-                        matchStatusArray[hole - 1] = 0
+        // Only update if the match hasn't been finalized
+        if matchWinner == nil {
+            // If the match is already won, just display the winning text
+            if let winner = matchWinner, let score = winningScore {
+                matchPlayStatus = "\(winner) won \(score)"
+                print("Main match status: \(matchPlayStatus ?? "N/A")")
+            } else {
+                // Update match status for each hole up to the current hole
+                for hole in 1...currentHoleNumber {
+                    if let winner = holeWinners[hole] {
+                        if winner == player1.fullName {
+                            matchStatusArray[hole - 1] = 1
+                        } else if winner == player2.fullName {
+                            matchStatusArray[hole - 1] = -1
+                        } else {
+                            matchStatusArray[hole - 1] = 0
+                        }
                     }
-                }
-                
-                // Calculate cumulative status
-                var cumulativeStatus = 0
-                for i in 0..<hole {
-                    cumulativeStatus += matchStatusArray[i]
-                }
-                
-                matchScore = cumulativeStatus
-                holesPlayed = hole
-                
-                // Update matchPlayStatus string
-                if matchScore == 0 {
-                    matchPlayStatus = "All Square thru \(holesPlayed)"
-                } else {
-                    let leadingPlayer = matchScore > 0 ? player1.fullName : player2.fullName
-                    let absScore = abs(matchScore)
-                    matchPlayStatus = "\(leadingPlayer) \(absScore)UP thru \(holesPlayed)"
-                }
-                
-                // Check for match win conditions
-                let remainingHoles = 18 - holesPlayed
-                if abs(matchScore) > remainingHoles {
-                    matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
-                    winningScore = "\(abs(matchScore))&\(remainingHoles)"
-                    matchWinningHole = hole
-                    finalMatchStatusArray = matchStatusArray
-                } else if holesPlayed == 18 {
-                    if matchScore > 0 {
-                        matchWinner = player1.fullName
-                        winningScore = "\(matchScore)UP"
-                    } else if matchScore < 0 {
-                        matchWinner = player2.fullName
-                        winningScore = "\(abs(matchScore))UP"
-                    } else {
-                        matchWinner = "Tie"
-                        winningScore = "All Square"
+                    
+                    // Calculate cumulative status
+                    matchScore = matchStatusArray[0..<hole].reduce(0, +)
+                    holesPlayed = hole
+                    
+                    let remainingHoles = 18 - holesPlayed
+                    
+                    // Check for match win conditions
+                    if abs(matchScore) > remainingHoles {
+                        matchWinner = matchScore > 0 ? player1.fullName : player2.fullName
+                        winningScore = "\(abs(matchScore))&\(remainingHoles)"
+                        matchWinningHole = hole
+                        finalMatchStatusArray = matchStatusArray
+                        matchPlayStatus = "\(matchWinner!) won \(winningScore!)"
+                        break
+                    } else if holesPlayed == 18 {
+                        if matchScore > 0 {
+                            matchWinner = player1.fullName
+                            winningScore = "\(matchScore)UP"
+                        } else if matchScore < 0 {
+                            matchWinner = player2.fullName
+                            winningScore = "\(abs(matchScore))UP"
+                        } else {
+                            matchWinner = "Tie"
+                            winningScore = "All Square"
+                        }
+                        matchWinningHole = 18
+                        finalMatchStatusArray = matchStatusArray
+                        matchPlayStatus = "\(matchWinner!) \(winningScore!)"
+                        break
                     }
-                    matchWinningHole = 18
-                    finalMatchStatusArray = matchStatusArray
+                    
+                    // Update matchPlayStatus string
+                    if matchScore == 0 {
+                        matchPlayStatus = "All Square thru \(holesPlayed)"
+                    } else {
+                        let leadingPlayer = matchScore > 0 ? player1.fullName : player2.fullName
+                        let absScore = abs(matchScore)
+                        
+                        if absScore == remainingHoles {
+                            matchPlayStatus = "\(leadingPlayer) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+                        } else {
+                            matchPlayStatus = "\(leadingPlayer) \(absScore)UP thru \(holesPlayed)"
+                        }
+                    }
                 }
             }
         }
         
-        holesPlayed = currentHoleNumber
+        // Update press statuses
+        updateAllPressStatuses(for: currentHoleNumber)
         
         print("Updated match status for hole \(currentHoleNumber): \(matchStatusArray)")
+        print("Main match status: \(matchPlayStatus ?? "N/A")")
+        for (index, pressStatus) in pressStatuses.enumerated() {
+            print("Press \(index + 1) status: \(pressStatus)")
+        }
+        
         objectWillChange.send()
     }
-    
+
     func recalculateTallies(upToHole: Int) {
-        guard isMatchPlay else { return }
+        guard isMatchPlay && golfers.count >= 2 else { return }
         
         holeTallies = [:]
         talliedHoles = []
@@ -463,8 +485,106 @@ class RoundViewModel: ObservableObject {
             updateMatchStatus(for: holeNumber)
         }
     }
-
+    
+    private func updateAllPressStatuses(for currentHoleNumber: Int) {
+        for (index, press) in presses.enumerated() {
+            if currentHoleNumber >= press.startHole {
+                updatePressMatchStatus(pressIndex: index, for: currentHoleNumber)
+                pressStatuses[index] = calculatePressStatus(pressIndex: index, currentHole: currentHoleNumber)
+            }
+        }
+    }
+    
+    private func calculatePressStatus(pressIndex: Int, currentHole: Int) -> String {
+        guard pressIndex < presses.count, let (player1, player2) = matchPlayGolfers else {
+            return "Invalid Press"
+        }
+        
+        let press = presses[pressIndex]
+        let pressStartHole = press.startHole
+        let relevantHoles = pressStartHole...currentHole
+        
+        let cumulativePressScore = relevantHoles.reduce(0) { total, hole in
+            return total + (press.matchStatusArray[hole - pressStartHole] ?? 0)
+        }
+        
+        let holesPlayed = currentHole - pressStartHole + 1
+        let remainingHoles = 18 - currentHole
+        
+        // Check if this press has already been won
+        if let winner = press.winner, let winningScore = press.winningScore {
+            return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
+        }
+        
+        // Check for press win conditions
+        if abs(cumulativePressScore) > remainingHoles {
+            let winner = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+            let winningScore = "\(abs(cumulativePressScore))&\(remainingHoles)"
+            presses[pressIndex].winner = winner
+            presses[pressIndex].winningScore = winningScore
+            return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
+        } else if currentHole == 18 {
+            if cumulativePressScore != 0 {
+                let winner = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+                let winningScore = "\(abs(cumulativePressScore))UP"
+                presses[pressIndex].winner = winner
+                presses[pressIndex].winningScore = winningScore
+                return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
+            } else {
+                presses[pressIndex].winner = "Tie"
+                presses[pressIndex].winningScore = "All Square"
+                return "Press \(pressIndex + 1): Tie - All Square"
+            }
+        }
+        
+        // Dormie condition
+        if abs(cumulativePressScore) == remainingHoles {
+            let leadingPlayer = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+            return "Press \(pressIndex + 1): \(leadingPlayer) \(abs(cumulativePressScore))UP with \(remainingHoles) to play (Dormie)"
+        }
+        
+        // Regular status
+        if cumulativePressScore == 0 {
+            return "Press \(pressIndex + 1): All Square thru \(holesPlayed)"
+        } else {
+            let leadingPlayer = cumulativePressScore > 0 ? player1.fullName : player2.fullName
+            return "Press \(pressIndex + 1): \(leadingPlayer) \(abs(cumulativePressScore))UP thru \(holesPlayed)"
+        }
+    }
+    
+    func updatePressMatchStatus(pressIndex: Int, for currentHoleNumber: Int) {
+        guard let (golfer1, golfer2) = matchPlayGolfers else { return }
+        
+        let pressStartHole = presses[pressIndex].startHole
+        for hole in pressStartHole...currentHoleNumber {
+            if let winner = holeWinners[hole] {
+                if winner == golfer1.fullName {
+                    presses[pressIndex].matchStatusArray[hole - pressStartHole] = 1
+                } else if winner == golfer2.fullName {
+                    presses[pressIndex].matchStatusArray[hole - pressStartHole] = -1
+                } else {
+                    presses[pressIndex].matchStatusArray[hole - pressStartHole] = 0
+                }
+            }
+        }
+        
+        // Check if the press has been won
+        let pressStatus = presses[pressIndex].matchStatusArray.reduce(0, +)
+        let remainingHoles = 18 - currentHoleNumber
+        if abs(pressStatus) > remainingHoles {
+            let winner = pressStatus > 0 ? golfer1.fullName : golfer2.fullName
+            let leadAmount = abs(pressStatus)
+            presses[pressIndex].winner = winner
+            presses[pressIndex].winningScore = "\(leadAmount) & \(remainingHoles)"
+            presses[pressIndex].winningHole = currentHoleNumber
+        }
+    }
+    
     func clearRoundData() {
+        print("Clearing round data...")
+        print("Number of presses before clearing: \(presses.count)")
+        print("Number of press statuses before clearing: \(pressStatuses.count)")
+        
         // Reset all round-related data
         roundId = nil
         selectedCourse = nil
@@ -481,12 +601,136 @@ class RoundViewModel: ObservableObject {
         matchWinner = nil
         winningScore = nil
         matchPlayGolfers = nil
-        // ... reset any other properties related to the current round ...
+        
+        presses.removeAll()
+        pressStatuses.removeAll()
+        currentPressStartHole = nil
+        
+        print("Number of presses after clearing: \(presses.count)")
+        print("Number of press statuses after clearing: \(pressStatuses.count)")
+        
+        objectWillChange.send()
     }
-
+    
     func setMatchPlayGolfers(golfer1: Golfer, golfer2: Golfer) {
         matchPlayGolfers = (golfer1, golfer2)
         initializeMatchPlay()
     }
+    
+    func initiatePress(atHole: Int) {
+        // Allow new presses if there are existing presses or if the main match hasn't been won yet
+        if presses.isEmpty && matchWinner != nil {
+            print("Cannot initiate new press: main match has been won and no existing presses")
+            return
+        }
 
+        print("Initiating press at hole \(atHole)")
+        print("Current hole: \(currentHole)")
+        print("Number of presses before adding: \(presses.count)")
+        
+        presses.append((startHole: atHole, matchStatusArray: Array(repeating: 0, count: 18), winner: nil, winningScore: nil, winningHole: nil))
+        pressStatuses.append("Press \(presses.count): All Square thru 0")
+        currentPressStartHole = atHole
+        
+        print("Number of presses after adding: \(presses.count)")
+        print("Number of press statuses: \(pressStatuses.count)")
+        print("Current presses: \(presses)")
+        print("Current press statuses: \(pressStatuses)")
+        
+        objectWillChange.send()
+    }
+    
+    func getLosingPlayer() -> Golfer? {
+        guard let (golfer1, golfer2) = matchPlayGolfers else { return nil }
+        
+        if let lastPress = presses.last {
+            // Ensure we're not accessing an index out of bounds
+            let relevantIndex = max(0, min(currentHole - lastPress.startHole, lastPress.matchStatusArray.count - 1))
+            let pressScore = lastPress.matchStatusArray[relevantIndex]
+            if pressScore > 0 {
+                return golfer2
+            } else if pressScore < 0 {
+                return golfer1
+            }
+        } else {
+            // If no presses, check the main match
+            if matchScore > 0 {
+                return golfer2
+            } else if matchScore < 0 {
+                return golfer1
+            }
+        }
+        return nil  // Return nil if it's all square
+    }
+    
+    func getCurrentPressStatus() -> (leadingPlayer: Golfer?, trailingPlayer: Golfer?, score: Int)? {
+    guard let (golfer1, golfer2) = matchPlayGolfers else { return nil }
+    
+    if let lastPress = presses.last {
+        let pressStartHole = lastPress.startHole
+        let lowerBound = max(pressStartHole, 1)
+        let upperBound = max(currentHole, lowerBound)
+        let relevantHoles = lowerBound...upperBound
+        
+        print("Press start hole: \(pressStartHole)")
+        print("Current hole: \(currentHole)")
+        print("Relevant holes: \(relevantHoles)")
+        
+        let cumulativePressScore = relevantHoles.reduce(0) { total, hole in
+            guard hole - pressStartHole < lastPress.matchStatusArray.count else { return total }
+            return total + lastPress.matchStatusArray[hole - pressStartHole]
+        }
+        
+        print("Cumulative Press Score: \(cumulativePressScore)")
+        
+        if cumulativePressScore > 0 {
+            return (golfer1, golfer2, cumulativePressScore)
+        } else if cumulativePressScore < 0 {
+            return (golfer2, golfer1, -cumulativePressScore)
+        } else {
+            return (nil, nil, 0)  // All square
+        }
+    } else {
+        // If no presses, return main match status
+        if matchScore > 0 {
+            return (golfer1, golfer2, matchScore)
+        } else if matchScore < 0 {
+            return (golfer2, golfer1, -matchScore)
+        } else {
+            return (nil, nil, 0)  // All square
+        }
+    }
+}
+    
+    func forceUIUpdate() {
+        objectWillChange.send()
+    }
+
+    func updateFinalMatchStatus() {
+        // Update main match status
+        updateMatchStatus(for: 18)
+        
+        // If the main match is tied
+        if matchScore == 0 && matchWinner == nil {
+            matchWinner = "Tie"
+            winningScore = "All Square"
+            matchPlayStatus = "Match ended All Square"
+        }
+        
+        // Update and finalize all presses
+        for index in presses.indices {
+            updatePressMatchStatus(pressIndex: index, for: 18)
+            
+            let press = presses[index]
+            let pressScore = press.matchStatusArray.reduce(0, +)
+            
+            if pressScore == 0 && press.winner == nil {
+                presses[index].winner = "Tie"
+                presses[index].winningScore = "All Square"
+                pressStatuses[index] = "Press \(index + 1) ended All Square"
+            }
+        }
+        
+        forceUIUpdate()
+    }
 }

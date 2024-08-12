@@ -8,44 +8,35 @@ struct ScorecardView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedGolferId: String?
     @State private var navigateToInitialView = false
-    @State private var orientation = UIDeviceOrientation.unknown
     @State private var selectedScorecardType: ScorecardType = .strokePlay
-    @State private var isOrientationLocked = false
-    @State private var isPortrait = true
-    
-    private var isLandscape: Bool {
-        return !isPortrait || (selectedScorecardType == .matchPlay && !orientation.isPortrait)
-    }
+    @State private var isLandscape = false
     
     var body: some View {
-        ZStack {
-            OrientationLockedControllerRepresentable()
-                .frame(width: 0, height: 0)
-            
+        GeometryReader { geometry in
             Group {
-                if isLandscape {
-                    LandscapeScorecardView(
-                        navigateToInitialView: $navigateToInitialView,
-                        selectedScorecardType: $selectedScorecardType
-                    )
+                if geometry.size.width > geometry.size.height {
+                    if selectedScorecardType == .strokePlay {
+                        LandscapeStrokePlayScorecardView(golfer: selectedGolfer ?? roundViewModel.golfers.first!)
+                    } else {
+                        LandscapeScorecardView(
+                            navigateToInitialView: $navigateToInitialView,
+                            selectedScorecardType: $selectedScorecardType
+                        )
+                    }
                 } else {
                     portraitLayout
                 }
             }
         }
         .navigationTitle("Round Review")
-        .navigationBarTitleDisplayMode(isLandscape ? .inline : .large)
+        .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(false)
         .onAppear {
             selectedGolferId = authViewModel.currentUser?.id
-            orientation = UIDevice.current.orientation
-            isPortrait = orientation.isPortrait
+            AppDelegate.lockOrientation(.allButUpsideDown)
         }
-        .onRotate { newOrientation in
-            if !isOrientationLocked {
-                orientation = newOrientation
-                isPortrait = newOrientation.isPortrait
-            }
+        .onDisappear {
+            AppDelegate.lockOrientation(.portrait)
         }
         .background(
             NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(roundViewModel), isActive: $navigateToInitialView) {
@@ -55,18 +46,16 @@ struct ScorecardView: View {
         .onChange(of: selectedScorecardType) { newValue in
             if newValue == .matchPlay {
                 AppDelegate.setOrientation(to: .landscapeRight)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    orientation = .landscapeRight
-                    isPortrait = false
-                }
             } else {
-                AppDelegate.setOrientation(to: .portrait)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    orientation = .portrait
-                    isPortrait = true
-                }
+                AppDelegate.lockOrientation(.allButUpsideDown)
             }
         }
+    }
+    
+    func unlockOrientation() {
+        AppDelegate.orientationLock = .all
+        UIDevice.current.setValue(UIInterfaceOrientation.unknown.rawValue, forKey: "orientation")
+        UINavigationController.attemptRotationToDeviceOrientation()
     }
     
     private var portraitLayout: some View {
@@ -177,6 +166,32 @@ struct ScorecardView: View {
         roundViewModel.strokeHoles = [:]
         roundViewModel.selectedCourse = nil
         roundViewModel.selectedTee = nil
+        
+        // Reset match play data
+        roundViewModel.matchPlayNetScores = [:]
+        roundViewModel.matchPlayStrokeHoles = [:]
+        roundViewModel.holeWinners = [:]
+        roundViewModel.matchStatusArray = Array(repeating: 0, count: 18)
+        roundViewModel.matchScore = 0
+        roundViewModel.matchWinner = nil
+        roundViewModel.winningScore = nil
+        roundViewModel.matchWinningHole = nil
+        roundViewModel.finalMatchStatusArray = nil
+        roundViewModel.matchPlayStatus = nil
+        roundViewModel.presses = []
+        roundViewModel.pressStatuses = []
+        roundViewModel.currentPressStartHole = nil
+        
+        // Reset golfers and other round-specific data
+        roundViewModel.golfers = []
+        roundViewModel.roundId = nil
+        roundViewModel.holesPlayed = 0
+        
+        // Reset any other properties that should be cleared between rounds
+        // For example:
+        roundViewModel.isMatchPlay = false
+        // roundViewModel.selectedScorecardType = .strokePlay
+        
     }
     
     var selectedGolfer: Golfer? {

@@ -25,38 +25,99 @@ struct MatchPlaySCView: View {
     private let scoreCellHeight: CGFloat = 30
     
     var body: some View {
+        mainContent
+            .background(colorScheme == .light ? Color.white : Color.black)
+            .cornerRadius(10)
+            .shadow(radius: 5)
+            .padding(.horizontal, 10)
+            .onChange(of: roundViewModel.matchStatusArray) { _ in
+                matchStatusUpdateTrigger.toggle()
+            }
+            .id(matchStatusUpdateTrigger)
+    }
+    
+    private var mainContent: some View {
         VStack(spacing: 0) {
             if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
-                matchResultSummary()
-                    .padding(.vertical, 8)
-                    .foregroundColor(.primary)
-                    .font(.headline)
-                HStack(spacing: 0) {
-                    nineHoleView(holes: 1...9, golfer1: golfer1, golfer2: golfer2, title: "Out", showLabels: true)
-                    nineHoleView(holes: 10...18, golfer1: golfer1, golfer2: golfer2, title: "In", showTotal: true, showLabels: false)
-                }
+                mainMatchResultSummary()
+                mainMatchView(golfer1: golfer1, golfer2: golfer2)
+                pressesView(golfer1: golfer1, golfer2: golfer2)
             } else {
                 Text("Match play golfers not selected")
             }
         }
-        .background(colorScheme == .light ? Color.white : Color.black)
-        .cornerRadius(10)
-        .shadow(radius: 5)
-        .padding(.horizontal, 10)
-        .onChange(of: roundViewModel.matchStatusArray) { _ in
-            matchStatusUpdateTrigger.toggle()
-        }
-        .id(matchStatusUpdateTrigger)
     }
     
-    func nineHoleView(holes: ClosedRange<Int>, golfer1: Golfer, golfer2: Golfer, title: String, showTotal: Bool = false, showLabels: Bool = true) -> some View {
+    private func mainMatchView(golfer1: Golfer, golfer2: Golfer) -> some View {
+        HStack(spacing: 0) {
+            nineHoleView(holes: 1...9, golfer1: golfer1, golfer2: golfer2, title: "Out", showLabels: true)
+            nineHoleView(holes: 10...18, golfer1: golfer1, golfer2: golfer2, title: "In", showTotal: true, showLabels: false)
+        }
+    }
+    
+    private func pressesView(golfer1: Golfer, golfer2: Golfer) -> some View {
+        ForEach(roundViewModel.presses.indices, id: \.self) { index in
+            VStack(spacing: 4) {
+                pressMatchResultSummary(pressIndex: index)
+                Text("Started at hole \(roundViewModel.presses[index].startHole)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                HStack(spacing: 0) {
+                    nineHoleView(holes: 1...9, golfer1: golfer1, golfer2: golfer2, title: "Out", showLabels: true, pressIndex: index)
+                    nineHoleView(holes: 10...18, golfer1: golfer1, golfer2: golfer2, title: "In", showTotal: true, showLabels: false, pressIndex: index)
+                }
+            }
+            .padding(.top, 16)
+        }
+    }
+    
+    private func mainMatchResultSummary() -> some View {
+        Group {
+            if let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore {
+                Text("\(winner) won \(score)")
+            } else if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
+                Text("\(golfer1.fullName) vs \(golfer2.fullName)")
+            } else {
+                Text("Match play not set up")
+            }
+        }
+        .padding(.vertical, 8)
+        .foregroundColor(.primary)
+        .font(.headline)
+    }
+    
+    private func pressMatchResultSummary(pressIndex: Int) -> some View {
+        Group {
+            if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
+                let press = roundViewModel.presses[pressIndex]
+                if let winner = press.winner, let score = press.winningScore {
+                    Text("Press \(pressIndex + 1): \(winner) won \(score)")
+                } else {
+                    let pressStatus = press.matchStatusArray.reduce(0, +)
+                    if pressStatus == 0 {
+                        Text("Press \(pressIndex + 1): All Square")
+                    } else {
+                        let leadingGolfer = pressStatus > 0 ? golfer1 : golfer2
+                        let leadAmount = abs(pressStatus)
+                        Text("Press \(pressIndex + 1): \(leadingGolfer.fullName) \(leadAmount) UP")
+                    }
+                }
+            } else {
+                Text("Press \(pressIndex + 1) in progress")
+            }
+        }
+        .font(.subheadline)
+        .foregroundColor(.primary)
+    }
+    
+    func nineHoleView(holes: ClosedRange<Int>, golfer1: Golfer, golfer2: Golfer, title: String, showTotal: Bool = false, showLabels: Bool = true, pressIndex: Int? = nil) -> some View {
         VStack(spacing: 0) {
             holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, showLabel: showLabels)
             parRow(holes: holes, showTotal: showTotal, showLabel: showLabels)
             playerRow(for: golfer1, holes: holes, showTotal: showTotal, showLabel: showLabels)
-            matchStatusRow(for: golfer1, holes: holes, showTotal: showTotal, showLabel: showLabels)
+            matchStatusRow(for: golfer1, holes: holes, showTotal: showTotal, showLabel: showLabels, pressIndex: pressIndex)
             playerRow(for: golfer2, holes: holes, showTotal: showTotal, showLabel: showLabels)
-            matchStatusRow(for: golfer2, holes: holes, showTotal: showTotal, showLabel: showLabels)
+            matchStatusRow(for: golfer2, holes: holes, showTotal: showTotal, showLabel: showLabels, pressIndex: pressIndex)
         }
     }
     
@@ -115,7 +176,7 @@ struct MatchPlaySCView: View {
         .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
         .font(.caption)
     }
-
+    
     func playerRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool = false, showLabel: Bool = true) -> some View {
         HStack(spacing: 0) {
             if showLabel {
@@ -150,7 +211,7 @@ struct MatchPlaySCView: View {
             }
         }
         .font(.caption)
-    }    
+    }
     
     func scoreCell(for golfer: Golfer, hole: Int) -> some View {
         let par = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole })?.par ?? 0
@@ -217,19 +278,25 @@ struct MatchPlaySCView: View {
         }
     }
     
-    func matchStatusRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool = false, showLabel: Bool = true) -> some View {
+    func matchStatusRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool = false, showLabel: Bool = true, pressIndex: Int? = nil) -> some View {
         HStack(spacing: 0) {
             if showLabel {
-                Text("Match")
-                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
-                    .padding(.horizontal, 2)
-                    .background(Color(UIColor.systemGray4))
-                    .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
-                    .fontWeight(.bold)
+                Group {
+                    if let index = pressIndex {
+                        Text("Press \(index + 1)")
+                    } else {
+                        Text("Match")
+                    }
+                }
+                .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
+                .padding(.horizontal, 2)
+                .background(Color(UIColor.systemGray4))
+                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                .fontWeight(.bold)
             }
             
             ForEach(holes, id: \.self) { hole in
-                matchStatusCell(for: golfer, hole: hole)
+                matchStatusCell(for: golfer, hole: hole, pressIndex: pressIndex)
                     .frame(width: scoreCellWidth, height: scoreCellHeight)
             }
             
@@ -244,24 +311,32 @@ struct MatchPlaySCView: View {
         .font(.caption)
     }
     
-    func matchStatusCell(for golfer: Golfer, hole: Int) -> some View {
-        let statusArray = roundViewModel.finalMatchStatusArray ?? roundViewModel.matchStatusArray
-        let cumulativeStatus = statusArray[0..<hole].reduce(0, +)
-        let absStatus = abs(cumulativeStatus)
-        let isFirstGolfer = golfer.id == roundViewModel.matchPlayGolfers?.0.id
-
+    func matchStatusCell(for golfer: Golfer, hole: Int, pressIndex: Int? = nil) -> some View {
+        let statusArray: [Int]
+        let startHole: Int
+        let winningHole: Int?
+        let holesPlayed: Int
+        
+        if let pressIndex = pressIndex {
+            let press = roundViewModel.presses[pressIndex]
+            statusArray = press.matchStatusArray
+            startHole = press.startHole
+            winningHole = press.winningHole
+            holesPlayed = min(18, max(roundViewModel.holesPlayed, startHole))
+        } else {
+            statusArray = roundViewModel.finalMatchStatusArray ?? roundViewModel.matchStatusArray
+            startHole = 1
+            winningHole = roundViewModel.matchWinningHole
+            holesPlayed = roundViewModel.holesPlayed
+        }
+        
         return Group {
-            if let winningHole = roundViewModel.matchWinningHole {
-                if hole < winningHole {
-                    displayMatchStatus(cumulativeStatus: cumulativeStatus, absStatus: absStatus, isFirstGolfer: isFirstGolfer)
-                } else if hole == winningHole {
-                    Text(roundViewModel.winningScore ?? "")
-                        .font(.caption)
-                } else {
+            if hole >= startHole && hole <= holesPlayed {
+                if let winningHole = winningHole, hole > winningHole {
                     Color.clear
+                } else {
+                    displayMatchStatus(for: golfer, hole: hole, startHole: startHole, statusArray: statusArray)
                 }
-            } else if hole <= roundViewModel.holesPlayed {
-                displayMatchStatus(cumulativeStatus: cumulativeStatus, absStatus: absStatus, isFirstGolfer: isFirstGolfer)
             } else {
                 Color.clear
             }
@@ -271,9 +346,15 @@ struct MatchPlaySCView: View {
         .border(Color.black, width: 1)
     }
     
-    private func displayMatchStatus(cumulativeStatus: Int, absStatus: Int, isFirstGolfer: Bool) -> some View {
-        Group {
-            if cumulativeStatus == 0 && isFirstGolfer {
+    private func displayMatchStatus(for golfer: Golfer, hole: Int, startHole: Int, statusArray: [Int]) -> some View {
+        let cumulativeStatus = statusArray[0..<(hole - startHole + 1)].reduce(0, +)
+        let absStatus = abs(cumulativeStatus)
+        let isFirstGolfer = golfer.id == roundViewModel.matchPlayGolfers?.0.id
+        
+        return Group {
+            if hole == startHole && statusArray[hole - startHole] == 0 {
+                Text("AS")
+            } else if cumulativeStatus == 0 && isFirstGolfer {
                 Text("AS")
             } else if (cumulativeStatus > 0 && isFirstGolfer) || (cumulativeStatus < 0 && !isFirstGolfer) {
                 HStack(spacing: 2) {
@@ -282,18 +363,6 @@ struct MatchPlaySCView: View {
                 }
             } else {
                 Color.clear
-            }
-        }
-    }
-
-    private func matchResultSummary() -> some View {
-        Group {
-            if let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore {
-                Text("\(winner) won \(score)")
-            } else if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
-                Text("\(golfer1.fullName) vs \(golfer2.fullName)")
-            } else {
-                Text("Match play not set up")
             }
         }
     }
