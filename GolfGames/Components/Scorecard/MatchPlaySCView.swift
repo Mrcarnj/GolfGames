@@ -313,40 +313,75 @@ struct MatchPlaySCView: View {
     }
     
     func matchStatusCell(for golfer: Golfer, hole: Int, pressIndex: Int? = nil) -> some View {
-        let statusArray: [Int]
-        let startHole: Int
-        let winningHole: Int?
-        let relevantHolesPlayed: Int
-        
-        if let pressIndex = pressIndex {
-            let press = roundViewModel.presses[pressIndex]
-            statusArray = press.matchStatusArray
-            startHole = press.startHole
-            winningHole = press.winningHole
-            // For presses, consider all holes up to the winning hole or 18, whichever comes first
-            relevantHolesPlayed = winningHole ?? 18
-        } else {
-            statusArray = roundViewModel.finalMatchStatusArray ?? roundViewModel.matchStatusArray
-            startHole = 1
-            winningHole = roundViewModel.matchWinningHole
-            relevantHolesPlayed = roundViewModel.holesPlayed
-        }
-        
-        return Group {
-            if hole >= startHole && hole <= relevantHolesPlayed {
-                if let winningHole = winningHole, hole > winningHole {
-                    Color.clear
-                } else {
-                    displayMatchStatus(for: golfer, hole: hole, startHole: startHole, statusArray: statusArray)
-                }
-            } else {
-                Color.clear
-            }
-        }
-        .frame(width: scoreCellWidth, height: scoreCellHeight)
-        .background(Color(UIColor.systemGray4))
-        .border(Color.black, width: 1)
+    if let pressIndex = pressIndex {
+        return AnyView(pressMatchStatusCell(for: golfer, hole: hole, pressIndex: pressIndex))
+    } else {
+        return AnyView(mainMatchStatusCell(for: golfer, hole: hole))
     }
+}
+
+private func mainMatchStatusCell(for golfer: Golfer, hole: Int) -> some View {
+    let statusArray = roundViewModel.finalMatchStatusArray ?? roundViewModel.matchStatusArray
+    let winningHole = roundViewModel.matchWinningHole
+    let relevantHolesPlayed = roundViewModel.holesPlayed
+    
+    return Group {
+        if hole <= relevantHolesPlayed {
+            if let winningHole = winningHole, hole > winningHole {
+                Color.clear
+            } else if hole == winningHole, let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore, golfer.formattedName(golfers: roundViewModel.golfers) == winner {
+                Text(formatFinalScore(score))
+                    .font(.caption)
+                    .foregroundColor(.green)
+            } else {
+                displayMatchStatus(for: golfer, hole: hole, startHole: 1, statusArray: statusArray)
+            }
+        } else {
+            Color.clear
+        }
+    }
+    .frame(width: scoreCellWidth, height: scoreCellHeight)
+    .background(Color(UIColor.systemGray4))
+    .border(Color.black, width: 1)
+}
+
+private func pressMatchStatusCell(for golfer: Golfer, hole: Int, pressIndex: Int) -> some View {
+    let press = roundViewModel.presses[pressIndex]
+    let statusArray = press.matchStatusArray
+    let startHole = press.startHole
+    let winningHole = press.winningHole
+    
+    // Calculate the last relevant hole for this press
+    let lastRelevantHole = (statusArray.lastIndex(where: { $0 != 0 }) ?? -1) + startHole
+    let relevantHolesPlayed = max(lastRelevantHole, roundViewModel.currentHole)
+    
+    return Group {
+        if hole >= startHole && hole <= relevantHolesPlayed {
+            if let winningHole = winningHole, hole > winningHole {
+                Color.clear
+            } else if hole == winningHole, let winner = press.winner, let score = press.winningScore, golfer.formattedName(golfers: roundViewModel.golfers) == winner {
+                Text(formatFinalScore(score))
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.red)
+            } else {
+                displayMatchStatus(for: golfer, hole: hole, startHole: startHole, statusArray: statusArray)
+            }
+        } else {
+            Color.clear
+        }
+    }
+    .frame(width: scoreCellWidth, height: scoreCellHeight)
+    .background(Color(UIColor.systemGray4))
+    .border(Color.black, width: 1)
+}
+
+private func formatFinalScore(_ score: String) -> String {
+    if score.hasSuffix("&0") {
+        return score.replacingOccurrences(of: "&0", with: "UP")
+    }
+    return score
+}
     
     private func displayMatchStatus(for golfer: Golfer, hole: Int, startHole: Int, statusArray: [Int]) -> some View {
         let cumulativeStatus = statusArray[0..<(hole - startHole + 1)].reduce(0, +)
