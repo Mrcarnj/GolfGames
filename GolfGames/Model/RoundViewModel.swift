@@ -385,6 +385,14 @@ class RoundViewModel: ObservableObject {
         talliedHoles.remove(holeNumber)
     }
     
+    private func formatWinningScore(_ score: String) -> String {
+        if score.hasSuffix("&0") {
+            let leadNumber = score.split(separator: "&")[0]
+            return "\(leadNumber)UP"
+        }
+        return score
+    }
+
     func updateMatchStatus(for currentHoleNumber: Int) {
         self.currentHole = currentHoleNumber
         guard isMatchPlay, let (player1, player2) = matchPlayGolfers else { return }
@@ -400,66 +408,58 @@ class RoundViewModel: ObservableObject {
         
         // Only update if the match hasn't been finalized
         if matchWinner == nil {
-            // If the match is already won, just display the winning text
-            if let winner = matchWinner, let score = winningScore {
-                matchPlayStatus = "\(winner) won \(score)"
-                print("Main match status: \(matchPlayStatus ?? "N/A")")
-            } else {
-                // Update match status for each hole up to the current hole
-                for hole in 1...currentHoleNumber {
-                    if let winner = holeWinners[hole] {
-                        if winner == player1.formattedName(golfers: self.golfers) {
-                            matchStatusArray[hole - 1] = 1
-                        } else if winner == player2.formattedName(golfers: self.golfers) {
-                            matchStatusArray[hole - 1] = -1
-                        } else {
-                            matchStatusArray[hole - 1] = 0
-                        }
-                    }
-                    
-                    // Calculate cumulative status
-                    matchScore = matchStatusArray[0..<hole].reduce(0, +)
-                    holesPlayed = hole
-                    
-                    let remainingHoles = 18 - holesPlayed
-                    
-                    // Check for match win conditions
-                    if abs(matchScore) > remainingHoles {
-                        matchWinner = matchScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
-                        winningScore = "\(abs(matchScore))&\(remainingHoles)"
-                        matchWinningHole = hole
-                        finalMatchStatusArray = matchStatusArray
-                        matchPlayStatus = "\(matchWinner!) won \(winningScore!)"
-                        break
-                    } else if holesPlayed == 18 {
-                        if matchScore > 0 {
-                            matchWinner = player1.formattedName(golfers: self.golfers)
-                            winningScore = "\(matchScore)UP"
-                        } else if matchScore < 0 {
-                            matchWinner = player2.formattedName(golfers: self.golfers)
-                            winningScore = "\(abs(matchScore))UP"
-                        } else {
-                            matchWinner = "Tie"
-                            winningScore = "All Square"
-                        }
-                        matchWinningHole = 18
-                        finalMatchStatusArray = matchStatusArray
-                        matchPlayStatus = "\(matchWinner!) \(winningScore!)"
-                        break
-                    }
-                    
-                    // Update matchPlayStatus string
-                    if matchScore == 0 {
-                        matchPlayStatus = "All Square thru \(holesPlayed)"
+            // Update match status for each hole up to the current hole
+            for hole in 1...currentHoleNumber {
+                if let winner = holeWinners[hole] {
+                    if winner == player1.formattedName(golfers: self.golfers) {
+                        matchStatusArray[hole - 1] = 1
+                    } else if winner == player2.formattedName(golfers: self.golfers) {
+                        matchStatusArray[hole - 1] = -1
                     } else {
-                        let leadingPlayer = matchScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
-                        let absScore = abs(matchScore)
-                        
-                        if absScore == remainingHoles {
-                            matchPlayStatus = "\(leadingPlayer) \(absScore)UP with \(remainingHoles) to play (Dormie)"
-                        } else {
-                            matchPlayStatus = "\(leadingPlayer) \(absScore)UP thru \(holesPlayed)"
-                        }
+                        matchStatusArray[hole - 1] = 0
+                    }
+                }
+                
+                // Calculate cumulative status
+                matchScore = matchStatusArray[0..<hole].reduce(0, +)
+                holesPlayed = hole
+                
+                let remainingHoles = 18 - holesPlayed
+                
+                // Check for match win conditions
+                if abs(matchScore) > remainingHoles {
+                    matchWinner = matchScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
+                    winningScore = formatWinningScore("\(abs(matchScore))&\(remainingHoles)")
+                    matchWinningHole = hole
+                    finalMatchStatusArray = matchStatusArray
+                    matchPlayStatus = "\(matchWinner!) won \(winningScore!)"
+                    break
+                } else if holesPlayed == 18 {
+                    if matchScore != 0 {
+                        matchWinner = matchScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
+                        winningScore = "1UP"
+                        matchPlayStatus = "\(matchWinner!) won \(winningScore!)"
+                    } else {
+                        matchWinner = "Tie"
+                        winningScore = "All Square"
+                        matchPlayStatus = "Match ended \(winningScore!)"
+                    }
+                    matchWinningHole = 18
+                    finalMatchStatusArray = matchStatusArray
+                    break
+                }
+                
+                // Update matchPlayStatus string
+                if matchScore == 0 {
+                    matchPlayStatus = "All Square thru \(holesPlayed)"
+                } else {
+                    let leadingPlayer = matchScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
+                    let absScore = abs(matchScore)
+                    
+                    if absScore == remainingHoles {
+                        matchPlayStatus = "\(leadingPlayer) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+                    } else {
+                        matchPlayStatus = "\(leadingPlayer) \(absScore)UP thru \(holesPlayed)"
                     }
                 }
             }
@@ -523,7 +523,7 @@ class RoundViewModel: ObservableObject {
         // Check for press win conditions
         if abs(cumulativePressScore) > remainingHoles {
             let winner = cumulativePressScore > 0 ? player1.formattedName(golfers: self.golfers) : player2.formattedName(golfers: self.golfers)
-            let winningScore = "\(abs(cumulativePressScore))&\(remainingHoles)"
+            let winningScore = formatWinningScore("\(abs(cumulativePressScore))&\(remainingHoles)")
             presses[pressIndex].winner = winner
             presses[pressIndex].winningScore = winningScore
             return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
@@ -579,8 +579,14 @@ class RoundViewModel: ObservableObject {
             let winner = pressStatus > 0 ? golfer1.formattedName(golfers: self.golfers) : golfer2.formattedName(golfers: self.golfers)
             let leadAmount = abs(pressStatus)
             presses[pressIndex].winner = winner
-            presses[pressIndex].winningScore = "\(leadAmount) & \(remainingHoles)"
+            presses[pressIndex].winningScore = formatWinningScore("\(leadAmount)&\(remainingHoles)")
             presses[pressIndex].winningHole = currentHoleNumber
+        } else if currentHoleNumber == 18 && pressStatus != 0 {
+            // Handle the case where the press is won on the 18th hole
+            let winner = pressStatus > 0 ? golfer1.formattedName(golfers: self.golfers) : golfer2.formattedName(golfers: self.golfers)
+            presses[pressIndex].winner = winner
+            presses[pressIndex].winningScore = "1UP"
+            presses[pressIndex].winningHole = 18
         }
     }
     
@@ -714,11 +720,10 @@ class RoundViewModel: ObservableObject {
         // Update main match status
         updateMatchStatus(for: 18)
         
-        // If the main match is tied
-        if matchScore == 0 && matchWinner == nil {
-            matchWinner = "Tie"
-            winningScore = "All Square"
-            matchPlayStatus = "Match ended All Square"
+        // If the main match ended with a "&0" score, update it
+        if let score = winningScore, score.hasSuffix("&0") {
+            winningScore = formatWinningScore(score)
+            matchPlayStatus = "\(matchWinner!) won \(winningScore!)"
         }
         
         // Update and finalize all presses
@@ -732,6 +737,10 @@ class RoundViewModel: ObservableObject {
                 presses[index].winner = "Tie"
                 presses[index].winningScore = "All Square"
                 pressStatuses[index] = "Press \(index + 1) ended All Square"
+            } else if let score = press.winningScore, score.hasSuffix("&0") {
+                // Update press status if it ended with a "&0" score
+                presses[index].winningScore = formatWinningScore(score)
+                pressStatuses[index] = "Press \(index + 1): \(press.winner ?? "Unknown") won \(presses[index].winningScore ?? "Unknown")"
             }
         }
         

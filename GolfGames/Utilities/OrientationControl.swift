@@ -25,21 +25,3 @@ extension View {
         self.modifier(DeviceRotationViewModifier(action: action))
     }
 }
-
-struct OrientationLockedControllerRepresentable: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIViewController {
-        return OrientationLockedController()
-    }
-
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-}
-
-class OrientationLockedController: UIViewController {
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return AppDelegate.orientationLock
-    }
-    
-    override var shouldAutorotate: Bool {
-        return true
-    }
-}

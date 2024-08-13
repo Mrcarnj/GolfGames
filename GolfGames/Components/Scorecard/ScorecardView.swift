@@ -15,14 +15,11 @@ struct ScorecardView: View {
         GeometryReader { geometry in
             Group {
                 if geometry.size.width > geometry.size.height {
-                    if selectedScorecardType == .strokePlay {
-                        LandscapeStrokePlayScorecardView(golfer: selectedGolfer ?? roundViewModel.golfers.first!)
-                    } else {
                         LandscapeScorecardView(
                             navigateToInitialView: $navigateToInitialView,
                             selectedScorecardType: $selectedScorecardType
                         )
-                    }
+                    
                 } else {
                     portraitLayout
                 }
@@ -442,4 +439,3 @@ struct AnyShape: Shape {
         _path(rect)
     }
 }
-
