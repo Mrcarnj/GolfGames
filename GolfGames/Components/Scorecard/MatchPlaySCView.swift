@@ -316,23 +316,24 @@ struct MatchPlaySCView: View {
         let statusArray: [Int]
         let startHole: Int
         let winningHole: Int?
-        let holesPlayed: Int
+        let relevantHolesPlayed: Int
         
         if let pressIndex = pressIndex {
             let press = roundViewModel.presses[pressIndex]
             statusArray = press.matchStatusArray
             startHole = press.startHole
             winningHole = press.winningHole
-            holesPlayed = min(18, max(roundViewModel.holesPlayed, startHole))
+            // For presses, consider all holes up to the winning hole or 18, whichever comes first
+            relevantHolesPlayed = winningHole ?? 18
         } else {
             statusArray = roundViewModel.finalMatchStatusArray ?? roundViewModel.matchStatusArray
             startHole = 1
             winningHole = roundViewModel.matchWinningHole
-            holesPlayed = roundViewModel.holesPlayed
+            relevantHolesPlayed = roundViewModel.holesPlayed
         }
         
         return Group {
-            if hole >= startHole && hole <= holesPlayed {
+            if hole >= startHole && hole <= relevantHolesPlayed {
                 if let winningHole = winningHole, hole > winningHole {
                     Color.clear
                 } else {

@@ -505,6 +505,12 @@ class RoundViewModel: ObservableObject {
         }
         
         let press = presses[pressIndex]
+        
+        // If this press has already been won, return its final status
+        if let winner = press.winner, let winningScore = press.winningScore {
+            return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
+        }
+        
         let pressStartHole = press.startHole
         let relevantHoles = pressStartHole...currentHole
         
@@ -559,7 +565,14 @@ class RoundViewModel: ObservableObject {
     func updatePressMatchStatus(pressIndex: Int, for currentHoleNumber: Int) {
         guard let (golfer1, golfer2) = matchPlayGolfers else { return }
         
-        let pressStartHole = presses[pressIndex].startHole
+        let press = presses[pressIndex]
+        
+        // If the press already has a winner, don't update it
+        if press.winner != nil {
+            return
+        }
+        
+        let pressStartHole = press.startHole
         for hole in pressStartHole...currentHoleNumber {
             if let winner = holeWinners[hole] {
                 if winner == golfer1.formattedName(golfers: self.golfers) {
@@ -674,43 +687,43 @@ class RoundViewModel: ObservableObject {
     }
     
     func getCurrentPressStatus() -> (leadingPlayer: Golfer?, trailingPlayer: Golfer?, score: Int)? {
-    guard let (golfer1, golfer2) = matchPlayGolfers else { return nil }
-    
-    if let lastPress = presses.last {
-        let pressStartHole = lastPress.startHole
-        let lowerBound = max(pressStartHole, 1)
-        let upperBound = max(currentHole, lowerBound)
-        let relevantHoles = lowerBound...upperBound
+        guard let (golfer1, golfer2) = matchPlayGolfers else { return nil }
         
-        print("Press start hole: \(pressStartHole)")
-        print("Current hole: \(currentHole)")
-        print("Relevant holes: \(relevantHoles)")
-        
-        let cumulativePressScore = relevantHoles.reduce(0) { total, hole in
-            guard hole - pressStartHole < lastPress.matchStatusArray.count else { return total }
-            return total + lastPress.matchStatusArray[hole - pressStartHole]
-        }
-        
-        print("Cumulative Press Score: \(cumulativePressScore)")
-        
-        if cumulativePressScore > 0 {
-            return (golfer1, golfer2, cumulativePressScore)
-        } else if cumulativePressScore < 0 {
-            return (golfer2, golfer1, -cumulativePressScore)
+        if let lastPress = presses.last {
+            let pressStartHole = lastPress.startHole
+            let lowerBound = max(pressStartHole, 1)
+            let upperBound = max(currentHole, lowerBound)
+            let relevantHoles = lowerBound...upperBound
+            
+            print("Press start hole: \(pressStartHole)")
+            print("Current hole: \(currentHole)")
+            print("Relevant holes: \(relevantHoles)")
+            
+            let cumulativePressScore = relevantHoles.reduce(0) { total, hole in
+                guard hole - pressStartHole < lastPress.matchStatusArray.count else { return total }
+                return total + lastPress.matchStatusArray[hole - pressStartHole]
+            }
+            
+            print("Cumulative Press Score: \(cumulativePressScore)")
+            
+            if cumulativePressScore > 0 {
+                return (golfer1, golfer2, cumulativePressScore)
+            } else if cumulativePressScore < 0 {
+                return (golfer2, golfer1, -cumulativePressScore)
+            } else {
+                return (nil, nil, 0)  // All square
+            }
         } else {
-            return (nil, nil, 0)  // All square
-        }
-    } else {
-        // If no presses, return main match status
-        if matchScore > 0 {
-            return (golfer1, golfer2, matchScore)
-        } else if matchScore < 0 {
-            return (golfer2, golfer1, -matchScore)
-        } else {
-            return (nil, nil, 0)  // All square
+            // If no presses, return main match status
+            if matchScore > 0 {
+                return (golfer1, golfer2, matchScore)
+            } else if matchScore < 0 {
+                return (golfer2, golfer1, -matchScore)
+            } else {
+                return (nil, nil, 0)  // All square
+            }
         }
     }
-}
     
     func forceUIUpdate() {
         objectWillChange.send()
