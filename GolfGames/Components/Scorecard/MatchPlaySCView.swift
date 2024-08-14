@@ -44,7 +44,7 @@ struct MatchPlaySCView: View {
                 mainMatchView(golfer1: golfer1, golfer2: golfer2)
                 pressesView(golfer1: golfer1, golfer2: golfer2)
             } else {
-                Text("Match play golfers not selected")
+                Text("Match play not enabled")
             }
         }
     }

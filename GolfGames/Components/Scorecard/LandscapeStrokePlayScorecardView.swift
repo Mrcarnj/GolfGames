@@ -17,6 +17,10 @@ struct LandscapeStrokePlayScorecardView: View {
     private let scoreCellWidth: CGFloat = 36
     private let scoreCellHeight: CGFloat = 40
     
+    private var isNegativeHandicap: Bool {
+        return roundViewModel.courseHandicaps[golfer.id] ?? 0 < 0
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
@@ -145,15 +149,21 @@ struct LandscapeStrokePlayScorecardView: View {
             }
             
             if isGross && isStrokeHole {
-                Circle()
-                    .fill(strokeDotColor(score: score, par: par))
-                    .frame(width: 6, height: 6)
-                    .offset(x: 7, y: -7)
+                if isNegativeHandicap {
+                    Text("+")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(strokeDotColor(score: score, par: par))
+                        .offset(x: 7, y: -7)
+                } else {
+                    Circle()
+                        .fill(strokeDotColor(score: score, par: par))
+                        .frame(width: 6, height: 6)
+                        .offset(x: 7, y: -7)
+                }
             }
         }
     }
     
-    // Include the scoreCellBackground, scoreCellTextColor, strokeDotColor, and scoreLegend functions from your existing LandscapeScorecardView
     func strokeDotColor(score: Int, par: Int) -> Color {
         if score == par + 1 {
             return .white
