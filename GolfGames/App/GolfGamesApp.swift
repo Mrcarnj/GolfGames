@@ -16,7 +16,8 @@ struct GolfGamesApp: App {
     @StateObject private var roundViewModel = RoundViewModel()
     @StateObject private var sharedViewModel = SharedViewModel()
     @StateObject private var matchPlayViewModel = MatchPlayViewModel(player1Id: "", player2Id: "", matchPlayHandicap: 0)
-
+    @StateObject private var locationManager = LocationManager()
+    
     init() {
         FirebaseApp.configure()
         let shared = SharedViewModel()
@@ -29,7 +30,7 @@ struct GolfGamesApp: App {
             matchPlayHandicap: 0
         ))
     }
-
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -38,9 +39,12 @@ struct GolfGamesApp: App {
                 .environmentObject(roundViewModel)
                 .environmentObject(sharedViewModel)
                 .environmentObject(matchPlayViewModel)
+                .environmentObject(locationManager)
                 .onAppear {
                     // Set initial orientation lock to portrait
                     AppDelegate.lockOrientation(.portrait)
+                    // Request location permission
+                    locationManager.requestLocation()
                 }
         }
     }

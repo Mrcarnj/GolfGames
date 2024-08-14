@@ -12,6 +12,17 @@ struct Course: Identifiable, Codable, Hashable {
     @DocumentID var id: String?
     var name: String
     var location: String
+    var latitude: Double?
+    var longitude: Double?
+    var distance: Double?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case location
+        case latitude
+        case longitude
+    }
     
     static func == (lhs: Course, rhs: Course) -> Bool {
         return lhs.id == rhs.id
@@ -39,6 +50,3 @@ struct Tee: Identifiable, Codable, Hashable {
         hasher.combine(id)
     }
 }
-
-
-

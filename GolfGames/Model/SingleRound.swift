@@ -8,18 +8,21 @@
 import Foundation
 import Firebase
 import FirebaseFirestoreSwift
+import CoreLocation
 
 class SingleRoundViewModel: ObservableObject {
-    @Published var courses: [Course] = []
+    @Published var allCourses: [Course] = []
     @Published var uniqueLocations: [String] = []
     @Published var filteredCourses: [Course] = []
+    @Published var nearbyCourses: [Course] = []
     @Published var selectedCourse: Course?
     @Published var tees: [Tee] = []
     @Published var holes: [Hole] = []
 
     private var db = Firestore.firestore()
 
-    func fetchCourses() {
+    func fetchCoursesAndNearby(userLocation: CLLocation?) {
+        print("Fetching all courses")
         db.collection("courses").getDocuments { snapshot, error in
             if let error = error {
                 print("Error fetching courses: \(error.localizedDescription)")
@@ -31,13 +34,18 @@ class SingleRoundViewModel: ObservableObject {
                 return
             }
 
-            self.courses = documents.compactMap { try? $0.data(as: Course.self) }
+            self.allCourses = documents.compactMap { try? $0.data(as: Course.self) }
+            print("Fetched \(self.allCourses.count) courses")
             self.extractUniqueLocations()
+            
+            if let location = userLocation {
+                self.fetchNearbyCourses(userLocation: location)
+            }
         }
     }
 
     private func extractUniqueLocations() {
-        let locations = courses.map { $0.location }
+        let locations = allCourses.map { $0.location }
         self.uniqueLocations = Array(Set(locations)).sorted()
     }
 
@@ -46,7 +54,27 @@ class SingleRoundViewModel: ObservableObject {
             filteredCourses = []
             return
         }
-        filteredCourses = courses.filter { $0.location == location }
+        filteredCourses = allCourses.filter { $0.location == location }
+    }
+
+    func fetchNearbyCourses(userLocation: CLLocation) {
+        print("Fetching nearby courses for location: \(userLocation)")
+        nearbyCourses = allCourses.compactMap { course in
+            guard let courseLat = course.latitude, let courseLon = course.longitude else {
+                print("Course \(course.name) missing lat/lon")
+                return nil
+            }
+            let courseLocation = CLLocation(latitude: courseLat, longitude: courseLon)
+            let distance = userLocation.distance(from: courseLocation) / 1609.34 // Convert meters to miles
+            print("Course: \(course.name), Distance: \(distance) miles")
+            if distance <= 20 {
+                var courseWithDistance = course
+                courseWithDistance.distance = distance
+                return courseWithDistance
+            }
+            return nil
+        }.sorted { $0.distance ?? 0 < $1.distance ?? 0 }
+        print("Found \(nearbyCourses.count) nearby courses")
     }
 
     func fetchTees(for course: Course, completion: @escaping ([Tee]) -> Void) {
@@ -130,7 +158,6 @@ class SingleRoundViewModel: ObservableObject {
             
             DispatchQueue.main.async {
                 self.holes = loadedHoles
-                //print("Holes loaded in SingleRoundViewModel: \(self.holes.map { "Hole \($0.holeNumber): Par \($0.par), Handicap \($0.handicap), Yardage \($0.yardage)" }.joined(separator: ", "))")
                 completion(loadedHoles)
             }
         }
