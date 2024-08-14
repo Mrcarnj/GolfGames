@@ -24,7 +24,7 @@ struct FriendsListView: View {
                         Text(friend.fullName)
                         Spacer()
                         HStack(spacing: 10) {
-                            Text(String(format: "%.1f", friend.handicap))
+                            Text(formatHandicap(friend.handicap))
                                 .foregroundColor(.secondary)
                             if selectedFriends.contains(where: { $0.id == friend.id }) {
                                 Image(systemName: "checkmark")
@@ -95,6 +95,14 @@ struct FriendsListView: View {
         for index in offsets {
             let friend = viewModel.friends[index]
             viewModel.removeFriend(friend)
+        }
+    }
+
+    private func formatHandicap(_ handicap: Float) -> String {
+        if handicap < 0 {
+            return String(format: "+%.1f", abs(handicap))
+        } else {
+            return String(format: "%.1f", handicap)
         }
     }
 }

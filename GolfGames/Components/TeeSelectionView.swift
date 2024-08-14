@@ -34,13 +34,13 @@ struct TeeSelectionView: View {
                             Text("HCP:")
                                 .font(.headline)
                                 .fontWeight(.regular)
-                            Text("\(String(format: "%.1f", golfer.handicap))")
+                            Text(formatHandicap(golfer.handicap))
                                 .font(.headline)
                             if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
                                 Text(" CH:")
                                     .font(.headline)
                                     .fontWeight(.regular)
-                                Text("\(courseHandicap)")
+                                Text(formatHandicap(Float(courseHandicap)))
                                     .font(.headline)
                             }
                         }
@@ -288,6 +288,14 @@ struct TeeSelectionView: View {
         }
 
         loadHolesData()
+    }
+
+    private func formatHandicap(_ handicap: Float) -> String {
+        if handicap < 0 {
+            return String(format: "+%.1f", abs(handicap))
+        } else {
+            return String(format: "%.1f", handicap)
+        }
     }
 }
 

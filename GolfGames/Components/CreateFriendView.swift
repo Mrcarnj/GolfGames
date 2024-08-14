@@ -14,6 +14,7 @@ struct CreateFriendView: View {
     @State private var fullName = ""
     @State private var ghinNumber = ""
     @State private var handicap = ""
+    @State private var isPlusHandicap = false
     @State private var showAlert = false
     @State private var alertMessage = ""
 
@@ -24,8 +25,14 @@ struct CreateFriendView: View {
                     TextField("Full Name", text: $fullName)
                     TextField("GHIN (Optional)", text: $ghinNumber)
                         .keyboardType(.numberPad)
-                    TextField("Handicap", text: $handicap)
-                        .keyboardType(.decimalPad)
+                    HStack {
+                        Toggle(isOn: $isPlusHandicap) {
+                            Text("+")
+                        }
+                        .fixedSize()
+                        TextField("Handicap", text: $handicap)
+                            .keyboardType(.decimalPad)
+                    }
                 }
             }
             .navigationBarTitle(friendToEdit == nil ? "Add Friend" : "Edit Friend", displayMode: .inline)
@@ -45,7 +52,12 @@ struct CreateFriendView: View {
             if let friend = friendToEdit {
                 fullName = friend.fullName
                 ghinNumber = friend.ghinNumber.map(String.init) ?? ""
-                handicap = String(format: "%.1f", friend.handicap)
+                if friend.handicap < 0 {
+                    isPlusHandicap = true
+                    handicap = String(format: "%.1f", abs(friend.handicap))
+                } else {
+                    handicap = String(format: "%.1f", friend.handicap)
+                }
             }
         }
     }
@@ -54,7 +66,10 @@ struct CreateFriendView: View {
         guard validateInput() else { return }
         
         let ghinNumberValue = Int(ghinNumber)
-        let handicapValue = Float(handicap) ?? 0.0
+        var handicapValue = Float(handicap) ?? 0.0
+        if isPlusHandicap {
+            handicapValue = -handicapValue
+        }
         
         viewModel.addFriend(fullName: fullName, ghinNumber: ghinNumberValue, handicap: handicapValue) { result in
             handleResult(result)
@@ -65,7 +80,10 @@ struct CreateFriendView: View {
         guard validateInput() else { return }
         
         let ghinNumberValue = Int(ghinNumber)
-        let handicapValue = Float(handicap) ?? 0.0
+        var handicapValue = Float(handicap) ?? 0.0
+        if isPlusHandicap {
+            handicapValue = -handicapValue
+        }
         
         guard let friend = friendToEdit else { return }
         
