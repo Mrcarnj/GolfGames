@@ -165,7 +165,7 @@ struct LandscapeStrokePlayScorecardView: View {
     }
     
     func strokeDotColor(score: Int, par: Int) -> Color {
-    if score <= par - 1 || score >= par + 1 {
+    if score == par - 1 || score == par + 1 {
         return .white
     } else {
         return colorScheme == .dark ? .white : .black

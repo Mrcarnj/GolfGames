@@ -23,7 +23,7 @@ struct HoleView: View {
     
     @State private var currentHoleIndex: Int
     @State private var scoreInputs: [String: String] = [:]
-    @FocusState private var focusedGolferId: String?
+    @FocusState private var focusedField: String?
     @State private var showMissingScores = false
     @State private var missingScores: [String: [Int]] = [:]
     @State private var holesLoaded = false
@@ -152,6 +152,14 @@ struct HoleView: View {
                 secondaryButton: .cancel()
             )
         }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedField = nil
+                }
+            }
+        }
     }
     
     private var customNavigationBar: some View {
@@ -239,19 +247,6 @@ struct HoleView: View {
             }
         }
         .gesture(holeNavigationGesture)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    if let golferId = focusedGolferId,
-                       let golfer = roundViewModel.golfers.first(where: { $0.id == golferId }) {
-                        let score = scoreInputs[golferId] ?? ""
-                        updateScore(for: golferId, score: score)
-                    }
-                    focusedGolferId = nil
-                }
-            }
-        }
     }
     
     private var matchPlayStatusView: some View {
@@ -301,6 +296,7 @@ struct HoleView: View {
                     strokeHoleInfo: strokeHoleInfo(for: golfer.id),
                     updateScore: updateScore
                 )
+                .focused($focusedField, equals: golfer.id)
                 
                 if roundViewModel.isMatchPlay {
                     pressButton(for: golfer)
@@ -576,7 +572,7 @@ private struct HoleDetailsView: View {
 
 private struct ScoreInputView: View {
     @Binding var scoreInputs: [String: String]
-    @FocusState private var focusedGolferId: String?
+    @FocusState var focusedField: String?
     @Environment(\.colorScheme) var colorScheme
     let golfer: Golfer
     let strokeHoleInfo: (isStrokeHole: Bool, isNegativeHandicap: Bool)
@@ -591,7 +587,7 @@ private struct ScoreInputView: View {
             }
         ))
         .keyboardType(.numberPad)
-        .focused($focusedGolferId, equals: golfer.id)
+        .focused($focusedField, equals: golfer.id)
         .frame(width: 50, height: 50)
         .background(colorScheme == .dark ? Color.white : Color.gray.opacity(0.2))
         .foregroundColor(colorScheme == .dark ? .black : .primary)
