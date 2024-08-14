@@ -161,28 +161,40 @@ class RoundViewModel: ObservableObject {
     }
     
     func calculateStrokePlayStrokeHoles(holes: [Hole]) {
-        for golfer in golfers {
-            guard let courseHandicap = courseHandicaps[golfer.id] else {
-                print("Warning: No course handicap found for golfer \(golfer.fullName)")
-                continue
-            }
-            
-            let strokeHoles = HandicapCalculator.determineStrokePlayStrokeHoles(courseHandicap: courseHandicap, holes: holes)
-            self.strokeHoles[golfer.id] = strokeHoles
-            
-            print("Calculated stroke holes for \(golfer.formattedName(golfers: self.golfers)): \(strokeHoles)")
-            print("Course Handicap: \(courseHandicap)")
+    for golfer in golfers {
+        guard let courseHandicap = courseHandicaps[golfer.id] else {
+            print("Warning: No course handicap found for golfer \(golfer.fullName)")
+            continue
         }
+        
+        let strokeHoles = HandicapCalculator.determineStrokePlayStrokeHoles(courseHandicap: courseHandicap, holes: holes)
+        self.strokeHoles[golfer.id] = strokeHoles
+        
+        print("Calculated stroke holes for \(golfer.formattedName(golfers: self.golfers)): \(strokeHoles)")
+        print("Course Handicap: \(courseHandicap)")
     }
+}
     
     func updateStrokePlayNetScores() {
         for (holeNumber, scores) in grossScores {
             for (golferId, grossScore) in scores {
+                guard let courseHandicap = courseHandicaps[golferId] else {
+                    print("Warning: No course handicap found for golfer \(golferId)")
+                    continue
+                }
+                
                 let isStrokeHole = strokeHoles[golferId]?.contains(holeNumber) ?? false
-                let netScore = isStrokeHole ? grossScore - 1 : grossScore
+                let netScore: Int
+                
+                if courseHandicap < 0 {
+                    netScore = isStrokeHole ? grossScore + 1 : grossScore
+                } else {
+                    netScore = isStrokeHole ? grossScore - 1 : grossScore
+                }
+                
                 netStrokePlayScores[holeNumber, default: [:]][golferId] = netScore
                 
-                print("Hole \(holeNumber) for golfer \(golferId): Gross \(grossScore), Net \(netScore), Stroke Hole: \(isStrokeHole)")
+                print("Hole \(holeNumber) for golfer \(golferId): Gross \(grossScore), Net \(netScore), Stroke Hole: \(isStrokeHole), Course Handicap: \(courseHandicap)")
             }
         }
     }

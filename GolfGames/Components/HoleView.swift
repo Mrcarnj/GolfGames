@@ -82,7 +82,7 @@ struct HoleView: View {
                         }
                     }
                 }
-
+                
                 if showSideMenu && !isLandscape {
                     Color.black.opacity(0.3)
                         .edgesIgnoringSafeArea(.all)
@@ -91,12 +91,12 @@ struct HoleView: View {
                                 self.showSideMenu = false
                             }
                         }
-
+                    
                     HStack {
                         SideMenuView(isShowing: $showSideMenu, navigateToInitialView: $navigateToInitialView)
                             .frame(width: 250)
                             .transition(.move(edge: .leading))
-
+                        
                         Spacer()
                     }
                 }
@@ -141,17 +141,17 @@ struct HoleView: View {
                            }
         )
         .alert(isPresented: $showingPressConfirmation) {
-    Alert(
-        title: Text("Confirm Press"),
-        message: Text("Are you sure you want to initiate a press?"),
-        primaryButton: .default(Text("Yes")) {
-            if let losingPlayer = roundViewModel.getLosingPlayer() {
-                roundViewModel.initiatePress(atHole: currentHoleIndex + 1)
-            }
-        },
-        secondaryButton: .cancel()
-    )
-}
+            Alert(
+                title: Text("Confirm Press"),
+                message: Text("Are you sure you want to initiate a press?"),
+                primaryButton: .default(Text("Yes")) {
+                    if let losingPlayer = roundViewModel.getLosingPlayer() {
+                        roundViewModel.initiatePress(atHole: currentHoleIndex + 1)
+                    }
+                },
+                secondaryButton: .cancel()
+            )
+        }
     }
     
     private var customNavigationBar: some View {
@@ -176,7 +176,7 @@ struct HoleView: View {
             holeNavigation
         }
     }
-
+    
     private var holeNavigation: some View {
         HStack {
             if currentHoleIndex > 0 {
@@ -262,7 +262,7 @@ struct HoleView: View {
                             .font(.headline)
                             .padding(.vertical, 5)
                     }
-
+                    
                     // Press statuses
                     ForEach(roundViewModel.pressStatuses, id: \.self) { pressStatus in
                         Text(pressStatus)
@@ -275,8 +275,10 @@ struct HoleView: View {
                         Text("Golfer")
                         Spacer()
                         Text("Score")
-                        Text("Press")
-                            .frame(width: 60)
+                        if roundViewModel.isMatchPlay {
+                            Text("Press")
+                                .frame(width: 60)
+                        }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal)
@@ -305,11 +307,20 @@ struct HoleView: View {
                             .multilineTextAlignment(.center)
                             .overlay(
                                 Group {
-                                    if isStrokeHole(for: golfer.id) {
-                                        Circle()
-                                            .fill(Color.black)
-                                            .frame(width: 6, height: 6)
-                                            .offset(x: 20, y: -17)
+                                    let (isStrokeHole, isNegativeHandicap) = strokeHoleInfo(for: golfer.id)
+                                    if isStrokeHole {
+                                        if isNegativeHandicap {
+                                            Image(systemName: "plus.circle.fill")
+                                                .fill(Color.black)
+                                                .resizable()
+                                                .frame(width: 10, height: 10)
+                                                .offset(x: 20, y: -17)
+                                        } else {
+                                            Circle()
+                                                .fill(Color.black)
+                                                .frame(width: 6, height: 6)
+                                                .offset(x: 20, y: -17)
+                                        }
                                     }
                                 }
                             )
@@ -321,9 +332,9 @@ struct HoleView: View {
                                             Text("")
                                                 .font(.system(size: 10))
                                                 .foregroundColor(.gray)
-                                        } else if trailingPlayer?.id == golfer.id && roundViewModel.currentPressStartHole == nil && 
-                                                  (roundViewModel.matchWinner == nil || !roundViewModel.presses.isEmpty) && 
-                                                  !scoresChecked && currentHoleIndex < 17 {
+                                        } else if trailingPlayer?.id == golfer.id && roundViewModel.currentPressStartHole == nil &&
+                                                    (roundViewModel.matchWinner == nil || !roundViewModel.presses.isEmpty) &&
+                                                    !scoresChecked && currentHoleIndex < 17 {
                                             Button(action: {
                                                 showingPressConfirmation = true
                                             }) {
@@ -360,7 +371,7 @@ struct HoleView: View {
                     .background(Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(10)
-
+                    
                     if showMissingScores && roundViewModel.allScoresEntered(for: currentHoleIndex + 1) {
                         NavigationLink(destination: ScorecardView()
                             .environmentObject(roundViewModel)
@@ -372,8 +383,8 @@ struct HoleView: View {
                                     .background(Color(.systemTeal))
                                     .foregroundColor(.white)
                                     .cornerRadius(10)
-                        }
-                        .padding(.horizontal)
+                            }
+                            .padding(.horizontal)
                     }
                 }
             }
@@ -507,23 +518,28 @@ struct HoleView: View {
         }
     }
     
-    private func isStrokeHole(for golferId: String) -> Bool {
+    private func strokeHoleInfo(for golferId: String) -> (isStrokeHole: Bool, isNegativeHandicap: Bool) {
         let currentHoleNumber = currentHoleIndex + 1
+        let courseHandicap = roundViewModel.courseHandicaps[golferId] ?? 0
+        let isNegativeHandicap = courseHandicap < 0
+        
         if roundViewModel.isMatchPlay {
-            return roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            let isStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            return (isStrokeHole, isNegativeHandicap)
         } else {
-            return roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            let isStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            return (isStrokeHole, isNegativeHandicap)
         }
     }
     
     private func unlockOrientation() {
         AppDelegate.lockOrientation(.allButUpsideDown)
     }
-
+    
     private func lockOrientation() {
         AppDelegate.lockOrientation(.portrait)
     }
-
+    
 }
 
 struct MatchPlayStatusView: View {

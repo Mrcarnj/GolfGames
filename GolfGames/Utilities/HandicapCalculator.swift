@@ -34,14 +34,16 @@ struct HandicapCalculator {
         // Sort holes by their handicap rating
         let sortedHoles = holes.sorted { $0.handicap < $1.handicap }
         
-        // Take the first 'courseHandicap' number of holes
-        let strokeHoles = sortedHoles.prefix(courseHandicap).map { $0.holeNumber }
+        let absHandicap = abs(courseHandicap)
+        let strokeHoles: [Int]
         
-//        print("Determined stroke holes: \(strokeHoles) for course handicap: \(courseHandicap)")
-//        print("Holes with their handicaps:")
-//        for hole in sortedHoles {
-//            print("Hole \(hole.holeNumber): Handicap \(hole.handicap)")
-//        }
+        if courseHandicap < 0 {
+            // For negative handicaps, take the last 'absHandicap' number of holes (easiest holes)
+            strokeHoles = sortedHoles.suffix(absHandicap).map { $0.holeNumber }
+        } else {
+            // For positive handicaps, take the first 'courseHandicap' number of holes (hardest holes)
+            strokeHoles = sortedHoles.prefix(absHandicap).map { $0.holeNumber }
+        }
         
         return strokeHoles
     }
