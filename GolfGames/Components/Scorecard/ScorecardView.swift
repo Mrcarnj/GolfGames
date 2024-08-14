@@ -328,21 +328,32 @@ struct ScorecardView: View {
             }
             
             if isGross && isStrokeHole {
-                Circle()
-                    .fill(strokeDotColor(score: score, par: par))
-                    .frame(width: 6, height: 6)
-                    .offset(x: 7, y: -7)
+                if isNegativeHandicap(for: golfer.id) {
+                    Text("+")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(strokeDotColor(score: score, par: par))
+                        .offset(x: 7, y: -7)
+                } else {
+                    Circle()
+                        .fill(strokeDotColor(score: score, par: par))
+                        .frame(width: 6, height: 6)
+                        .offset(x: 7, y: -7)
+                }
             }
         }
     }
     
-    func strokeDotColor(score: Int, par: Int) -> Color {
-        if score == par + 1 {
-            return .white
-        } else {
-            return colorScheme == .dark ? .white : .black
-        }
+    private func isNegativeHandicap(for golferId: String) -> Bool {
+        return roundViewModel.courseHandicaps[golferId] ?? 0 < 0
     }
+    
+    func strokeDotColor(score: Int, par: Int) -> Color {
+    if score <= par - 1 || score >= par + 1 {
+        return .white
+    } else {
+        return colorScheme == .dark ? .white : .black
+    }
+}
     
     func scoreCellBackground(score: Int, par: Int) -> some View {
         Group {
