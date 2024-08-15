@@ -55,6 +55,7 @@ class SingleRoundViewModel: ObservableObject {
             return
         }
         filteredCourses = allCourses.filter { $0.location == location }
+        filteredCourses.sort { $0.name < $1.name }  // Sort alphabetically
     }
 
     func fetchNearbyCourses(userLocation: CLLocation) {

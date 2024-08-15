@@ -86,16 +86,16 @@ struct SingleRoundSetupView: View {
                                 }
                             } else {
                                 ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 15) {
-                                        ForEach(viewModel.nearbyCourses) { course in
-                                            NearbyCourseCard(course: course, isSelected: selectedCourse?.id == course.id)
-                                                .onTapGesture {
-                                                    selectNearbyCourse(course)
-                                                }
-                                        }
-                                    }
-                                    .padding(.horizontal)
-                                }
+    HStack(spacing: 15) {
+        ForEach(viewModel.nearbyCourses) { course in
+            NearbyCourseCard(course: course, isSelected: selectedCourse?.id == course.id)
+                .onTapGesture {
+                    selectNearbyCourse(course)
+                }
+        }
+    }
+    .padding(.horizontal)
+}
                             }
                         }
                         .padding(.vertical)
@@ -157,6 +157,14 @@ struct SingleRoundSetupView: View {
         selectedLocation = nil  // Clear the location picker
         viewModel.filterCourses(by: nil)  // Clear the filtered courses
         selectedCourse = course  // Select the nearby course
+        
+        // Fetch tees for the selected course, just like in the course picker
+        viewModel.fetchTees(for: course) { tees in
+            // handle the fetched tees if needed
+        }
+        
+        // If you have any other actions that need to be performed when a course is selected,
+        // add them here to ensure consistency with the course picker selection
     }
 }
 

@@ -17,6 +17,7 @@ struct HoleView: View {
     @EnvironmentObject var sharedViewModel: SharedViewModel
     @State private var navigateToInitialView = false
     @State private var selectedScorecardType: ScorecardType = .strokePlay
+    @State private var navigateToFriendsList = false
     
     let teeId: String
     let initialHoleIndex: Int
@@ -93,9 +94,11 @@ struct HoleView: View {
                         }
                     
                     HStack {
-                        SideMenuView(isShowing: $showSideMenu, navigateToInitialView: $navigateToInitialView)
-                            .frame(width: 250)
-                            .transition(.move(edge: .leading))
+                        SideMenuView(isShowing: $showSideMenu,
+                                     navigateToInitialView: $navigateToInitialView,
+                                     showDiscardButton: true)
+                        .frame(width: 250)
+                        .transition(.move(edge: .leading))
                         
                         Spacer()
                     }
@@ -314,8 +317,8 @@ struct HoleView: View {
     
     private var checkScoresButton: some View {
         Group {
-            if currentHoleIndex == 17 {
-                Button("Check Scores") {
+            if currentHoleIndex == 17 && roundViewModel.allScoresEntered(for: currentHoleIndex + 1) {
+                Button("Check For Missing Scores") {
                     checkScores()
                     scoresChecked = true
                 }

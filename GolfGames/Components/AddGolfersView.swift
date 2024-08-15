@@ -40,7 +40,7 @@ struct AddGolfersView: View {
                     .padding(.top)
                     .foregroundColor(Color.primary)
 
-                Text("Add Golfers")
+                Text("Who's Playing Today?")
                     .font(.headline)
                     .foregroundColor(Color.primary)
                     .padding(.top)

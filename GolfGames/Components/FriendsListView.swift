@@ -15,7 +15,7 @@ struct FriendsListView: View {
     @State private var showingAddFriendSheet = false
     @State private var friendToEdit: Golfer?
     var onDone: () -> Void
-
+    
     var body: some View {
         VStack {
             List {
@@ -32,6 +32,7 @@ struct FriendsListView: View {
                             }
                         }
                         .frame(width: 70, alignment: .trailing)
+                        
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -46,14 +47,24 @@ struct FriendsListView: View {
                     }
                 }
                 .onDelete(perform: deleteFriends)
+                
+                // Add the tip text as the last item in the list
+                Text("Tip: Long press on a friend to edit them. Update their handicaps to their current handicap index before each round.")
+                    .italic()
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .listRowBackground(Color.clear)
+                    .padding(.vertical, 8)
             }
-            .navigationTitle("Friends List")
-            .navigationBarItems(trailing: Button(action: {
-                friendToEdit = nil
-                showingAddFriendSheet.toggle()
-            }) {
-                Image(systemName: "plus")
-            })
+            
+                .navigationTitle("Friends List")
+                .navigationBarItems(trailing: Button(action: {
+                    friendToEdit = nil
+                    showingAddFriendSheet.toggle()
+                }) {
+                    Image(systemName: "plus")
+                })
             
             if !selectedFriends.isEmpty {
                 Button(action: {
@@ -82,7 +93,7 @@ struct FriendsListView: View {
             }
         }
     }
-
+    
     private func toggleFriendSelection(_ friend: Golfer) {
         if let index = selectedFriends.firstIndex(where: { $0.id == friend.id }) {
             selectedFriends.remove(at: index)
@@ -90,14 +101,14 @@ struct FriendsListView: View {
             selectedFriends.append(friend)
         }
     }
-
+    
     private func deleteFriends(at offsets: IndexSet) {
         for index in offsets {
             let friend = viewModel.friends[index]
             viewModel.removeFriend(friend)
         }
     }
-
+    
     private func formatHandicap(_ handicap: Float) -> String {
         if handicap < 0 {
             return String(format: "+%.1f", abs(handicap))

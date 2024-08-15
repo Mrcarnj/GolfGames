@@ -13,6 +13,8 @@ struct SideMenuView: View {
     @Binding var navigateToInitialView: Bool
     @State private var showDiscardAlert = false
     @Environment(\.colorScheme) var colorScheme
+    var showDiscardButton: Bool
+    @GestureState private var dragOffset: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -27,21 +29,40 @@ struct SideMenuView: View {
             
             Spacer()
             
-            discardButton
+            if showDiscardButton {
+                discardButton
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .background(backgroundColor)
         .edgesIgnoringSafeArea(.all)
-        .alert(isPresented: $showDiscardAlert) {
-            Alert(
-                title: Text("Discard Round"),
-                message: Text("Are you sure you want to discard the round?"),
-                primaryButton: .destructive(Text("Discard")) {
-                    discardRound()
-                },
-                secondaryButton: .cancel()
-            )
+        .offset(x: dragOffset)
+        .gesture(
+            DragGesture()
+                .updating($dragOffset) { value, state, _ in
+                    if value.translation.width < 0 {
+                        state = value.translation.width
+                    }
+                }
+                .onEnded { value in
+                    if value.translation.width < -50 {
+                        withAnimation {
+                            isShowing = false
+                        }
+                    }
+                }
+        )
+        .alert("Discard Round", isPresented: $showDiscardAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Discard", role: .destructive) {
+                discardRound()
+            }
+        } message: {
+            Text("Are you sure you want to discard the round?")
+        }
+        .onChange(of: showDiscardAlert) { newValue in
+            print("showDiscardAlert changed to: \(newValue)")
         }
     }
     
@@ -64,9 +85,9 @@ struct SideMenuView: View {
     
     private var menuItems: some View {
         VStack(alignment: .leading, spacing: 25) {
-            menuButton(icon: "list.bullet", text: "View Scorecard") {
-                // Add action for viewing scorecard
-            }
+            // menuButton(icon: "list.bullet", text: "View Scorecard") {
+            //     // Add action for viewing scorecard
+            // }
         }
     }
     
@@ -89,6 +110,7 @@ struct SideMenuView: View {
     
     private var discardButton: some View {
         Button(action: {
+            print("Discard button tapped")
             showDiscardAlert = true
         }) {
             HStack(spacing: 16) {
@@ -108,6 +130,7 @@ struct SideMenuView: View {
     }
     
     private func discardRound() {
+        print("Discarding round")
         roundViewModel.clearRoundData()
         navigateToInitialView = true
         isShowing = false

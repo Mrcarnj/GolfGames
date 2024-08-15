@@ -228,6 +228,7 @@
 				050BE22D2C5DAA0F0060EB23 /* Games */,
 				054E960E2C3F654C0036165A /* Scorecard */,
 				05198A782C35C26B0016F576 /* InputView.swift */,
+				054EB85E2C3A2C9B00E44F97 /* AddGolfersView.swift */,
 				05198A7A2C35C2770016F576 /* SettingsRowView.swift */,
 				054EB86B2C3CB53000E44F97 /* HoleView.swift */,
 				054E96242C4063D30036165A /* CreateGolferView.swift */,
@@ -283,7 +284,6 @@
 			children = (
 				05198A692C35BDDF0016F576 /* LoginView.swift */,
 				05198A6B2C35BDEA0016F576 /* RegistrationView.swift */,
-				054EB85E2C3A2C9B00E44F97 /* AddGolfersView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -639,7 +639,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2;
+				MARKETING_VERSION = 2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = FlushIt.GolfGames;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -672,7 +672,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2;
+				MARKETING_VERSION = 2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = FlushIt.GolfGames;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
