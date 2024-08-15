@@ -10,8 +10,10 @@ import SwiftUI
 struct SideMenuView: View {
     @Binding var isShowing: Bool
     @EnvironmentObject var roundViewModel: RoundViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
     @Binding var navigateToInitialView: Bool
     @State private var showDiscardAlert = false
+    @State private var showFriendsSheet = false
     @Environment(\.colorScheme) var colorScheme
     var showDiscardButton: Bool
     @GestureState private var dragOffset: CGFloat = 0
@@ -61,8 +63,15 @@ struct SideMenuView: View {
         } message: {
             Text("Are you sure you want to discard the round?")
         }
-        .onChange(of: showDiscardAlert) { newValue in
-            print("showDiscardAlert changed to: \(newValue)")
+        .sheet(isPresented: $showFriendsSheet) {
+            FriendsListView(
+                viewModel: FriendsViewModel(userId: authViewModel.currentUser?.id ?? ""),
+                selectedFriends: .constant([]),
+                onDone: {
+                    showFriendsSheet = false
+                    isShowing = false
+                }
+            ).environmentObject(authViewModel)
         }
     }
     
@@ -85,6 +94,12 @@ struct SideMenuView: View {
     
     private var menuItems: some View {
         VStack(alignment: .leading, spacing: 25) {
+            if roundViewModel.roundId == nil {
+                menuButton(icon: "person.2", text: "Friends") {
+                    print("Friends button tapped")
+                    showFriendsSheet = true
+                }
+            }
             // menuButton(icon: "list.bullet", text: "View Scorecard") {
             //     // Add action for viewing scorecard
             // }

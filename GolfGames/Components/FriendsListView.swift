@@ -17,68 +17,61 @@ struct FriendsListView: View {
     var onDone: () -> Void
     
     var body: some View {
-        VStack {
-            List {
-                ForEach(viewModel.friends) { friend in
-                    HStack {
-                        Text(friend.fullName)
-                        Spacer()
-                        HStack(spacing: 10) {
-                            Text(formatHandicap(friend.handicap))
-                                .foregroundColor(.secondary)
-                            if selectedFriends.contains(where: { $0.id == friend.id }) {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.green)
+        NavigationView {
+            VStack {
+                List {
+                    ForEach(viewModel.friends) { friend in
+                        HStack {
+                            Text(friend.fullName)
+                            Spacer()
+                            HStack(spacing: 10) {
+                                Text(formatHandicap(friend.handicap))
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(width: 70, alignment: .trailing)
+                        }
+                        .contentShape(Rectangle())
+                        .contextMenu {
+                            Button(action: {
+                                friendToEdit = friend
+                            }) {
+                                Label("Edit", systemImage: "pencil")
                             }
                         }
-                        .frame(width: 70, alignment: .trailing)
-                        
                     }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        toggleFriendSelection(friend)
-                    }
-                    .contextMenu {
-                        Button(action: {
-                            friendToEdit = friend
-                        }) {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                    }
+                    .onDelete(perform: deleteFriends)
+                    
+                    Text("Tip: Long press on a friend to edit them. Update their handicaps to their current handicap index before each round.")
+                        .italic()
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .listRowBackground(Color.clear)
+                        .padding(.vertical, 8)
                 }
-                .onDelete(perform: deleteFriends)
                 
-                // Add the tip text as the last item in the list
-                Text("Tip: Long press on a friend to edit them. Update their handicaps to their current handicap index before each round.")
-                    .italic()
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .listRowBackground(Color.clear)
-                    .padding(.vertical, 8)
-            }
-            
-                .navigationTitle("Friends List")
-                .navigationBarItems(trailing: Button(action: {
-                    friendToEdit = nil
-                    showingAddFriendSheet.toggle()
-                }) {
-                    Image(systemName: "plus")
-                })
-            
-            if !selectedFriends.isEmpty {
                 Button(action: {
                     onDone()
                     presentationMode.wrappedValue.dismiss()
                 }) {
                     Text("Done")
-                        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
                         .foregroundColor(.white)
-                        .background(Color(.systemGreen))
                         .cornerRadius(10)
                 }
                 .padding()
             }
+            .navigationTitle("Friends List")
+            .navigationBarItems(
+                trailing: Button(action: {
+                    friendToEdit = nil
+                    showingAddFriendSheet.toggle()
+                }) {
+                    Image(systemName: "plus")
+                }
+            )
         }
         .sheet(isPresented: $showingAddFriendSheet) {
             CreateFriendView(viewModel: viewModel, friendToEdit: $friendToEdit)
