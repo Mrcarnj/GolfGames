@@ -102,12 +102,19 @@ struct AddGolfersView: View {
             }
         )
         .background(
-            NavigationLink(destination: FriendsListView(viewModel: FriendsViewModel(userId: authViewModel.currentUser?.id), selectedFriends: $selectedFriends, onDone: {
-                navigateToFriendsList = false
-            }).environmentObject(singleRoundViewModel).environmentObject(authViewModel), isActive: $navigateToFriendsList) {
-                EmptyView()
-            }
-        )
+                    NavigationLink(destination: FriendsListView(
+                        viewModel: FriendsViewModel(userId: authViewModel.currentUser?.id),
+                        selectedFriends: $selectedFriends,
+                        onDone: {
+                            navigateToFriendsList = false
+                        },
+                        allowSelection: true
+                    )
+                    .environmentObject(singleRoundViewModel)
+                    .environmentObject(authViewModel), isActive: $navigateToFriendsList) {
+                        EmptyView()
+                    }
+                )
         .onAppear {
             if let user = authViewModel.currentUser {
                 sharedViewModel.currentUserGolfer = Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)

@@ -36,7 +36,8 @@ struct AddGolferButtonView: View {
                     selectedFriends: $additionalGolfers,
                     onDone: {
                         showingAddGolferSheet = false
-                    }
+                    },
+                    allowSelection: true
                 )
                 .environmentObject(singleRoundViewModel)
                 .environmentObject(authViewModel)
@@ -48,10 +49,12 @@ struct AddGolferButtonView: View {
                         for: currentUser,
                         additionalGolfers: additionalGolfers,
                         isMatchPlay: sharedViewModel.isMatchPlay
-                    ) { roundId, courseId, teeId in
+                    ) { roundId, error, additionalInfo in
                         if let roundId = roundId {
                             self.roundId = roundId
                             self.navigateToRoundView = true
+                        } else if let error = error {
+                            print("Failed to create round: \(error.localizedDescription)")
                         }
                     }
                 }

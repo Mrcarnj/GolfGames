@@ -33,6 +33,7 @@ struct SideMenuView: View {
             
             if showDiscardButton {
                 discardButton
+                    .padding(.bottom, 200)
             }
         }
         .padding()
@@ -70,7 +71,8 @@ struct SideMenuView: View {
                 onDone: {
                     showFriendsSheet = false
                     isShowing = false
-                }
+                },
+                allowSelection: false
             ).environmentObject(authViewModel)
         }
     }
@@ -141,7 +143,6 @@ struct SideMenuView: View {
             .background(Color.red)
             .cornerRadius(10)
         }
-        .padding(.bottom, 100)
     }
     
     private func discardRound() {
