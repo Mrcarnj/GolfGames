@@ -1,5 +1,23 @@
 import SwiftUI
 import Firebase
+import Photos
+
+class ImageSaver: NSObject {
+    var successHandler: (() -> Void)?
+    var errorHandler: ((Error) -> Void)?
+    
+    func saveImage(_ image: UIImage) {
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(saveCompleted), nil)
+    }
+    
+    @objc func saveCompleted(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        if let error = error {
+            errorHandler?(error)
+        } else {
+            successHandler?()
+        }
+    }
+}
 
 struct ScorecardView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -10,15 +28,16 @@ struct ScorecardView: View {
     @State private var navigateToInitialView = false
     @State private var selectedScorecardType: ScorecardType = .strokePlay
     @State private var isLandscape = false
+    @State private var imageSaver = ImageSaver()
     
     var body: some View {
         GeometryReader { geometry in
             Group {
                 if geometry.size.width > geometry.size.height {
-                        LandscapeScorecardView(
-                            navigateToInitialView: $navigateToInitialView,
-                            selectedScorecardType: $selectedScorecardType
-                        )
+                    LandscapeScorecardView(
+                        navigateToInitialView: $navigateToInitialView,
+                        selectedScorecardType: $selectedScorecardType
+                    )
                     
                 } else {
                     portraitLayout
@@ -28,6 +47,15 @@ struct ScorecardView: View {
         .navigationTitle("Round Review")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(false)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    shareScorecard()
+                }) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+        }
         .onAppear {
             selectedGolferId = authViewModel.currentUser?.id
             AppDelegate.lockOrientation(.allButUpsideDown)
@@ -103,6 +131,71 @@ struct ScorecardView: View {
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .frame(height: 60)
+    }
+    
+    func shareScorecard() {
+    guard let golfer = selectedGolfer else { return }
+    
+    let image = createShareableImage(for: golfer)
+    
+    // Convert the image to data
+    guard let imageData = image.pngData() else {
+        print("Failed to create image data")
+        return
+    }
+    
+    // Create an array of items to share
+    let itemsToShare: [Any] = [imageData]
+    
+    // Create and configure the UIActivityViewController
+    let activityViewController = UIActivityViewController(activityItems: itemsToShare, applicationActivities: nil)
+    
+    // Configure the popover presentation controller for iPad
+    if let popoverController = activityViewController.popoverPresentationController {
+        popoverController.sourceView = UIApplication.shared.windows.first
+        popoverController.sourceRect = CGRect(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY, width: 0, height: 0)
+        popoverController.permittedArrowDirections = []
+    }
+    
+    // Present the share sheet
+    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+       let window = windowScene.windows.first,
+       let rootViewController = window.rootViewController {
+        rootViewController.present(activityViewController, animated: true, completion: nil)
+    }
+}
+    
+    private func saveImageToPhotoLibrary(_ image: UIImage) {
+        imageSaver.successHandler = {
+            print("Image saved successfully")
+            // You can show a success alert to the user here
+        }
+        imageSaver.errorHandler = { error in
+            print("Error saving image: \(error.localizedDescription)")
+            // You can show an error alert to the user here
+        }
+        imageSaver.saveImage(image)
+    }
+    
+    private func presentShareSheet(for image: UIImage) {
+        guard let imageData = image.pngData() else {
+            print("Failed to create image data")
+            return
+        }
+        
+        let activityViewController = UIActivityViewController(activityItems: [imageData], applicationActivities: nil)
+        
+        if let popoverController = activityViewController.popoverPresentationController {
+            popoverController.sourceView = UIApplication.shared.windows.first
+            popoverController.sourceRect = CGRect(x: UIScreen.main.bounds.midX, y: UIScreen.main.bounds.midY, width: 0, height: 0)
+            popoverController.permittedArrowDirections = []
+        }
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let rootViewController = window.rootViewController {
+            rootViewController.present(activityViewController, animated: true, completion: nil)
+        }
     }
     
     private func finalizeRound() {
@@ -241,7 +334,7 @@ struct ScorecardView: View {
                     .frame(width: 32, height: 27)
             }
         }
-        .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
+        .foregroundColor(colorScheme == .light ? Color.primary : Color.black)
         .font(.caption)
     }
     
@@ -272,7 +365,7 @@ struct ScorecardView: View {
                     .frame(width: 32, height: 27)
             }
         }
-        .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
+        .foregroundColor(colorScheme == .light ? Color.primary : Color.black)
         .font(.caption)
     }
     
@@ -282,7 +375,7 @@ struct ScorecardView: View {
                 .frame(width: 40, height: 27, alignment: .leading)
                 .padding(.horizontal, 2)
                 .background(Color(UIColor.systemGray4))
-                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                .foregroundColor(colorScheme == .light ? Color.black : Color.white)
                 .fontWeight(.bold)
             ForEach(holes, id: \.self) { hole in
                 scoreCell(for: golfer, hole: hole, isGross: isGross)
@@ -294,7 +387,7 @@ struct ScorecardView: View {
             Text("\(totalScore)")
                 .frame(width: 32, height: 27)
                 .background(Color(UIColor.systemGray4))
-                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                .foregroundColor(colorScheme == .light ? Color.primary : Color.white)
                 .fontWeight(.bold)
             if showTotal {
                 let grandTotal = singleRoundViewModel.holes.reduce(0) { total, hole in
@@ -303,7 +396,7 @@ struct ScorecardView: View {
                 Text("\(grandTotal)")
                     .frame(width: 32, height: 27)
                     .background(Color(UIColor.systemGray4))
-                    .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                    .foregroundColor(colorScheme == .light ? Color.black : Color.white)
                     .fontWeight(.bold)
             } else if addBlankColumn {
                 Color(UIColor.systemGray4)
@@ -348,41 +441,43 @@ struct ScorecardView: View {
     }
     
     func strokeDotColor(score: Int, par: Int) -> Color {
-    if score <= par - 1 || score >= par + 1 {
-        return .white
-    } else {
-        return colorScheme == .dark ? .white : .black
-    }
-}
-    
-    func scoreCellBackground(score: Int, par: Int) -> some View {
-        Group {
-            if score == 0 {
-                Color.clear
-            } else if score <= par - 2 {
-                Circle().fill(Color.yellow)
-            } else if score == par - 1 {
-                Circle().fill(Color.red)
-            } else if score == par + 1 {
-                Rectangle().fill(Color.black)
-                    .if(colorScheme == .dark) { view in
-                        view.overlay(
-                            Rectangle()
-                                .stroke(Color.white, lineWidth: 1)
-                        )
-                    }
-            } else if score >= par + 2 {
-                Rectangle().fill(Color.blue)
-            } else {
-                Color.clear
-            }
+        if score <= par - 1 || score >= par + 1 {
+            return .white
+        } else {
+            return colorScheme == .dark ? .white : .black
         }
     }
+    
+    func scoreCellBackground(score: Int, par: Int) -> some View {
+    Group {
+        if score == 0 {
+            Color.clear
+        } else if score <= par - 2 {
+            Circle()
+                .stroke(Color.yellow, lineWidth: 3)
+        } else if score == par - 1 {
+            Circle()
+                .stroke(Color.red, lineWidth: 3)
+        } else if score == par + 1 {
+            Rectangle().fill(Color.black)
+                .if(colorScheme == .dark) { view in
+                    view.overlay(
+                        Rectangle()
+                            .stroke(Color.white, lineWidth: 1)
+                    )
+                }
+        } else if score >= par + 2 {
+            Rectangle().fill(Color.blue)
+        } else {
+            Color.clear
+        }
+    }
+}
     
     func scoreCellTextColor(score: Int, par: Int) -> Color {
         if score == 0 {
             return .clear
-        } else if score <= par - 1 || score >= par + 1 {
+        } else if score >= par + 1 {
             return .white
         } else {
             return colorScheme == .light ? .black : .white
@@ -427,6 +522,26 @@ struct ScorecardView: View {
             Text(text)
         }
     }
+
+    func requestPhotoLibraryAccess() {
+    PHPhotoLibrary.requestAuthorization { status in
+        DispatchQueue.main.async {
+            switch status {
+            case .authorized, .limited:
+                print("Photo library access granted")
+                // You can enable your "Save Image" functionality here
+            case .denied, .restricted:
+                print("Photo library access denied")
+                // You might want to show an alert to the user explaining how to enable access in Settings
+            case .notDetermined:
+                print("Photo library access not determined")
+                // This shouldn't happen at this point, but you might want to handle it just in case
+            @unknown default:
+                print("Unknown photo library access status")
+            }
+        }
+    }
+}
 }
 
 extension View {
@@ -450,3 +565,180 @@ struct AnyShape: Shape {
         _path(rect)
     }
 }
+
+struct SizePreferenceKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
+    }
+    var value: CGSize
+}
+
+extension View {
+    func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
+        background(
+            GeometryReader { geometryProxy in
+                Color.clear
+                    .preference(key: SizePreferenceKey.self, value: geometryProxy.size)
+            }
+        )
+        .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
+    }
+}
+
+extension ScorecardView {
+    func createShareableImage(for golfer: Golfer) -> UIImage {
+    let scorecard = scoreCardView(for: golfer)
+    
+    let controller = UIHostingController(rootView: scorecard)
+    controller.view.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+    controller.view.layoutIfNeeded()
+    
+    let targetSize = controller.view.sizeThatFits(CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+    controller.view.bounds = CGRect(origin: .zero, size: targetSize)
+    controller.view.sizeToFit()
+    
+    let scorecardImage = controller.view.asImage(size: targetSize)
+    
+    let headerHeight: CGFloat = 40
+    let legendHeight: CGFloat = 30
+    let footerHeight: CGFloat = 50
+    let horizontalPadding: CGFloat = 22
+    let finalSize = CGSize(width: targetSize.width, height: targetSize.height + headerHeight + legendHeight + footerHeight)
+    
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 5.0
+    let renderer = UIGraphicsImageRenderer(size: finalSize, format: format)
+    
+    return renderer.image { context in
+        UIColor.systemBackground.setFill()
+        context.fill(CGRect(origin: .zero, size: finalSize))
+        
+        // Draw the logo
+        if let logoImage = UIImage(named: "golfgamble_bag") {
+            let logoSize = CGSize(width: 30, height: 30)
+            let logoRect = CGRect(x: horizontalPadding, y: 5, width: logoSize.width, height: logoSize.height)
+            context.cgContext.saveGState()
+            context.cgContext.addPath(UIBezierPath(roundedRect: logoRect, cornerRadius: 5).cgPath)
+            context.cgContext.clip()
+            logoImage.draw(in: logoRect)
+            context.cgContext.restoreGState()
+        }
+        
+        // Draw "BirdieBank" text
+        let birdieBankAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 16),
+            .foregroundColor: UIColor.label
+        ]
+        "BirdieBank".draw(with: CGRect(x: horizontalPadding + 35, y: 17, width: 100, height: 20), options: .usesLineFragmentOrigin, attributes: birdieBankAttrs, context: nil)
+        
+        // Draw date in top right
+        let dateString = DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .none)
+        let dateAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 12),
+            .foregroundColor: UIColor.label
+        ]
+        let dateSize = (dateString as NSString).size(withAttributes: dateAttrs)
+        dateString.draw(with: CGRect(x: finalSize.width - dateSize.width - horizontalPadding - 5, y: 20, width: dateSize.width, height: 20), options: .usesLineFragmentOrigin, attributes: dateAttrs, context: nil)
+        
+        // Draw the scorecard
+        scorecardImage.draw(at: CGPoint(x: 0, y: headerHeight))
+        
+        // Draw the legend
+        drawLegend(in: context, at: CGPoint(x: 0, y: headerHeight + targetSize.height), width: finalSize.width)
+        
+        // Draw additional information below the scorecard and legend
+        let footerAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 10, weight: .semibold),
+            .foregroundColor: UIColor.label
+        ]
+        
+        let courseName = roundViewModel.selectedCourse?.name ?? "Unknown Course"
+        let teeName = roundViewModel.selectedTee?.tee_name ?? "Unknown Tee"
+        let slope = roundViewModel.selectedTee?.slope_rating ?? 0
+        let courseRating = roundViewModel.selectedTee?.course_rating ?? 0
+        let par = singleRoundViewModel.holes.reduce(0) { $0 + $1.par }
+        let yardage = roundViewModel.selectedTee?.tee_yards ?? 0
+        
+        let infoString = """
+        \(courseName) | Tees: \(teeName)
+        Slope: \(slope) | Rating: \(String(format: "%.1f", courseRating)) | Par: \(par) | \(yardage) Yards
+        """
+        
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        
+        let footerAttrsWithParagraphStyle = footerAttrs.merging([.paragraphStyle: paragraphStyle]) { (_, new) in new }
+        
+        let infoRect = CGRect(x: 0, y: headerHeight + targetSize.height + legendHeight + 5, width: finalSize.width, height: footerHeight - 10)
+        infoString.draw(with: infoRect, options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: footerAttrsWithParagraphStyle, context: nil)
+    }
+}
+
+func drawLegend(in context: UIGraphicsImageRendererContext, at point: CGPoint, width: CGFloat) {
+    let legendItems: [(color: UIColor, shape: String, text: String)] = [
+        (.yellow, "●", "Eagle or better"),
+        (.red, "●", "Birdie"),
+        (.black, "■", "Bogey"),
+        (.blue, "■", "Double bogey +")
+    ]
+    
+    let fontSize: CGFloat = 10
+    let shapeSize: CGFloat = 10
+    let itemSpacing: CGFloat = 10
+    let itemHeight: CGFloat = 20
+    
+    // Calculate total width of all items
+    let totalWidth = legendItems.reduce(0) { (result, item) -> CGFloat in
+        let textWidth = (item.text as NSString).size(withAttributes: [.font: UIFont.systemFont(ofSize: fontSize)]).width
+        return result + shapeSize + 5 + textWidth + itemSpacing
+    } - itemSpacing // Subtract last spacing
+    
+    // Calculate start X position to center the legend
+    let startX = (width - totalWidth) / 2
+    
+    var currentX = startX
+    for item in legendItems {
+        // Draw shape
+        let shapeRect = CGRect(x: currentX, y: point.y + (itemHeight - shapeSize) / 2, width: shapeSize, height: shapeSize)
+        context.cgContext.setFillColor(item.color.cgColor)
+        
+        if item.shape == "●" {
+            context.cgContext.fillEllipse(in: shapeRect)
+        } else {
+            // For square shapes
+            if item.color == .black && UITraitCollection.current.userInterfaceStyle == .dark {
+                // Draw white border for black square in dark mode
+                context.cgContext.setStrokeColor(UIColor.white.cgColor)
+                context.cgContext.setLineWidth(1)
+                context.cgContext.stroke(shapeRect)
+            }
+            context.cgContext.fill(shapeRect)
+        }
+        
+        // Draw text
+        let textAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize),
+            .foregroundColor: UIColor.label
+        ]
+        let textSize = (item.text as NSString).size(withAttributes: textAttributes)
+        let textRect = CGRect(x: currentX + shapeSize + 5, y: point.y + (itemHeight - textSize.height) / 2, width: textSize.width, height: textSize.height)
+        item.text.draw(with: textRect, options: .usesLineFragmentOrigin, attributes: textAttributes, context: nil)
+        
+        // Move to next item
+        currentX += shapeSize + 5 + textSize.width + itemSpacing
+    }
+}
+}
+extension UIView {
+    func asImage(size: CGSize) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            self.drawHierarchy(in: self.bounds, afterScreenUpdates: true)
+        }
+    }
+}
+
+
