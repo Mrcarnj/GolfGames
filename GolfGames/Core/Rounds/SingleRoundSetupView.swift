@@ -16,6 +16,8 @@ struct SingleRoundSetupView: View {
     @State private var selectedLocation: String? = nil
     @State private var selectedCourse: Course? = nil
     @State private var navigateToAddGolfersView = false
+    @State private var isRefreshing = false
+    @State private var viewRefreshTrigger = false
 
     var formIsValid: Bool {
         return selectedCourse != nil
@@ -24,6 +26,12 @@ struct SingleRoundSetupView: View {
     var body: some View {
         NavigationView {
             ScrollView {
+                RefreshControl(isRefreshing: $isRefreshing, coordinateSpaceName: "pullToRefresh") {
+                    refreshLocation()
+                }
+                .font(.footnote)
+                .padding(.top)
+                
                 VStack(spacing: 20) {
                     Image("golfgamble_bag")
                         .resizable()
@@ -86,16 +94,17 @@ struct SingleRoundSetupView: View {
                                 }
                             } else {
                                 ScrollView(.horizontal, showsIndicators: false) {
-    HStack(spacing: 15) {
-        ForEach(viewModel.nearbyCourses) { course in
-            NearbyCourseCard(course: course, isSelected: selectedCourse?.id == course.id)
-                .onTapGesture {
-                    selectNearbyCourse(course)
-                }
-        }
-    }
-    .padding(.horizontal)
-}
+                                    HStack(spacing: 15) {
+                                        ForEach(viewModel.nearbyCourses) { course in
+                                            NearbyCourseCard(course: course, isSelected: selectedCourse?.id == course.id)
+                                                .onTapGesture {
+                                                    selectNearbyCourse(course)
+                                                }
+                                                .id("\(course.id ?? "")-\(viewRefreshTrigger)")
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                }
                             }
                         }
                         .padding(.vertical)
@@ -138,6 +147,7 @@ struct SingleRoundSetupView: View {
                 }
                 .padding()
             }
+            .coordinateSpace(name: "pullToRefresh")
             .onAppear {
                 updateCoursesAndNearby()
             }
@@ -151,6 +161,18 @@ struct SingleRoundSetupView: View {
 
     private func updateCoursesAndNearby() {
         viewModel.fetchCoursesAndNearby(userLocation: locationManager.lastLocation)
+    }
+
+    private func refreshLocation() {
+        isRefreshing = true
+        locationManager.requestLocation()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { // Simulating a delay
+            if let newLocation = locationManager.lastLocation {
+                viewModel.updateNearbyCourses(userLocation: newLocation)
+                viewRefreshTrigger.toggle() // Force view refresh
+            }
+            isRefreshing = false
+        }
     }
 
     private func selectNearbyCourse(_ course: Course) {
@@ -221,7 +243,9 @@ struct NearbyCourseCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(course.name)
                 .font(.headline)
-                .lineLimit(1)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
             
             HStack {
                 Image(systemName: "mappin.and.ellipse")
@@ -235,13 +259,49 @@ struct NearbyCourseCard: View {
                 .foregroundColor(.secondary)
         }
         .padding()
-        .frame(width: 200, height: 120)
+        .frame(width: 200, height: 140)
         .background(isSelected ? Color.blue.opacity(0.1) : Color(.tertiarySystemBackground))
         .cornerRadius(10)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
                 .stroke(isSelected ? Color.blue : Color.secondary.opacity(0.2), lineWidth: isSelected ? 2 : 1)
         )
+    }
+}
+
+struct RefreshControl: View {
+    @Binding var isRefreshing: Bool
+    let coordinateSpaceName: String
+    let onRefresh: () -> Void
+    
+    @State private var needsRefresh: Bool = false
+    
+    var body: some View {
+        GeometryReader { geo in
+            if geo.frame(in: .named(coordinateSpaceName)).midY > 50 {
+                Spacer()
+                    .onAppear {
+                        needsRefresh = true
+                    }
+            } else if geo.frame(in: .named(coordinateSpaceName)).maxY < 1 {
+                Spacer()
+                    .onAppear {
+                        if needsRefresh {
+                            needsRefresh = false
+                            onRefresh()
+                        }
+                    }
+            }
+            HStack {
+                Spacer()
+                if isRefreshing {
+                    ProgressView()
+                } else {
+                    Text("Pull to refresh")
+                }
+                Spacer()
+            }
+        }.padding(.top, -50)
     }
 }
 

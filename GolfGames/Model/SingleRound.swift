@@ -78,6 +78,26 @@ class SingleRoundViewModel: ObservableObject {
         print("Found \(nearbyCourses.count) nearby courses")
     }
 
+    func updateNearbyCourses(userLocation: CLLocation) {
+        print("Updating nearby courses for location: \(userLocation)")
+        nearbyCourses = allCourses.compactMap { course in
+            guard let courseLat = course.latitude, let courseLon = course.longitude else {
+                print("Course \(course.name) missing lat/lon")
+                return nil
+            }
+            let courseLocation = CLLocation(latitude: courseLat, longitude: courseLon)
+            let distance = userLocation.distance(from: courseLocation) / 1609.34 // Convert meters to miles
+            print("Course: \(course.name), Distance: \(distance) miles")
+            if distance <= 20 {
+                var courseWithDistance = course
+                courseWithDistance.distance = distance
+                return courseWithDistance
+            }
+            return nil
+        }.sorted { $0.distance ?? 0 < $1.distance ?? 0 }
+        print("Updated \(nearbyCourses.count) nearby courses")
+    }
+
     func fetchTees(for course: Course, completion: @escaping ([Tee]) -> Void) {
         guard let courseId = course.id else { return }
 
