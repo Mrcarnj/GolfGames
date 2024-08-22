@@ -421,43 +421,35 @@ struct HoleView: View {
             }
         }
         
-        print("Updated scores for Hole \(currentHoleNumber): \(scoreInputs)")
+        print("HoleView updateScoresForCurrentHole() - Updated scores for Hole \(currentHoleNumber): \(scoreInputs)")
     }
     
     private func updateScore(for golferId: String, score: String) {
         let currentHoleNumber = currentHoleIndex + 1
         if let scoreInt = Int(score) {
+            // Always update gross scores
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = scoreInt
-            roundViewModel.updateStrokePlayNetScores()
             
-            let netStrokePlayScore = roundViewModel.netStrokePlayScores[currentHoleNumber]?[golferId] ?? scoreInt
-            let isStrokePlayStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            // Always update stroke play scores
+            StrokePlayModel.updateStrokePlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
             
-            var logMessage = "Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.formattedName(golfers: roundViewModel.golfers) ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Stroke Play Net Score: \(netStrokePlayScore), Stroke Play Stroke Hole: \(isStrokePlayStrokeHole)"
-            
+            // Update match play scores only if match play is enabled
             if roundViewModel.isMatchPlay {
-                let isMatchPlayStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
-                let matchPlayNetScore = isMatchPlayStrokeHole ? scoreInt - 1 : scoreInt
-                
-                roundViewModel.matchPlayNetScores[currentHoleNumber, default: [:]][golferId] = matchPlayNetScore
-                
-                logMessage += ", Match Play Net Score: \(matchPlayNetScore), Match Play Stroke Hole: \(isMatchPlayStrokeHole)"
+                MatchPlayModel.updateMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
             }
-            
-            print(logMessage)
         } else {
+            // Reset scores if the input is invalid
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
             roundViewModel.netStrokePlayScores[currentHoleNumber, default: [:]][golferId] = nil
+            
             if roundViewModel.isMatchPlay {
-                roundViewModel.matchPlayNetScores[currentHoleNumber, default: [:]][golferId] = nil
-                roundViewModel.holeWinners[currentHoleNumber] = nil
-                roundViewModel.resetTallyForHole(currentHoleNumber)
+                MatchPlayModel.resetMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber)
             }
         }
         
+        // Update match play tallies if all scores are entered and match play is enabled
         if roundViewModel.isMatchPlay && roundViewModel.allScoresEntered(for: currentHoleNumber) {
-            roundViewModel.updateTallies(for: currentHoleNumber)
-            roundViewModel.currentPressStartHole = nil  // Reset the current press start hole
+            MatchPlayModel.updateMatchPlayTallies(roundViewModel: roundViewModel, currentHoleNumber: currentHoleNumber)
         }
         
         // Force view update
@@ -498,9 +490,11 @@ struct HoleView: View {
         
         if roundViewModel.isMatchPlay {
             let isStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            print("Debug: HoleView strokeHoleInfo()")
             return (isStrokeHole, isNegativeHandicap)
         } else {
             let isStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            print("Debug: HoleView strokeHoleInfo()")
             return (isStrokeHole, isNegativeHandicap)
         }
     }
@@ -513,20 +507,6 @@ struct HoleView: View {
         AppDelegate.lockOrientation(.portrait)
     }
     
-}
-
-struct MatchPlayStatusView: View {
-    @EnvironmentObject var roundViewModel: RoundViewModel
-    
-    var body: some View {
-        if let (player1, player2) = roundViewModel.matchPlayGolfers,
-           let status = roundViewModel.matchPlayViewModel?.getMatchStatus() {
-            Text("\(player1.formattedName(golfers: roundViewModel.golfers)) vs \(player2.formattedName(golfers: roundViewModel.golfers)): \(status)")
-                .padding()
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(8)
-        }
-    }
 }
 
 struct HoleView_Previews: PreviewProvider {

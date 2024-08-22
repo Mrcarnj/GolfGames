@@ -370,71 +370,71 @@ struct ScorecardView: View {
     }
     
     func scoreRow(for golfer: Golfer, holes: ClosedRange<Int>, isGross: Bool, showTotal: Bool = false, addBlankColumn: Bool = false) -> some View {
-        HStack(spacing: 0) {
-            Text(isGross ? "Gross" : "Net")
-                .frame(width: 40, height: 27, alignment: .leading)
-                .padding(.horizontal, 2)
+    HStack(spacing: 0) {
+        Text(isGross ? "Gross" : "Net")
+            .frame(width: 40, height: 27, alignment: .leading)
+            .padding(.horizontal, 2)
+            .background(Color(UIColor.systemGray4))
+            .foregroundColor(colorScheme == .light ? Color.black : Color.white)
+            .fontWeight(.bold)
+        ForEach(holes, id: \.self) { hole in
+            scoreCell(for: golfer, hole: hole, isGross: isGross)
+                .frame(width: 27, height: 27)
+        }
+        let totalScore = holes.reduce(0) { total, hole in
+            total + (isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0)
+        }
+        Text("\(totalScore)")
+            .frame(width: 32, height: 27)
+            .background(Color(UIColor.systemGray4))
+            .foregroundColor(colorScheme == .light ? Color.primary : Color.white)
+            .fontWeight(.bold)
+        if showTotal {
+            let grandTotal = singleRoundViewModel.holes.reduce(0) { total, hole in
+                total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole.holeNumber]?[golfer.id] ?? 0)
+            }
+            Text("\(grandTotal)")
+                .frame(width: 32, height: 27)
                 .background(Color(UIColor.systemGray4))
                 .foregroundColor(colorScheme == .light ? Color.black : Color.white)
                 .fontWeight(.bold)
-            ForEach(holes, id: \.self) { hole in
-                scoreCell(for: golfer, hole: hole, isGross: isGross)
-                    .frame(width: 27, height: 27)
-            }
-            let totalScore = holes.reduce(0) { total, hole in
-                total + (isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0)
-            }
-            Text("\(totalScore)")
+        } else if addBlankColumn {
+            Color(UIColor.systemGray4)
                 .frame(width: 32, height: 27)
-                .background(Color(UIColor.systemGray4))
-                .foregroundColor(colorScheme == .light ? Color.primary : Color.white)
-                .fontWeight(.bold)
-            if showTotal {
-                let grandTotal = singleRoundViewModel.holes.reduce(0) { total, hole in
-                    total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole.holeNumber]?[golfer.id] ?? 0)
-                }
-                Text("\(grandTotal)")
-                    .frame(width: 32, height: 27)
-                    .background(Color(UIColor.systemGray4))
-                    .foregroundColor(colorScheme == .light ? Color.black : Color.white)
-                    .fontWeight(.bold)
-            } else if addBlankColumn {
-                Color(UIColor.systemGray4)
-                    .frame(width: 32, height: 27)
-            }
         }
-        .font(.caption)
     }
+    .font(.caption)
+}
     
     func scoreCell(for golfer: Golfer, hole: Int, isGross: Bool) -> some View {
-        let par = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole })?.par ?? 0
-        let score = isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0
-        let isStrokeHole = roundViewModel.strokeHoles[golfer.id]?.contains(hole) ?? false
+    let par = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole })?.par ?? 0
+    let score = isGross ? roundViewModel.grossScores[hole]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole]?[golfer.id] ?? 0
+    let isStrokeHole = roundViewModel.strokeHoles[golfer.id]?.contains(hole) ?? false
+    
+    return ZStack {
+        scoreCellBackground(score: score, par: par)
         
-        return ZStack {
-            scoreCellBackground(score: score, par: par)
-            
-            if score != 0 {
-                Text("\(score)")
-                    .foregroundColor(scoreCellTextColor(score: score, par: par))
-                    .font(.subheadline)
-            }
-            
-            if isGross && isStrokeHole {
-                if isNegativeHandicap(for: golfer.id) {
-                    Text("+")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(strokeDotColor(score: score, par: par))
-                        .offset(x: 7, y: -7)
-                } else {
-                    Circle()
-                        .fill(strokeDotColor(score: score, par: par))
-                        .frame(width: 6, height: 6)
-                        .offset(x: 7, y: -7)
-                }
+        if score != 0 {
+            Text("\(score)")
+                .foregroundColor(scoreCellTextColor(score: score, par: par))
+                .font(.subheadline)
+        }
+        
+        if isGross && isStrokeHole {
+            if isNegativeHandicap(for: golfer.id) {
+                Text("+")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(strokeDotColor(score: score, par: par))
+                    .offset(x: 7, y: -7)
+            } else {
+                Circle()
+                    .fill(strokeDotColor(score: score, par: par))
+                    .frame(width: 6, height: 6)
+                    .offset(x: 7, y: -7)
             }
         }
     }
+}
     
     private func isNegativeHandicap(for golferId: String) -> Bool {
         return roundViewModel.courseHandicaps[golferId] ?? 0 < 0

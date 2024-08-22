@@ -53,6 +53,8 @@ struct MatchPlayGame: Identifiable, Codable {
         
         currentHole = hole + 1
         checkForWin(hole: hole)
+
+        print("Debug: MatchPlayGame updateScore() - Hole \(hole) updated with scores \(player1NetScore) and \(player2NetScore)")
     }
     
     private mutating func checkForWin(hole: Int) {
@@ -60,14 +62,17 @@ struct MatchPlayGame: Identifiable, Codable {
         if abs(currentScore) > holesRemaining {
             isComplete = true
             finalScore = "\(abs(currentScore))&\(holesRemaining)"
+            print("Debug: MatchPlayGame checkForWin() - Game is complete with score \(finalScore)")
         }
     }
     
     func isStrokeHole(for playerId: String, holeHandicap: Int) -> Bool {
         if playerId == player1Id {
             return holeHandicap <= matchPlayHandicap
+            print("Debug: MatchPlayGame isStrokeHole() - Player 1 stroke hole: \(holeHandicap <= matchPlayHandicap)")
         } else if playerId == player2Id {
             return holeHandicap <= -matchPlayHandicap
+            print("Debug: MatchPlayGame isStrokeHole() - Player 2 stroke hole: \(holeHandicap <= -matchPlayHandicap)")
         }
         return false
     }
@@ -75,18 +80,23 @@ struct MatchPlayGame: Identifiable, Codable {
     func getMatchStatus() -> (String?, Int) {
         if currentScore > 0 {
             return ("Player 1", currentScore)
+            print("Debug: MatchPlayGame getMatchStatus() - Player 1 leading with score \(currentScore)")
         } else if currentScore < 0 {
             return ("Player 2", -currentScore)
+            print("Debug: MatchPlayGame getMatchStatus() - Player 2 leading with score \(currentScore)")
         } else {
             return (nil, 0)
+            print("Debug: MatchPlayGame getMatchStatus() - Game is tied with score \(currentScore)")
         }
     }
-    
+
     var player1Score: Int {
         return max(currentScore, 0)
+        print("Debug: MatchPlayGame player1Score() - Player 1 score: \(max(currentScore, 0))")
     }
     
     var player2Score: Int {
         return max(-currentScore, 0)
+        print("Debug: MatchPlayGame player2Score() - Player 2 score: \(max(-currentScore, 0))")
     }
 }

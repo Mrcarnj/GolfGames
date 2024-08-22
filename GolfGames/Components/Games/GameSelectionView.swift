@@ -88,7 +88,7 @@ struct GameSelectionView: View {
                 if newValue {
                     roundViewModel.initializeMatchPlay()
                 } else {
-                    roundViewModel.matchPlayViewModel = nil
+//                    roundViewModel.matchPlayViewModel = nil
                 }
             }
         }

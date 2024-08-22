@@ -21,12 +21,14 @@ class MatchPlayViewModel: ObservableObject {
         let player2NetScore = player2Score - (isStrokeHole(for: matchPlayGame.player2Id, holeHandicap: player2HoleHandicap) ? 1 : 0)
         
         matchPlayGame.updateScore(for: hole, player1Score: player1NetScore, player2Score: player2NetScore, player1HoleHandicap: player1HoleHandicap, player2HoleHandicap: player2HoleHandicap)
+        print("Debug: MatchPlayViewModel updateScore() - Hole \(hole) updated with scores \(player1NetScore) and \(player2NetScore)")
     }
 
     func updateMatchStatus() {
         matchStatus = calculateMatchStatus()
         if matchPlayGame.isComplete {
             matchStatus += " (Match Over)"
+            print("Debug: MatchPlayViewModel updateMatchStatus()")
         }
     }
 
@@ -47,15 +49,21 @@ class MatchPlayViewModel: ObservableObject {
     }
 
     func getMatchStatus() -> String {
+        print("Debug: MatchPlayViewModel getMatchStatus()")
         return matchStatus
+        
     }
 
     func isMatchComplete() -> Bool {
+        print("Debug: MatchPlayViewModel isMatchComplete()")
         return matchPlayGame.isComplete
+        
     }
 
     func getFinalScore() -> String? {
+        print("Debug: MatchPlayViewModel getFinalScore()")
         return matchPlayGame.isComplete ? matchPlayGame.finalScore : nil
+        
     }
 
     var player1Score: Int {
@@ -64,6 +72,7 @@ class MatchPlayViewModel: ObservableObject {
 
     var player2Score: Int {
         matchPlayGame.player2Score
+        
     }
 
     var currentHole: Int {

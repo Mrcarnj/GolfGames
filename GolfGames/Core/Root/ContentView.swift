@@ -10,7 +10,6 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var sharedViewModel: SharedViewModel
-    @EnvironmentObject var matchPlayViewModel: MatchPlayViewModel
 
     var body: some View {
         Group {
@@ -28,6 +27,5 @@ struct ContentView_Previews: PreviewProvider {
            ContentView()
                .environmentObject(AuthViewModel())
                .environmentObject(SharedViewModel())
-               .environmentObject(MatchPlayViewModel(player1Id: "", player2Id: "", matchPlayHandicap: 0))
        }
    }

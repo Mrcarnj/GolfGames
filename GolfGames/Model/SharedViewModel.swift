@@ -69,5 +69,6 @@ class SharedViewModel: ObservableObject {
             return
         }
         matchPlayHandicap = abs(handicaps[0] - handicaps[1])
+        print("Debug SharedViewModel calculateMatchPlayHandicaps()")
     }
 }

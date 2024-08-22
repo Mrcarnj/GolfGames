@@ -15,7 +15,6 @@ struct Round: Identifiable, Codable {
     var teeName: String
     var golfers: [Golfer]
     var date: Date
-    var matchPlayGame: MatchPlayGame?  // Add this line
     
     struct Golfer: Identifiable, Codable {
         var id: String

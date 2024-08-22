@@ -1,3 +1,4 @@
+
 //
 //  RoundView.swift
 //  GolfGames
@@ -23,7 +24,7 @@ class RoundViewModel: ObservableObject {
     @Published var golfers: [Golfer] = []
     @Published var currentHole: Int = 1 // Track the current hole
     @Published var holes: [String: [Hole]] = [:] // Dictionary with teeId as key and array of Holes as value
-    @Published var matchPlayViewModel: MatchPlayViewModel?
+//    @Published var matchPlayViewModel: MatchPlayViewModel?
     @Published var matchPlayStatus: String?
     @Published var isMatchPlay: Bool = false // Track whether it's a match play game
     @Published var matchPlayStrokeHoles: [String: [Int]] = [:]
@@ -298,6 +299,7 @@ class RoundViewModel: ObservableObject {
         // Recalculate match status for all holes from the changed hole onward
         for currentHole in hole...18 {
             updateMatchStatus(for: currentHole)
+            print("Debug: RoundViewModel updateScore()")
         }
     }
     
@@ -307,25 +309,6 @@ class RoundViewModel: ObservableObject {
             return holeData.handicap
         }
         return 0  // Default value if hole data is not found
-    }
-    
-    func isMatchPlayStrokeHole(for golferId: String, teeId: String, holeNumber: Int) -> Bool {
-        guard let holesForTee = holes[teeId],
-              let hole = holesForTee.first(where: { $0.holeNumber == holeNumber }),
-              let matchPlayVM = matchPlayViewModel else { return false }
-        return matchPlayVM.isStrokeHole(for: golferId, holeHandicap: hole.handicap)
-    }
-    
-    func getMatchPlayStatus() -> String? {
-        return matchPlayViewModel?.matchStatus
-    }
-    
-    func isMatchPlayComplete() -> Bool {
-        return matchPlayViewModel?.isMatchComplete() ?? false
-    }
-    
-    func getMatchPlayFinalScore() -> String? {
-        return matchPlayViewModel?.getFinalScore()
     }
     
     func initializeMatchPlay() {
@@ -340,19 +323,13 @@ class RoundViewModel: ObservableObject {
         let player1Handicap = courseHandicaps[matchPlayGolfers!.0.id] ?? 0
         let player2Handicap = courseHandicaps[matchPlayGolfers!.1.id] ?? 0
         
-        print("Debug: Initializing Match Play")
+        print("Debug: RoundViewModel - Initializing Match Play")
         print("Debug: \(matchPlayGolfers!.0.fullName) - Playing Handicap: \(player1Handicap)")
         print("Debug: \(matchPlayGolfers!.1.fullName) - Playing Handicap: \(player2Handicap)")
         
         let matchPlayHandicap = abs(player1Handicap - player2Handicap)
         
-        print("Debug: Calculated Match Play Handicap: \(matchPlayHandicap)")
-        
-        matchPlayViewModel = MatchPlayViewModel(
-            player1Id: matchPlayGolfers!.0.id,
-            player2Id: matchPlayGolfers!.1.id,
-            matchPlayHandicap: matchPlayHandicap
-        )
+        print("Debug: RoundViewModel initializeMatchPlay() - Calculated Match Play Handicap: \(matchPlayHandicap)")
         
         // Set up match play stroke holes
         let lowerHandicapPlayer = player1Handicap < player2Handicap ? matchPlayGolfers!.0 : matchPlayGolfers!.1
@@ -361,8 +338,8 @@ class RoundViewModel: ObservableObject {
         matchPlayStrokeHoles[lowerHandicapPlayer.id] = []
         matchPlayStrokeHoles[higherHandicapPlayer.id] = strokeHoles[higherHandicapPlayer.id]?.prefix(matchPlayHandicap).map { $0 } ?? []
         
-        print("Debug: Match Play Stroke Holes - \(lowerHandicapPlayer.fullName): \(matchPlayStrokeHoles[lowerHandicapPlayer.id] ?? [])")
-        print("Debug: Match Play Stroke Holes - \(higherHandicapPlayer.fullName): \(matchPlayStrokeHoles[higherHandicapPlayer.id] ?? [])")
+        print("Debug: Roundviewmodel initializeMatchPlay() - Match Play Stroke Holes - \(lowerHandicapPlayer.fullName): \(matchPlayStrokeHoles[lowerHandicapPlayer.id] ?? [])")
+        print("Debug: Roundviewmodel initializeMatchPlay() - Match Play Stroke Holes - \(higherHandicapPlayer.fullName): \(matchPlayStrokeHoles[higherHandicapPlayer.id] ?? [])")
     }
     
     func updateTallies(for holeNumber: Int) {
@@ -480,7 +457,7 @@ class RoundViewModel: ObservableObject {
         // Update press statuses
         updateAllPressStatuses(for: currentHoleNumber)
         
-        print("Updated match status for hole \(currentHoleNumber): \(matchStatusArray)")
+        print("Debug: RoundViewModel updateMatchStatus() - Updated match status for hole \(currentHoleNumber): \(matchStatusArray)")
         print("Main match status: \(matchPlayStatus ?? "N/A")")
         for (index, pressStatus) in pressStatuses.enumerated() {
             print("Press \(index + 1) status: \(pressStatus)")
@@ -650,6 +627,7 @@ class RoundViewModel: ObservableObject {
     func setMatchPlayGolfers(golfer1: Golfer, golfer2: Golfer) {
         matchPlayGolfers = (golfer1, golfer2)
         initializeMatchPlay()
+        print("Debug: RoundViewModel setMatchPlayGolfers()")
     }
     
     func initiatePress(atHole: Int) {
@@ -743,6 +721,7 @@ class RoundViewModel: ObservableObject {
 
     func updateFinalMatchStatus() {
         // Update main match status
+        print("Debug: RoundViewModel updateFinalMatchStatus()")
         updateMatchStatus(for: 18)
         
         // If the main match ended with a "&0" score, update it
