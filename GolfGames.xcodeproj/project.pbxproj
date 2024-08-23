@@ -64,6 +64,7 @@
 		0587FC5A2C696EE000120C99 /* SideMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0587FC592C696EDF00120C99 /* SideMenuView.swift */; };
 		05DF12CA2C76BBB500278505 /* StrokePlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12C92C76BBB500278505 /* StrokePlayModel.swift */; };
 		05DF12CC2C76BBCE00278505 /* MatchPlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */; };
+		05DF12CE2C782C5100278505 /* MatchPlayPressModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */; };
 		05F1C9172C6BA525009D40EE /* OrientationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F1C9162C6BA525009D40EE /* OrientationHelper.swift */; };
 		05F1C91D2C6D4603009D40EE /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F1C91C2C6D4603009D40EE /* LocationManager.swift */; };
 /* End PBXBuildFile section */
@@ -124,6 +125,7 @@
 		0587FC592C696EDF00120C99 /* SideMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenuView.swift; sourceTree = "<group>"; };
 		05DF12C92C76BBB500278505 /* StrokePlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokePlayModel.swift; sourceTree = "<group>"; };
 		05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayModel.swift; sourceTree = "<group>"; };
+		05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayPressModel.swift; sourceTree = "<group>"; };
 		05F1C9162C6BA525009D40EE /* OrientationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationHelper.swift; sourceTree = "<group>"; };
 		05F1C9182C6D38B2009D40EE /* GolfGames.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GolfGames.entitlements; sourceTree = "<group>"; };
 		05F1C9192C6D4469009D40EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -158,6 +160,7 @@
 			children = (
 				0523E34E2C740895000B9313 /* BetterBallModel.swift */,
 				05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */,
+				05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */,
 				05DF12C92C76BBB500278505 /* StrokePlayModel.swift */,
 			);
 			path = Games;
@@ -484,6 +487,7 @@
 				053D7AFD2C62B955007D2D30 /* TestData.swift in Sources */,
 				054E960D2C3F64D20036165A /* HandicapCalculator.swift in Sources */,
 				054E961B2C403BAB0036165A /* AppDelegate.swift in Sources */,
+				05DF12CE2C782C5100278505 /* MatchPlayPressModel.swift in Sources */,
 				05480CF42C51CA940082E638 /* RoundViewModel.swift in Sources */,
 				05480CF32C51BC7C0082E638 /* RecentRoundsListView.swift in Sources */,
 				05DF12CA2C76BBB500278505 /* StrokePlayModel.swift in Sources */,

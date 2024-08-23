@@ -332,7 +332,7 @@ private func mainMatchStatusCell(for golfer: Golfer, hole: Int) -> some View {
             } else if hole == winningHole, let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore, golfer.formattedName(golfers: roundViewModel.golfers) == winner {
                 Text(formatFinalScore(score))
                     .font(.caption)
-                    .foregroundColor(.green)
+                    .foregroundColor(.red)
             } else {
                 displayMatchStatus(for: golfer, hole: hole, startHole: 1, statusArray: statusArray)
             }

@@ -148,8 +148,8 @@ struct HoleView: View {
                 title: Text("Confirm Press"),
                 message: Text("Are you sure you want to initiate a press?"),
                 primaryButton: .default(Text("Yes")) {
-                    if let losingPlayer = roundViewModel.getLosingPlayer() {
-                        roundViewModel.initiatePress(atHole: currentHoleIndex + 1)
+                    if let losingPlayer = MatchPlayPressModel.getLosingPlayer(roundViewModel: roundViewModel) {
+                        MatchPlayPressModel.initiatePress(roundViewModel: roundViewModel, atHole: currentHoleIndex + 1)
                     }
                 },
                 secondaryButton: .cancel()
@@ -209,13 +209,13 @@ struct HoleView: View {
             if currentHoleIndex < singleRoundViewModel.holes.count - 1 {
                 Button(action: {
                     if roundViewModel.isMatchPlay {
-                        roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
-                        roundViewModel.updateMatchStatus(for: currentHoleIndex + 1)
+                        MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
+                        MatchPlayModel.updateMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
                         
                         // Explicitly update all presses
                         for pressIndex in roundViewModel.presses.indices {
                             if currentHoleIndex + 1 >= roundViewModel.presses[pressIndex].startHole {
-                                roundViewModel.updatePressMatchStatus(pressIndex: pressIndex, for: currentHoleIndex + 1)
+                                MatchPlayPressModel.updatePressMatchStatus(roundViewModel: roundViewModel, pressIndex: pressIndex, for: currentHoleIndex + 1)
                             }
                         }
                     }
@@ -351,7 +351,7 @@ struct HoleView: View {
     
     private func pressButton(for golfer: Golfer) -> some View {
         Group {
-            if let (leadingPlayer, trailingPlayer, score) = roundViewModel.getCurrentPressStatus() {
+            if let (leadingPlayer, trailingPlayer, score) = MatchPlayPressModel.getCurrentPressStatus(roundViewModel: roundViewModel) {
                 ZStack {
                     if score == 0 {
                         Text("")
@@ -387,8 +387,8 @@ struct HoleView: View {
                     updateScoresForCurrentHole()
                 } else if gesture.translation.width < -threshold && currentHoleIndex < singleRoundViewModel.holes.count - 1 {
                     if roundViewModel.isMatchPlay {
-                        roundViewModel.recalculateTallies(upToHole: currentHoleIndex + 1)
-                        roundViewModel.updateMatchStatus(for: currentHoleIndex + 1)
+                        MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
+                        MatchPlayModel.updateMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
                     }
                     currentHoleIndex += 1
                     updateScoresForCurrentHole()
@@ -464,7 +464,7 @@ struct HoleView: View {
         
         // If there are no missing scores, update the final match status
         if missingScores.values.allSatisfy({ $0.isEmpty }) {
-            roundViewModel.updateFinalMatchStatus()
+            MatchPlayModel.updateFinalMatchStatus(roundViewModel: roundViewModel)
         }
     }
     
