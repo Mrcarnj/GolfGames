@@ -10,6 +10,7 @@ import Foundation
 import Firebase
 import FirebaseFirestoreSwift
 
+
 class RoundViewModel: ObservableObject {
     @Published var selectedTee: Tee?
     @Published var selectedCourse: Course?
@@ -160,45 +161,6 @@ class RoundViewModel: ObservableObject {
         }
     }
     
-    func calculateStrokePlayStrokeHoles(holes: [Hole]) {
-    for golfer in golfers {
-        guard let courseHandicap = courseHandicaps[golfer.id] else {
-            print("Warning: No course handicap found for golfer \(golfer.fullName)")
-            continue
-        }
-        
-        let strokeHoles = HandicapCalculator.determineStrokePlayStrokeHoles(courseHandicap: courseHandicap, holes: holes)
-        self.strokeHoles[golfer.id] = strokeHoles
-        
-        print("Calculated stroke holes for \(golfer.formattedName(golfers: self.golfers)): \(strokeHoles)")
-        print("Course Handicap: \(courseHandicap)")
-    }
-}
-    
-    func updateStrokePlayNetScores() {
-        for (holeNumber, scores) in grossScores {
-            for (golferId, grossScore) in scores {
-                guard let courseHandicap = courseHandicaps[golferId] else {
-                    print("Warning: No course handicap found for golfer \(golferId)")
-                    continue
-                }
-                
-                let isStrokeHole = strokeHoles[golferId]?.contains(holeNumber) ?? false
-                let netScore: Int
-                
-                if courseHandicap < 0 {
-                    netScore = isStrokeHole ? grossScore + 1 : grossScore
-                } else {
-                    netScore = isStrokeHole ? grossScore - 1 : grossScore
-                }
-                
-                netStrokePlayScores[holeNumber, default: [:]][golferId] = netScore
-                
-                print("Hole \(holeNumber) for golfer \(golferId): Gross \(grossScore), Net \(netScore), Stroke Hole: \(isStrokeHole), Course Handicap: \(courseHandicap)")
-            }
-        }
-    }
-    
     func printDebugInfo() {
         print("RoundViewModel Debug Info:")
         print("Number of golfers: \(golfers.count)")
@@ -226,92 +188,48 @@ class RoundViewModel: ObservableObject {
             }
     }
 
+ ////////////////// STROKES //////////////////
+
+    func getHoleHandicap(for hole: Int, teeId: String) -> Int {
+        return StrokesModel.getHoleHandicap(roundViewModel: self, for: hole, teeId: teeId)
+    }
+
+func calculateStrokePlayStrokeHoles(holes: [Hole]) {
+        StrokesModel.calculateStrokePlayStrokeHoles(roundViewModel: self, holes: holes)
+    }
+
  ////////////////// SCORING //////////////////
 
+    func updateStrokePlayNetScores() {
+        ScoringModel.updateStrokePlayNetScores(roundViewModel: self)
+    }
+    
     func resetScoresForCurrentHole() {
-        for golfer in golfers {
-            let par = pars[currentHole] ?? 0
-            if let index = grossScores[currentHole]?.firstIndex(where: { $0.key == golfer.id }) {
-                grossScores[currentHole]?[golfer.id] = par
-            } else {
-                grossScores[currentHole, default: [:]][golfer.id] = par
-            }
-        }
+        ScoringModel.resetScoresForCurrentHole(roundViewModel: self)
     }
     
     func nextHole() {
-        saveScores()
-        if currentHole < 18 {
-            currentHole += 1
-            resetScoresForCurrentHole()
-        }
+        ScoringModel.nextHole(roundViewModel: self)
     }
     
     func previousHole() {
-        saveScores()
-        if currentHole > 1 {
-            currentHole -= 1
-            resetScoresForCurrentHole()
-        }
+        ScoringModel.previousHole(roundViewModel: self)
     }
     
     func saveScores() {
-        guard let roundId = roundId else { return }
-        
-        let db = Firestore.firestore()
-        let grossScoresData = grossScores.mapValues { $0.mapValues { $0 } }
-        let netScoresData = netStrokePlayScores.mapValues { $0.mapValues { $0 } }
-        
-        db.collection("users").document("user_id").collection("rounds").document(roundId).setData(["gross_scores": grossScoresData, "net_scores": netScoresData], merge: true) { error in
-            if let error = error {
-                print("Error saving scores: \(error.localizedDescription)")
-            } else {
-                print("Scores saved successfully: \(self.grossScores)")
-            }
-        }
+        ScoringModel.saveScores(roundViewModel: self)
     }
     
     func getMissingScores(for golferId: String) -> [Int] {
-        return (1...18).filter { holeNumber in
-            grossScores[holeNumber]?[golferId] == nil
-        }
+        return ScoringModel.getMissingScores(roundViewModel: self, for: golferId)
     }
     
     func allScoresEntered(for holeNumber: Int? = nil) -> Bool {
-        if let hole = holeNumber {
-            // Check for a specific hole
-            return golfers.allSatisfy { golfer in
-                grossScores[hole]?[golfer.id] != nil
-            }
-        } else {
-            // Check all holes
-            return (1...18).allSatisfy { hole in
-                golfers.allSatisfy { golfer in
-                    grossScores[hole]?[golfer.id] != nil
-                }
-            }
-        }
+        return ScoringModel.allScoresEntered(roundViewModel: self, for: holeNumber)
     }
     
     func updateScore(for hole: Int, golferId: String, score: Int) {
-        grossScores[hole, default: [:]][golferId] = score
-        updateStrokePlayNetScores()
-        
-        if isMatchPlay {
-            MatchPlayModel.updateMatchPlayScore(roundViewModel: self, golferId: golferId, currentHoleNumber: hole, scoreInt: score)
-            // Recalculate match status for all holes from the changed hole onward
-            for currentHole in hole...18 {
-                MatchPlayModel.updateMatchStatus(roundViewModel: self, for: currentHole)
-            }
-        }
-    }
-    
-    func getHoleHandicap(for hole: Int, teeId: String) -> Int {
-        if let holes = self.holes[teeId],
-           let holeData = holes.first(where: { $0.holeNumber == hole }) {
-            return holeData.handicap
-        }
-        return 0  // Default value if hole data is not found
+        ScoringModel.updateScore(roundViewModel: self, for: hole, golferId: golferId, score: score)
     }
     
 ////////////////// MATCH PLAY //////////////////

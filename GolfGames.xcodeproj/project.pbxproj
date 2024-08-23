@@ -65,6 +65,7 @@
 		05DF12CA2C76BBB500278505 /* StrokePlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12C92C76BBB500278505 /* StrokePlayModel.swift */; };
 		05DF12CC2C76BBCE00278505 /* MatchPlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */; };
 		05DF12CE2C782C5100278505 /* MatchPlayPressModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */; };
+		05DF12D02C7833D600278505 /* StrokesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CF2C7833D600278505 /* StrokesModel.swift */; };
 		05F1C9172C6BA525009D40EE /* OrientationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F1C9162C6BA525009D40EE /* OrientationHelper.swift */; };
 		05F1C91D2C6D4603009D40EE /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F1C91C2C6D4603009D40EE /* LocationManager.swift */; };
 /* End PBXBuildFile section */
@@ -126,6 +127,7 @@
 		05DF12C92C76BBB500278505 /* StrokePlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokePlayModel.swift; sourceTree = "<group>"; };
 		05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayModel.swift; sourceTree = "<group>"; };
 		05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayPressModel.swift; sourceTree = "<group>"; };
+		05DF12CF2C7833D600278505 /* StrokesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokesModel.swift; sourceTree = "<group>"; };
 		05F1C9162C6BA525009D40EE /* OrientationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationHelper.swift; sourceTree = "<group>"; };
 		05F1C9182C6D38B2009D40EE /* GolfGames.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GolfGames.entitlements; sourceTree = "<group>"; };
 		05F1C9192C6D4469009D40EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 				054E962C2C498E2D0036165A /* FriendsViewModel.swift */,
 				05480CFA2C597F250082E638 /* SharedViewModel.swift */,
 				053D7B002C6312CF007D2D30 /* ScorecardType.swift */,
+				05DF12CF2C7833D600278505 /* StrokesModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -460,6 +463,7 @@
 				05198A6A2C35BDDF0016F576 /* LoginView.swift in Sources */,
 				05198A792C35C26B0016F576 /* InputView.swift in Sources */,
 				054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */,
+				05DF12D02C7833D600278505 /* StrokesModel.swift in Sources */,
 				05198A7D2C35C2840016F576 /* User.swift in Sources */,
 				05480CFC2C5A9A850082E638 /* HoleView.swift in Sources */,
 				054E96212C4054180036165A /* OrientationObserver.swift in Sources */,
