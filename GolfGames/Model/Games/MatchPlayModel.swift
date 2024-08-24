@@ -13,7 +13,7 @@ struct MatchPlayModel {
         initializeMatchPlay(roundViewModel: roundViewModel)
         print("Debug: MatchPlayModel setMatchPlayGolfers()")
     }
-
+    
     static func updateMatchPlayScore(roundViewModel: RoundViewModel, golferId: String, currentHoleNumber: Int, scoreInt: Int) {
         let isMatchPlayStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
         let matchPlayNetScore = isMatchPlayStrokeHole ? scoreInt - 1 : scoreInt
@@ -24,7 +24,7 @@ struct MatchPlayModel {
         
         print(logMessage)
     }
-
+    
     static func updateTallies(roundViewModel: RoundViewModel, for holeNumber: Int) {
         guard let (player1, player2) = roundViewModel.matchPlayGolfers,
               let player1Score = roundViewModel.matchPlayNetScores[holeNumber]?[player1.id],
@@ -56,7 +56,7 @@ struct MatchPlayModel {
         updateTallies(roundViewModel: roundViewModel, for: currentHoleNumber)
         roundViewModel.currentPressStartHole = nil  // Reset the current press start hole
     }
-
+    
     static func recalculateTallies(roundViewModel: RoundViewModel, upToHole: Int) {
         guard roundViewModel.isMatchPlay && roundViewModel.golfers.count >= 2 else { return }
         
@@ -69,7 +69,7 @@ struct MatchPlayModel {
             updateMatchStatus(roundViewModel: roundViewModel, for: holeNumber)
         }
     }
-
+    
     static func updateMatchStatus(roundViewModel: RoundViewModel, for currentHoleNumber: Int) {
         roundViewModel.currentHole = currentHoleNumber
         guard roundViewModel.isMatchPlay, let (player1, player2) = roundViewModel.matchPlayGolfers else { return }
@@ -153,15 +153,15 @@ struct MatchPlayModel {
         
         roundViewModel.objectWillChange.send()
     }
-
-     static func formatWinningScore(_ score: String) -> String {
+    
+    static func formatWinningScore(_ score: String) -> String {
         if score.hasSuffix("&0") {
             let leadNumber = score.split(separator: "&")[0]
             return "\(leadNumber)UP"
         }
         return score
     }
-
+    
     static func resetTallyForHole(roundViewModel: RoundViewModel, holeNumber: Int) {
         guard roundViewModel.talliedHoles.contains(holeNumber), let winner = roundViewModel.holeWinners[holeNumber] else { return }
         
@@ -172,7 +172,7 @@ struct MatchPlayModel {
         }
         roundViewModel.talliedHoles.remove(holeNumber)
     }
-
+    
     static func updateFinalMatchStatus(roundViewModel: RoundViewModel) {
         // Update main match status
         print("Debug: MatchPlayModel updateFinalMatchStatus()")
@@ -204,35 +204,15 @@ struct MatchPlayModel {
         
         roundViewModel.forceUIUpdate()
     }
-
+    
     static func initializeMatchPlay(roundViewModel: RoundViewModel) {
-        guard roundViewModel.isMatchPlay, roundViewModel.golfers.count >= 2 else { return }
-        
-        // If matchPlayGolfers is not set, default to the first two golfers
-        if roundViewModel.matchPlayGolfers == nil {
-            roundViewModel.matchPlayGolfers = (roundViewModel.golfers[0], roundViewModel.golfers[1])
-        }
-        
-        // Ensure we're using the correct playing handicaps
-        let player1Handicap = roundViewModel.courseHandicaps[roundViewModel.matchPlayGolfers!.0.id] ?? 0
-        let player2Handicap = roundViewModel.courseHandicaps[roundViewModel.matchPlayGolfers!.1.id] ?? 0
-        
-        print("Debug: MatchPlayModel - Initializing Match Play")
-        print("Debug: \(roundViewModel.matchPlayGolfers!.0.fullName) - Playing Handicap: \(player1Handicap)")
-        print("Debug: \(roundViewModel.matchPlayGolfers!.1.fullName) - Playing Handicap: \(player2Handicap)")
-        
-        let matchPlayHandicap = abs(player1Handicap - player2Handicap)
-        
-        print("Debug: MatchPlayModel initializeMatchPlay() - Calculated Match Play Handicap: \(matchPlayHandicap)")
-        
-        // Set up match play stroke holes
-        let lowerHandicapPlayer = player1Handicap < player2Handicap ? roundViewModel.matchPlayGolfers!.0 : roundViewModel.matchPlayGolfers!.1
-        let higherHandicapPlayer = player1Handicap < player2Handicap ? roundViewModel.matchPlayGolfers!.1 : roundViewModel.matchPlayGolfers!.0
-        
-        roundViewModel.matchPlayStrokeHoles[lowerHandicapPlayer.id] = []
-        roundViewModel.matchPlayStrokeHoles[higherHandicapPlayer.id] = roundViewModel.strokeHoles[higherHandicapPlayer.id]?.prefix(matchPlayHandicap).map { $0 } ?? []
-        
-        print("Debug: MatchPlayModel initializeMatchPlay() - Match Play Stroke Holes - \(lowerHandicapPlayer.fullName): \(roundViewModel.matchPlayStrokeHoles[lowerHandicapPlayer.id] ?? [])")
-        print("Debug: MatchPlayModel initializeMatchPlay() - Match Play Stroke Holes - \(higherHandicapPlayer.fullName): \(roundViewModel.matchPlayStrokeHoles[higherHandicapPlayer.id] ?? [])")
-    }
+    guard roundViewModel.isMatchPlay, roundViewModel.golfers.count >= 2 else { return }
+
+    // If matchPlayGolfers is not set, use all golfers in the round
+    let matchPlayGolfers = roundViewModel.matchPlayGolfers.map { [$0.0, $0.1] } ?? roundViewModel.golfers
+
+    print("Debug: MatchPlayModel - Initializing Match Play")
+   StrokesModel.calculateGameStrokeHoles(roundViewModel: roundViewModel, golfers: matchPlayGolfers)
+}
+    
 }

@@ -30,4 +30,56 @@ struct StrokesModel {
             print("Course Handicap: \(courseHandicap)")
         }
     }
+
+    static func calculateGameStrokeHoles(roundViewModel: RoundViewModel, golfers: [Golfer]) {
+    // Get handicaps for all golfers
+    let golfersWithHandicaps = golfers.map { golfer -> (Golfer, Int) in
+        let handicap = roundViewModel.courseHandicaps[golfer.id] ?? 0
+        print("Debug StrokesModel: \(golfer.fullName) - Playing Handicap: \(handicap)")
+        return (golfer, handicap)
+    }
+
+    // Find the lowest handicap
+    guard let lowestHandicap = golfersWithHandicaps.min(by: { $0.1 < $1.1 }) else { return }
+    let lowestHandicapPlayer = lowestHandicap.0
+    let lowestHandicapValue = lowestHandicap.1
+
+    print("Debug StrokesModel: Lowest Handicap Player: \(lowestHandicapPlayer.fullName) with handicap \(lowestHandicapValue)")
+
+    // Set stroke holes for each player
+    for (golfer, handicap) in golfersWithHandicaps {
+        let gameHandicap = max(0, handicap - lowestHandicapValue)
+        
+        if roundViewModel.isMatchPlay {
+            calculateMatchPlayStrokeHoles(roundViewModel: roundViewModel, golfer: golfer, gameHandicap: gameHandicap, isLowestHandicap: golfer.id == lowestHandicapPlayer.id)
+        } else if roundViewModel.isBetterBall {
+            calculateBetterBallStrokeHoles(roundViewModel: roundViewModel, golfer: golfer, gameHandicap: gameHandicap)
+        }
+    }
+}
+
+static func calculateMatchPlayStrokeHoles(roundViewModel: RoundViewModel, golfer: Golfer, gameHandicap: Int, isLowestHandicap: Bool) {
+    print("Debug StrokesModel: Match Play Handicap for \(golfer.fullName): \(gameHandicap)")
+    
+    if isLowestHandicap {
+        roundViewModel.matchPlayStrokeHoles[golfer.id] = []
+    } else {
+        roundViewModel.matchPlayStrokeHoles[golfer.id] = roundViewModel.strokeHoles[golfer.id]?.prefix(gameHandicap).map { $0 } ?? []
+    }
+    
+    print("Debug StrokesModel: Match Play Stroke Holes - \(golfer.fullName): \(roundViewModel.matchPlayStrokeHoles[golfer.id] ?? [])")
+}
+
+static func calculateBetterBallStrokeHoles(roundViewModel: RoundViewModel, golfer: Golfer, gameHandicap: Int) {
+    print("Debug StrokesModel: Better Ball Handicap for \(golfer.fullName): \(gameHandicap)")
+    
+    if let strokeHoles = roundViewModel.strokeHoles[golfer.id] {
+        roundViewModel.betterBallStrokeHoles[golfer.id] = Array(strokeHoles.prefix(gameHandicap))
+    } else {
+        print("Warning: No stroke holes found for \(golfer.fullName)")
+        roundViewModel.betterBallStrokeHoles[golfer.id] = []
+    }
+    
+    print("Debug StrokesModel: Better Ball Stroke Holes - \(golfer.fullName): \(roundViewModel.betterBallStrokeHoles[golfer.id] ?? [])")
+}
 }

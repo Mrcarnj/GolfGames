@@ -17,6 +17,81 @@ struct Score: Identifiable, Codable {
 }
 
 struct ScoringModel {
+    
+    static func updateHoleScores(roundViewModel: RoundViewModel, for golferId: String, score: String, currentHoleNumber: Int) {
+        if let scoreInt = Int(score) {
+            // Always update gross scores
+            roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = scoreInt
+            
+            // Always update stroke play scores
+            StrokePlayModel.updateStrokePlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
+            
+            // Update match play scores only if match play is enabled
+            if roundViewModel.isMatchPlay {
+                MatchPlayModel.updateMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
+            }
+        } else {
+            // Reset scores if the input is invalid
+            roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
+            roundViewModel.netStrokePlayScores[currentHoleNumber, default: [:]][golferId] = nil
+            
+            if roundViewModel.isMatchPlay {
+                MatchPlayModel.resetMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber)
+            }
+        }
+        
+        // Update match play tallies if all scores are entered and match play is enabled
+        if roundViewModel.isMatchPlay && roundViewModel.allScoresEntered(for: currentHoleNumber) {
+            MatchPlayModel.updateMatchPlayTallies(roundViewModel: roundViewModel, currentHoleNumber: currentHoleNumber)
+        }
+    }
+    
+    static func updateScoresForCurrentHole(roundViewModel: RoundViewModel, currentHoleIndex: Int) -> [String: String] {
+        let currentHoleNumber = currentHoleIndex + 1
+        var scoreInputs = roundViewModel.grossScores[currentHoleNumber]?.mapValues { String($0) } ?? [:]
+        
+        for golfer in roundViewModel.golfers {
+            if scoreInputs[golfer.id] == nil {
+                scoreInputs[golfer.id] = ""
+            }
+        }
+        
+        print("ScoringModel updateScoresForCurrentHole() - Updated scores for Hole \(currentHoleNumber): \(scoreInputs)")
+        return scoreInputs
+    }
+    
+    static func checkScores(roundViewModel: RoundViewModel) -> [String: [Int]] {
+        var missingScores: [String: [Int]] = [:]
+        for golfer in roundViewModel.golfers {
+            missingScores[golfer.id] = roundViewModel.getMissingScores(for: golfer.id)
+        }
+        
+        // If there are no missing scores, update the final match status
+        if missingScores.values.allSatisfy({ $0.isEmpty }) {
+            MatchPlayModel.updateFinalMatchStatus(roundViewModel: roundViewModel)
+        }
+        
+        return missingScores
+    }
+    
+    static func saveScores(roundViewModel: RoundViewModel, scores: [String: Int], currentHole: Int, isMatchPlay: Bool) {
+        for (golferId, score) in scores {
+            roundViewModel.updateScore(for: currentHole, golferId: golferId, score: score)
+        }
+        if isMatchPlay {
+            let currentHoleNumber = currentHole  // Assuming currentHole is already 1-based
+            // Add any match play specific logic here if needed
+        }
+    }
+    
+    static func loadScores(roundViewModel: RoundViewModel, currentHole: Int) -> [String: Int] {
+        var scores: [String: Int] = [:]
+        for golfer in roundViewModel.golfers {
+            scores[golfer.id] = roundViewModel.grossScores[currentHole]?[golfer.id] ?? roundViewModel.pars[currentHole] ?? 0
+        }
+        return scores
+    }
+    
     static func resetScoresForCurrentHole(roundViewModel: RoundViewModel) {
         for golfer in roundViewModel.golfers {
             let par = roundViewModel.pars[roundViewModel.currentHole] ?? 0

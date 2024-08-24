@@ -189,50 +189,58 @@ struct HoleView: View {
     }
     
     private var holeNavigation: some View {
-        HStack {
-            if currentHoleIndex > 0 {
-                Button(action: {
-                    currentHoleIndex -= 1
-                    updateScoresForCurrentHole()
-                }) {
-                    HStack {
-                        Image(systemName: "arrow.left")
-                        Text("Hole \(currentHoleIndex)")
-                    }
-                    .fontWeight(.bold)
+    HStack {
+        if currentHoleIndex > 0 {
+            Button(action: {
+                currentHoleIndex -= 1
+                updateScoresForCurrentHole()
+            }) {
+                HStack {
+                    Image(systemName: "arrow.left")
+                    Text("Hole \(currentHoleIndex)")
                 }
-                .padding()
+                .fontWeight(.bold)
             }
-            
-            Spacer()
-            
-            if currentHoleIndex < singleRoundViewModel.holes.count - 1 {
-                Button(action: {
-                    if roundViewModel.isMatchPlay {
-                        MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
-                        MatchPlayModel.updateMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
-                        
-                        // Explicitly update all presses
-                        for pressIndex in roundViewModel.presses.indices {
-                            if currentHoleIndex + 1 >= roundViewModel.presses[pressIndex].startHole {
-                                MatchPlayPressModel.updatePressMatchStatus(roundViewModel: roundViewModel, pressIndex: pressIndex, for: currentHoleIndex + 1)
-                            }
+            .padding()
+        }
+        
+        Spacer()
+        
+        if currentHoleIndex < singleRoundViewModel.holes.count - 1 {
+            Button(action: {
+                print("Debug: isBetterBall = \(roundViewModel.isBetterBall)")
+                if roundViewModel.isMatchPlay {
+                    MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
+                    MatchPlayModel.updateMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
+                    
+                    // Explicitly update all presses
+                    for pressIndex in roundViewModel.presses.indices {
+                        if currentHoleIndex + 1 >= roundViewModel.presses[pressIndex].startHole {
+                            MatchPlayPressModel.updatePressMatchStatus(roundViewModel: roundViewModel, pressIndex: pressIndex, for: currentHoleIndex + 1)
                         }
                     }
-                    currentHoleIndex += 1
-                    updateScoresForCurrentHole()
-                }) {
-                    HStack {
-                        Text("Hole \(currentHoleIndex + 2)")
-                        Image(systemName: "arrow.right")
-                    }
-                    .fontWeight(.bold)
                 }
-                .padding()
+                
+                if roundViewModel.isBetterBall {
+                    print("Debug: Calling recalculateBetterBallTallies from HoleView")
+                    BetterBallModel.recalculateBetterBallTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
+                    BetterBallModel.updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
+                }
+                
+                currentHoleIndex += 1
+                updateScoresForCurrentHole()
+            }) {
+                HStack {
+                    Text("Hole \(currentHoleIndex + 2)")
+                    Image(systemName: "arrow.right")
+                }
+                .fontWeight(.bold)
             }
+            .padding()
         }
-        .background(Color(.systemBackground))
     }
+    .background(Color(.systemBackground))
+}
     
     private var portraitHoleContent: some View {
         VStack {
@@ -240,7 +248,7 @@ struct HoleView: View {
             
             ScrollView {
                 VStack {
-                    matchPlayStatusView
+                    matchStatusView
                     pressStatusesView
                     scoreHeaderView
                     golferScoresView
@@ -252,10 +260,14 @@ struct HoleView: View {
         .gesture(holeNavigationGesture)
     }
     
-    private var matchPlayStatusView: some View {
+    private var matchStatusView: some View {
         Group {
             if roundViewModel.isMatchPlay {
                 Text(roundViewModel.matchPlayStatus ?? "")
+                    .font(.headline)
+                    .padding(.vertical, 5)
+            } else if roundViewModel.isBetterBall {
+                Text(roundViewModel.betterBallMatchStatus ?? "")
                     .font(.headline)
                     .padding(.vertical, 5)
             }
@@ -390,6 +402,11 @@ struct HoleView: View {
                         MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
                         MatchPlayModel.updateMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
                     }
+                    if roundViewModel.isBetterBall {
+                    print("Debug: Calling recalculateBetterBallTallies from HoleView")
+                    BetterBallModel.recalculateBetterBallTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
+                    BetterBallModel.updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
+                }
                     currentHoleIndex += 1
                     updateScoresForCurrentHole()
                 }
@@ -425,36 +442,44 @@ struct HoleView: View {
     }
     
     private func updateScore(for golferId: String, score: String) {
-        let currentHoleNumber = currentHoleIndex + 1
-        if let scoreInt = Int(score) {
-            // Always update gross scores
-            roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = scoreInt
-            
-            // Always update stroke play scores
-            StrokePlayModel.updateStrokePlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
-            
-            // Update match play scores only if match play is enabled
-            if roundViewModel.isMatchPlay {
-                MatchPlayModel.updateMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
-            }
-        } else {
-            // Reset scores if the input is invalid
-            roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
-            roundViewModel.netStrokePlayScores[currentHoleNumber, default: [:]][golferId] = nil
-            
-            if roundViewModel.isMatchPlay {
-                MatchPlayModel.resetMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber)
-            }
-        }
+    let currentHoleNumber = currentHoleIndex + 1
+    if let scoreInt = Int(score) {
+        // Always update gross scores
+        roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = scoreInt
         
-        // Update match play tallies if all scores are entered and match play is enabled
-        if roundViewModel.isMatchPlay && roundViewModel.allScoresEntered(for: currentHoleNumber) {
-            MatchPlayModel.updateMatchPlayTallies(roundViewModel: roundViewModel, currentHoleNumber: currentHoleNumber)
-        }
+        // Always update stroke play scores
+        StrokePlayModel.updateStrokePlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
         
-        // Force view update
-        roundViewModel.forceUIUpdate()
+        // Update match play scores only if match play is enabled
+        if roundViewModel.isMatchPlay {
+            MatchPlayModel.updateMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
+        } else if roundViewModel.isBetterBall {
+            BetterBallModel.updateBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
+        }
+    } else {
+        // Reset scores if the input is invalid
+        roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
+        roundViewModel.netStrokePlayScores[currentHoleNumber, default: [:]][golferId] = nil
+        
+        if roundViewModel.isMatchPlay {
+            MatchPlayModel.resetMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber)
+        } else if roundViewModel.isBetterBall {
+            BetterBallModel.resetBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber)
+        }
     }
+    
+    // Update tallies if all scores are entered
+    if roundViewModel.allScoresEntered(for: currentHoleNumber) {
+        if roundViewModel.isMatchPlay {
+            MatchPlayModel.updateMatchPlayTallies(roundViewModel: roundViewModel, currentHoleNumber: currentHoleNumber)
+        } else if roundViewModel.isBetterBall {
+            BetterBallModel.updateBetterBallTallies(roundViewModel: roundViewModel, for: currentHoleNumber)
+        }
+    }
+    
+    // Force view update
+    roundViewModel.forceUIUpdate()
+}
     
     private func checkScores() {
         showMissingScores = true
@@ -484,20 +509,24 @@ struct HoleView: View {
     }
     
     private func strokeHoleInfo(for golferId: String) -> (isStrokeHole: Bool, isNegativeHandicap: Bool) {
-        let currentHoleNumber = currentHoleIndex + 1
-        let courseHandicap = roundViewModel.courseHandicaps[golferId] ?? 0
-        let isNegativeHandicap = courseHandicap < 0
-        
-        if roundViewModel.isMatchPlay {
-            let isStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
-            print("Debug: HoleView strokeHoleInfo()")
-            return (isStrokeHole, isNegativeHandicap)
-        } else {
-            let isStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
-            print("Debug: HoleView strokeHoleInfo()")
-            return (isStrokeHole, isNegativeHandicap)
-        }
+    let currentHoleNumber = currentHoleIndex + 1
+    let courseHandicap = roundViewModel.courseHandicaps[golferId] ?? 0
+    let isNegativeHandicap = courseHandicap < 0
+    
+    if roundViewModel.isMatchPlay {
+        let isStrokeHole = roundViewModel.matchPlayStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+        print("Debug: HoleView strokeHoleInfo() - Match Play")
+        return (isStrokeHole, isNegativeHandicap)
+    } else if roundViewModel.isBetterBall {
+        let isStrokeHole = roundViewModel.betterBallStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+        print("Debug: HoleView strokeHoleInfo() - Better Ball")
+        return (isStrokeHole, isNegativeHandicap)
+    } else {
+        let isStrokeHole = roundViewModel.strokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+        print("Debug: HoleView strokeHoleInfo() - Stroke Play")
+        return (isStrokeHole, isNegativeHandicap)
     }
+}
     
     private func unlockOrientation() {
         AppDelegate.lockOrientation(.allButUpsideDown)

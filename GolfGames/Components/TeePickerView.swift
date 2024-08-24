@@ -36,7 +36,7 @@ struct TeePickerView: View {
                 )
                 sharedViewModel.golferTeeSelections[currentGolfer.id] = tee.id
                 sharedViewModel.courseHandicaps[currentGolfer.id] = courseHandicap
-                print("Debug: Set course handicap for \(currentGolfer.fullName): \(courseHandicap)")
+                print("Debug TeePickerView: Set course handicap for \(currentGolfer.fullName): \(courseHandicap)")
                 // print("Selected tee for golfer \(currentGolfer.fullName): \(tee.tee_name)")
             } else {
                 courseHandicap = 0

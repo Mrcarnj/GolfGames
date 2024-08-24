@@ -14,7 +14,7 @@ struct MatchPlayPressModel {
             print("Cannot initiate new press: main match has been won and no existing presses")
             return
         }
-
+        
         print("Initiating press at hole \(atHole)")
         print("Current hole: \(roundViewModel.currentHole)")
         print("Number of presses before adding: \(roundViewModel.presses.count)")
@@ -72,14 +72,14 @@ struct MatchPlayPressModel {
     
     static func updatePressMatchStatus(roundViewModel: RoundViewModel, pressIndex: Int, for currentHoleNumber: Int) {
         guard let (golfer1, golfer2) = roundViewModel.matchPlayGolfers else { return }
-            
+        
         let press = roundViewModel.presses[pressIndex]
-            
+        
         // If the press already has a winner, don't update it
         if press.winner != nil {
             return
         }
-            
+        
         let pressStartHole = press.startHole
         for hole in pressStartHole...currentHoleNumber {
             if let winner = roundViewModel.holeWinners[hole] {
@@ -92,7 +92,7 @@ struct MatchPlayPressModel {
                 }
             }
         }
-            
+        
         // Check if the press has been won
         let pressStatus = roundViewModel.presses[pressIndex].matchStatusArray.reduce(0, +)
         let remainingHoles = 18 - currentHoleNumber
@@ -119,34 +119,34 @@ struct MatchPlayPressModel {
             }
         }
     }
-        
-     static func calculatePressStatus(roundViewModel: RoundViewModel, pressIndex: Int, currentHole: Int) -> String {
+    
+    static func calculatePressStatus(roundViewModel: RoundViewModel, pressIndex: Int, currentHole: Int) -> String {
         guard pressIndex < roundViewModel.presses.count, let (player1, player2) = roundViewModel.matchPlayGolfers else {
             return "Invalid Press"
         }
-            
+        
         let press = roundViewModel.presses[pressIndex]
-            
+        
         // If this press has already been won, return its final status
         if let winner = press.winner, let winningScore = press.winningScore {
             return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
         }
-            
+        
         let pressStartHole = press.startHole
         let relevantHoles = pressStartHole...currentHole
-            
+        
         let cumulativePressScore = relevantHoles.reduce(0) { total, hole in
             return total + (press.matchStatusArray[hole - pressStartHole] ?? 0)
         }
-            
+        
         let holesPlayed = currentHole - pressStartHole + 1
         let remainingHoles = 18 - currentHole
-            
+        
         // Check if this press has already been won
         if let winner = press.winner, let winningScore = press.winningScore {
             return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
         }
-            
+        
         // Check for press win conditions
         if abs(cumulativePressScore) > remainingHoles {
             let winner = cumulativePressScore > 0 ? player1.formattedName(golfers: roundViewModel.golfers) : player2.formattedName(golfers: roundViewModel.golfers)
@@ -167,13 +167,13 @@ struct MatchPlayPressModel {
                 return "Press \(pressIndex + 1): Tie - All Square"
             }
         }
-            
+        
         // Dormie condition
         if abs(cumulativePressScore) == remainingHoles {
             let leadingPlayer = cumulativePressScore > 0 ? player1.formattedName(golfers: roundViewModel.golfers) : player2.formattedName(golfers: roundViewModel.golfers)
             return "Press \(pressIndex + 1): \(leadingPlayer) \(abs(cumulativePressScore))UP with \(remainingHoles) to play (Dormie)"
         }
-            
+        
         // Regular status
         if cumulativePressScore == 0 {
             return "Press \(pressIndex + 1): All Square thru \(holesPlayed)"
@@ -182,7 +182,7 @@ struct MatchPlayPressModel {
             return "Press \(pressIndex + 1): \(leadingPlayer) \(abs(cumulativePressScore))UP thru \(holesPlayed)"
         }
     }
-
+    
     static func getLosingPlayer(roundViewModel: RoundViewModel) -> Golfer? {
         guard let (golfer1, golfer2) = roundViewModel.matchPlayGolfers else { return nil }
         

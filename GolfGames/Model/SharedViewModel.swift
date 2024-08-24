@@ -15,15 +15,7 @@ class SharedViewModel: ObservableObject {
     @Published var roundId: String?
     @Published var currentUserGolfer: Golfer?
     @Published var golferTeeSelections: [String: String] = [:]  // [GolferID: TeeID]
-    @Published var isMatchPlay: Bool = false {
-        didSet {
-            if isMatchPlay {
-                calculateMatchPlayHandicap()
-            } else {
-                matchPlayHandicap = 0
-            }
-        }
-    }
+    @Published var isMatchPlay: Bool = false
     @Published var holes: [String: [Hole]] = [:] // Tee ID : [Hole]
     @Published var matchPlayHandicap: Int = 0
 
@@ -56,19 +48,5 @@ class SharedViewModel: ObservableObject {
 
     func updateHoles(_ newHoles: [String: [Hole]]) {
         holes = newHoles
-    }
-
-    private func calculateMatchPlayHandicap() {
-        guard golfers.count == 2 else {
-            matchPlayHandicap = 0
-            return
-        }
-        let handicaps = golfers.compactMap { $0.courseHandicap }
-        guard handicaps.count == 2 else {
-            matchPlayHandicap = 0
-            return
-        }
-        matchPlayHandicap = abs(handicaps[0] - handicaps[1])
-        print("Debug SharedViewModel calculateMatchPlayHandicaps()")
     }
 }

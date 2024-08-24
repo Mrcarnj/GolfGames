@@ -187,27 +187,7 @@ struct TeeSelectionView: View {
         print("Stroke play stroke holes after calculation: \(roundViewModel.strokeHoles)")
         
         if sharedViewModel.isMatchPlay {
-            calculateMatchPlayStrokeHoles()
-        }
-    }
-
-    private func calculateMatchPlayStrokeHoles() {
-        guard roundViewModel.golfers.count == 2 else { return }
-        
-        let sortedGolfers = roundViewModel.golfers.sorted { ($0.courseHandicap ?? 0) < ($1.courseHandicap ?? 0) }
-        let lowerHandicapGolfer = sortedGolfers[0]
-        let higherHandicapGolfer = sortedGolfers[1]
-        
-        if let lowerHandicapTeeId = lowerHandicapGolfer.tee?.id,
-           let holes = roundViewModel.holes[lowerHandicapTeeId] {
-            let matchPlayHandicap = sharedViewModel.matchPlayHandicap
-            let matchPlayStrokeHoles = HandicapCalculator.determineMatchPlayStrokeHoles(matchPlayHandicap: matchPlayHandicap, holes: holes)
-            roundViewModel.matchPlayStrokeHoles[lowerHandicapGolfer.id] = []
-            roundViewModel.matchPlayStrokeHoles[higherHandicapGolfer.id] = matchPlayStrokeHoles
-            
-            print("Debug: Match Play Stroke Holes - \(lowerHandicapGolfer.fullName): [], \(higherHandicapGolfer.fullName): \(matchPlayStrokeHoles)")
-        } else {
-            print("Warning: Unable to calculate match play stroke holes")
+            StrokesModel.calculateGameStrokeHoles(roundViewModel: roundViewModel, golfers: roundViewModel.golfers)
         }
     }
 
@@ -276,7 +256,7 @@ struct TeeSelectionView: View {
                 roundViewModel.golfers[index].courseHandicap = courseHandicap // Changed from playingHandicap to courseHandicap
                 roundViewModel.courseHandicaps[golfer.id] = courseHandicap
                 
-                print("Debug: Set course handicap for \(golfer.fullName): \(courseHandicap)")
+                print("Debug TeeSelectionView: Set course handicap for \(golfer.fullName): \(courseHandicap)")
             } else {
                 print("Warning: No tee selected for golfer \(golfer.fullName)")
             }
@@ -286,7 +266,7 @@ struct TeeSelectionView: View {
            let firstGolferTee = firstGolfer.tee {
             roundViewModel.selectedTee = firstGolferTee
         }
-
+        roundViewModel.initializeBetterBallAfterHandicapsSet()
         loadHolesData()
     }
 

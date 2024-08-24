@@ -48,6 +48,23 @@ class RoundViewModel: ObservableObject {
     @Published var presses: [(startHole: Int, matchStatusArray: [Int], winner: String?, winningScore: String?, winningHole: Int?)] = []
     @Published var pressStatuses: [String] = []
     @Published var currentPressStartHole: Int?
+    @Published var matchPlayHandicaps: [String: Int] = [:]
+    @Published var isBetterBall: Bool = false
+    @Published var betterBallMatchArray: [Int] = Array(repeating: 0, count: 18)
+    @Published var betterBallFinalMatchArray: [Int]?
+    @Published var betterBallMatchStatus: String?
+    @Published var betterBallTeamAssignments: [String: String] = [:]
+    @Published var betterBallNetScores: [Int: [String: Int]] = [:]
+    @Published var betterBallHoleWinners: [Int: String] = [:]
+    @Published var betterBallHoleTallies: [String: Int] = [:]
+    @Published var betterBallMatchScore: Int = 0
+    @Published var betterBallMatchWinner: String?
+    @Published var betterBallWinningScore: String?
+    @Published var betterBallMatchWinningHole: Int?
+    @Published var betterBallHandicaps: [String: Int] = [:]
+    @Published var betterBallFinalStatistics: [String: Int] = [:]
+    @Published var betterBallStrokeHoles: [String: [Int]] = [:]
+    @Published var betterBallTalliedHoles: Set<Int> = []
 
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
@@ -84,6 +101,10 @@ class RoundViewModel: ObservableObject {
         if isMatchPlay && golfers.count >= 2 {
             MatchPlayModel.initializeMatchPlay(roundViewModel: self)
         }
+
+        if isBetterBall && golfers.count >= 2 {
+        BetterBallModel.initializeBetterBall(roundViewModel: self)
+    }
         
         do {
             let db = Firestore.firestore()
@@ -289,7 +310,48 @@ func calculateStrokePlayStrokeHoles(holes: [Hole]) {
     func getCurrentPressStatus() -> (leadingPlayer: Golfer?, trailingPlayer: Golfer?, score: Int)? {
         MatchPlayPressModel.getCurrentPressStatus(roundViewModel: self)
 }
+////////////////// BETTER BALL //////////////////
+    func setBetterBallTeams(_ assignments: [String: String]) {
+    self.betterBallTeamAssignments = assignments
+    isBetterBall = true
+    isMatchPlay = false
+    print("Debug: RoundViewModel setBetterBallTeams() - Assignments: \(assignments)")
+    print("Debug: RoundViewModel setBetterBallTeams() - Course Handicaps: \(courseHandicaps)")
     
+    // Don't initialize here, we'll do it after course handicaps are set
+    objectWillChange.send()
+}
+
+func initializeBetterBallAfterHandicapsSet() {
+    guard isBetterBall, !courseHandicaps.isEmpty else { return }
+    
+    print("Debug: RoundViewModel initializeBetterBallAfterHandicapsSet() - Initializing Better Ball")
+    BetterBallModel.initializeBetterBall(roundViewModel: self)
+}
+    
+    func updateBetterBallScore(for golferId: String, currentHoleNumber: Int, score: Int) {
+        BetterBallModel.updateBetterBallScore(roundViewModel: self, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: score)
+    }
+    
+    func updateBetterBallTallies(for holeNumber: Int) {
+        BetterBallModel.updateBetterBallTallies(roundViewModel: self, for: holeNumber)
+    }
+    
+    func resetBetterBallScore(for golferId: String, currentHoleNumber: Int) {
+        BetterBallModel.resetBetterBallScore(roundViewModel: self, golferId: golferId, currentHoleNumber: currentHoleNumber)
+    }
+    
+    func updateBetterBallMatchStatus(for currentHoleNumber: Int) {
+        BetterBallModel.updateBetterBallMatchStatus(roundViewModel: self, for: currentHoleNumber)
+    }
+    
+    func recalculateBetterBallTallies(upToHole: Int) {
+        BetterBallModel.recalculateBetterBallTallies(roundViewModel: self, upToHole: upToHole)
+    }
+    
+    func updateFinalBetterBallMatchStatus() {
+        BetterBallModel.updateFinalBetterBallMatchStatus(roundViewModel: self)
+    }
 
 ////////////////// CLEAR ROUND DATA //////////////////
 
