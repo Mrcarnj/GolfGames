@@ -246,8 +246,10 @@ struct HoleView: View {
         VStack {
             HoleDetailsView(hole: hole)
             
+
             ScrollView {
                 VStack {
+                    BetterBallTeamsView()
                     matchStatusView
                     pressStatusesView
                     scoreHeaderView
@@ -623,5 +625,34 @@ private struct ScoreInputView: View {
                 }
             }
         )
+    }
+}
+
+private struct BetterBallTeamsView: View {
+    @EnvironmentObject var roundViewModel: RoundViewModel
+
+    var body: some View {
+        if roundViewModel.isBetterBall {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Better Ball Teams:")
+                    .font(.headline)
+                    .padding(.bottom, 2)
+                ForEach(["Team A", "Team B"], id: \.self) { team in
+                    HStack {
+                        Text("\(team):")
+                            .fontWeight(.semibold)
+                        let teamMembers = roundViewModel.golfers
+                            .filter { roundViewModel.betterBallTeamAssignments[$0.id] == team }
+                            .map { $0.formattedName(golfers: roundViewModel.golfers) }
+                            .joined(separator: " / ")
+                        Text(teamMembers)
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(8)
+        }
     }
 }
