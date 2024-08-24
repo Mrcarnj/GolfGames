@@ -66,6 +66,7 @@
 		05DF12CE2C782C5100278505 /* MatchPlayPressModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */; };
 		05DF12D02C7833D600278505 /* StrokesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CF2C7833D600278505 /* StrokesModel.swift */; };
 		05DF12D22C7A268C00278505 /* BetterBallModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12D12C7A268C00278505 /* BetterBallModel.swift */; };
+		05DF12D42C7A9AC400278505 /* BetterBallSCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12D32C7A9AC400278505 /* BetterBallSCView.swift */; };
 		05F1C9172C6BA525009D40EE /* OrientationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F1C9162C6BA525009D40EE /* OrientationHelper.swift */; };
 		05F1C91D2C6D4603009D40EE /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F1C91C2C6D4603009D40EE /* LocationManager.swift */; };
 /* End PBXBuildFile section */
@@ -128,6 +129,7 @@
 		05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayPressModel.swift; sourceTree = "<group>"; };
 		05DF12CF2C7833D600278505 /* StrokesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokesModel.swift; sourceTree = "<group>"; };
 		05DF12D12C7A268C00278505 /* BetterBallModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterBallModel.swift; sourceTree = "<group>"; };
+		05DF12D32C7A9AC400278505 /* BetterBallSCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterBallSCView.swift; sourceTree = "<group>"; };
 		05F1C9162C6BA525009D40EE /* OrientationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationHelper.swift; sourceTree = "<group>"; };
 		05F1C9182C6D38B2009D40EE /* GolfGames.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GolfGames.entitlements; sourceTree = "<group>"; };
 		05F1C9192C6D4469009D40EE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -335,10 +337,11 @@
 		054E960E2C3F654C0036165A /* Scorecard */ = {
 			isa = PBXGroup;
 			children = (
-				05480CCF2C51B68F0082E638 /* ScorecardView.swift */,
+				05DF12D32C7A9AC400278505 /* BetterBallSCView.swift */,
 				05480D052C5B360C0082E638 /* LandscapeScorecardView.swift */,
-				053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */,
 				0522BBA12C6AA8C50033497F /* LandscapeStrokePlayScorecardView.swift */,
+				053D7AFE2C62EE40007D2D30 /* MatchPlaySCView.swift */,
+				05480CCF2C51B68F0082E638 /* ScorecardView.swift */,
 			);
 			path = Scorecard;
 			sourceTree = "<group>";
@@ -502,6 +505,7 @@
 				054E96352C4B21A20036165A /* AddGolferButtonView.swift in Sources */,
 				050BE2342C5EBBFA0060EB23 /* DebugUtilities.swift in Sources */,
 				054EB85D2C37625200E44F97 /* CourseTee.swift in Sources */,
+				05DF12D42C7A9AC400278505 /* BetterBallSCView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

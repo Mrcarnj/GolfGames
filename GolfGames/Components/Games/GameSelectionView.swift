@@ -210,6 +210,7 @@ struct GameSelectionView: View {
     Group {
         if isBetterBall {
             let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
+            let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
             
             VStack(alignment: .leading, spacing: 10) {
                 Text("Better Ball Teams")
@@ -220,9 +221,13 @@ struct GameSelectionView: View {
                         Text(roundViewModel.formattedGolferName(for: golfer))
                             .font(.subheadline)
                         
-                        Spacer()
                         
-                        if let handicap = betterBallHandicaps[golfer.id], handicap > 0 {
+                        
+                        if golfer.id == lowestHandicapGolfer?.id {
+                            Text("0 strokes")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else if let handicap = betterBallHandicaps[golfer.id], handicap > 0 {
                             Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
                                 .font(.caption)
                                 .foregroundColor(.secondary)

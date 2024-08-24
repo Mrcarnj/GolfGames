@@ -40,14 +40,19 @@ struct LandscapeScorecardView: View {
                     
                     ScrollView([.horizontal, .vertical]) {
                         VStack {
-                            if selectedScorecardType == .strokePlay {
+                            switch selectedScorecardType {
+                            case .strokePlay:
                                 if let golfer = selectedGolfer {
                                     strokePlayScorecard(for: golfer, geometry: geometry)
                                     scoreLegend
                                         .padding(.top, 10)
                                 }
-                            } else {
+                            case .matchPlay:
                                 matchPlayScorecard(geometry: geometry)
+                                scoreLegend
+                                    .padding(.top, -10)
+                            case .betterBall:
+                                betterBallScorecard(geometry: geometry)
                                 scoreLegend
                                     .padding(.top, -10)
                             }
@@ -80,12 +85,17 @@ struct LandscapeScorecardView: View {
     }
     
     private var scorecardTypePicker: some View {
-        Picker("Scorecard Type", selection: $selectedScorecardType) {
-            Text("Stroke Play").tag(ScorecardType.strokePlay)
+    Picker("Scorecard Type", selection: $selectedScorecardType) {
+        Text("Stroke Play").tag(ScorecardType.strokePlay)
+        if roundViewModel.isMatchPlay {
             Text("Match Play").tag(ScorecardType.matchPlay)
         }
-        .pickerStyle(SegmentedPickerStyle())
+        if roundViewModel.isBetterBall {
+            Text("Better Ball").tag(ScorecardType.betterBall)
+        }
     }
+    .pickerStyle(SegmentedPickerStyle())
+}
     
     private func strokePlayScorecard(for golfer: Golfer, geometry: GeometryProxy) -> some View {
         LandscapeStrokePlayScorecardView(golfer: golfer)
@@ -94,6 +104,11 @@ struct LandscapeScorecardView: View {
     
     private func matchPlayScorecard(geometry: GeometryProxy) -> some View {
         MatchPlaySCView()
+            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    }
+    
+    private func betterBallScorecard(geometry: GeometryProxy) -> some View {
+        BetterBallSCView()
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
     

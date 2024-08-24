@@ -10,4 +10,5 @@ import Foundation
 enum ScorecardType {
     case strokePlay
     case matchPlay
+    case betterBall
 }
