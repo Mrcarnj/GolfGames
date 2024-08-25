@@ -37,11 +37,16 @@ struct BetterBallPressModel {
         let lowerBound = max(pressStartHole, 1)
         let upperBound = max(roundViewModel.currentHole, lowerBound)
         let relevantHoles = lowerBound...upperBound
+
+        print("Better Ball Press start hole: \(pressStartHole)")
+        print("Current hole: \(roundViewModel.currentHole)")
+        print("Relevant holes: \(relevantHoles)")
         
         let cumulativePressScore = relevantHoles.reduce(0) { total, hole in
             guard hole - pressStartHole < lastPress.matchStatusArray.count else { return total }
             return total + lastPress.matchStatusArray[hole - pressStartHole]
         }
+        print("Better Ball Cumulative Press Score: \(cumulativePressScore)")
         
         if cumulativePressScore > 0 {
             return (leadingTeam: "Team A", trailingTeam: "Team B", score: cumulativePressScore)
@@ -100,6 +105,14 @@ struct BetterBallPressModel {
     static func updateAllBetterBallPressStatuses(roundViewModel: RoundViewModel, for currentHoleNumber: Int) {
     for (index, press) in roundViewModel.betterBallPresses.enumerated() {
         if currentHoleNumber >= press.startHole {
+            // Reset this press if it's already been won
+            if press.winner != nil {
+                roundViewModel.betterBallPresses[index].matchStatusArray = Array(repeating: 0, count: 18)
+                roundViewModel.betterBallPresses[index].winner = nil
+                roundViewModel.betterBallPresses[index].winningScore = nil
+                roundViewModel.betterBallPresses[index].winningHole = nil
+            }
+            
             updateBetterBallPressMatchStatus(roundViewModel: roundViewModel, pressIndex: index, for: currentHoleNumber)
             roundViewModel.betterBallPressStatuses[index] = calculateBetterBallPressStatus(roundViewModel: roundViewModel, pressIndex: index, currentHole: currentHoleNumber)
         }
@@ -176,7 +189,7 @@ struct BetterBallPressModel {
         }
     } else {
         // If no presses, check the main match
-        let matchScore = roundViewModel.betterBallMatchArray.reduce(0, +)
+        let matchScore = roundViewModel.betterBallMatchArray[roundViewModel.currentHole - 1] ?? 0
         if matchScore > 0 {
             return "Team B"
         } else if matchScore < 0 {

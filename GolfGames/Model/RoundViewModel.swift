@@ -420,3 +420,9 @@ func clearRoundData() {
         objectWillChange.send()
     }
 }
+
+extension RoundViewModel {
+    var betterBallPressesUpdateTrigger: Int {
+        betterBallPresses.reduce(0) { $0 + $1.matchStatusArray.reduce(0, +) }
+    }
+}

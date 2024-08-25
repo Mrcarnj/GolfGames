@@ -82,7 +82,7 @@ struct GameSelectionView: View {
                 HStack (alignment: .center) {
                     Image(systemName: "flag.fill")
                         .foregroundColor(.blue)
-                    Text("Match Play")
+                    Text("Match Play - 18 Hole Match")
                         .font(.subheadline)
                 }
             }
@@ -110,7 +110,7 @@ struct GameSelectionView: View {
                 HStack (alignment: .center) {
                     Image(systemName: "person.3.fill")
                         .foregroundColor(.green)
-                    Text("Better Ball")
+                    Text("Better Ball - 18 Hole Match")
                         .font(.subheadline)
                 }
             }

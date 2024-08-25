@@ -14,6 +14,7 @@ struct BetterBallSCView: View {
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var matchStatusUpdateTrigger = false
+    @State private var scorecardUpdateTrigger = UUID()
     
     private let nameCellWidth: CGFloat = 70
     private let scoreCellWidth: CGFloat = 30
@@ -25,8 +26,8 @@ struct BetterBallSCView: View {
                 mainMatchResultSummary()
                 mainMatchView()
                 let teamA = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team A" }
-            let teamB = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team B" }
-            pressesView(teamA: teamA, teamB: teamB)
+                let teamB = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team B" }
+                pressesView(teamA: teamA, teamB: teamB)
             } else {
                 Text("Better Ball match not enabled")
             }
@@ -36,25 +37,30 @@ struct BetterBallSCView: View {
         .shadow(radius: 5)
         .padding(.horizontal, 10)
         .onChange(of: roundViewModel.betterBallMatchArray) { _ in
-            matchStatusUpdateTrigger.toggle()
+            scorecardUpdateTrigger = UUID()
         }
-        .id(matchStatusUpdateTrigger)
+        .onChange(of: roundViewModel.betterBallPressesUpdateTrigger) { _ in
+            scorecardUpdateTrigger = UUID()
+        }
+        .id(scorecardUpdateTrigger)
     }
     
     private func mainMatchResultSummary() -> some View {
-        Group {
-            if let winner = roundViewModel.betterBallMatchWinner, let score = roundViewModel.betterBallWinningScore {
-                Text("\(winner) won \(score)")
-            } else {
-                let teamA = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team A" }
-                let teamB = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team B" }
-                Text("Team A (\(teamA.map { $0.firstName }.joined(separator: "/"))) vs Team B (\(teamB.map { $0.firstName }.joined(separator: "/")))")
-            }
+    Group {
+        if let winner = roundViewModel.betterBallMatchWinner, let score = roundViewModel.betterBallWinningScore {
+            Text("\(winner) won \(score)")
+        } else if let status = roundViewModel.betterBallMatchStatus {
+            Text(status)
+        } else {
+            let teamA = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team A" }
+            let teamB = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team B" }
+            Text("Team A (\(teamA.map { $0.firstName }.joined(separator: "/"))) vs Team B (\(teamB.map { $0.firstName }.joined(separator: "/")))")
         }
-        .padding(.vertical, 8)
-        .foregroundColor(.primary)
-        .font(.headline)
     }
+    .padding(.vertical, 8)
+    .foregroundColor(.primary)
+    .font(.headline)
+}
     
     private func mainMatchView() -> some View {
         let teamA = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team A" }
@@ -208,29 +214,29 @@ private func matchStatusCell(for team: String, hole: Int, pressIndex: Int? = nil
 }
 
     private func mainMatchStatusCell(for team: String, hole: Int) -> some View {
-        let statusArray = roundViewModel.betterBallFinalMatchArray ?? roundViewModel.betterBallMatchArray
-        let winningHole = roundViewModel.betterBallMatchWinningHole
-        let relevantHolesPlayed = roundViewModel.holesPlayed
-        
-        return Group {
-            if hole <= relevantHolesPlayed {
-                if let winningHole = winningHole, hole > winningHole {
-                    Color.clear
-                } else if hole == winningHole, let winner = roundViewModel.betterBallMatchWinner, let score = roundViewModel.betterBallWinningScore, winner == "Team \(team)" {
-                    Text(BetterBallModel.formatBetterBallWinningScore(score))
-                        .font(.caption)
-                        .foregroundColor(.red)
-                } else {
-                    displayMatchStatus(for: team, hole: hole, startHole: 1, statusArray: statusArray)
-                }
-            } else {
+    let statusArray = roundViewModel.betterBallMatchArray
+    let winningHole = roundViewModel.betterBallMatchWinningHole
+    let relevantHolesPlayed = roundViewModel.currentHole
+    
+    return Group {
+        if hole <= relevantHolesPlayed {
+            if let winningHole = winningHole, hole > winningHole {
                 Color.clear
+            } else if hole == winningHole, let winner = roundViewModel.betterBallMatchWinner, let score = roundViewModel.betterBallWinningScore, winner == "Team \(team)" {
+                Text(score)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            } else {
+                displayMatchStatus(for: team, hole: hole, startHole: 1, statusArray: statusArray)
             }
+        } else {
+            Color.clear
         }
-        .frame(width: scoreCellWidth, height: scoreCellHeight)
-        .background(Color(UIColor.systemGray4))
-        .border(Color.black, width: 1)
     }
+    .frame(width: scoreCellWidth, height: scoreCellHeight)
+    .background(Color(UIColor.systemGray4))
+    .border(Color.black, width: 1)
+}
     
     private func displayMatchStatus(for team: String, hole: Int, startHole: Int, statusArray: [Int]) -> some View {
         let cumulativeStatus = statusArray[0..<(hole - startHole + 1)].reduce(0, +)
@@ -316,11 +322,10 @@ private func matchStatusCell(for team: String, hole: Int, pressIndex: Int? = nil
     let winningHole = press.winningHole
     
     // Calculate the last relevant hole for this press
-    let lastRelevantHole = (statusArray.lastIndex(where: { $0 != 0 }) ?? -1) + startHole
-    let relevantHolesPlayed = max(lastRelevantHole, roundViewModel.currentHole)
+    let lastRelevantHole = max((statusArray.lastIndex(where: { $0 != 0 }) ?? -1) + startHole, roundViewModel.currentHole)
     
     return Group {
-        if hole >= startHole && hole <= relevantHolesPlayed {
+        if hole >= startHole && hole <= lastRelevantHole {
             if let winningHole = winningHole, hole > winningHole {
                 Color.clear
             } else if hole == winningHole, let winner = press.winner, let score = press.winningScore, winner == "Team \(team)" {
@@ -338,7 +343,7 @@ private func matchStatusCell(for team: String, hole: Int, pressIndex: Int? = nil
     .frame(width: scoreCellWidth, height: scoreCellHeight)
     .background(Color(UIColor.systemGray4))
     .border(Color.black, width: 1)
-    }
+}
     
     private func scoreCellBackground(score: Int, par: Int) -> some View {
         Group {
