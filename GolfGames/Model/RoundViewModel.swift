@@ -65,6 +65,9 @@ class RoundViewModel: ObservableObject {
     @Published var betterBallFinalStatistics: [String: Int] = [:]
     @Published var betterBallStrokeHoles: [String: [Int]] = [:]
     @Published var betterBallTalliedHoles: Set<Int> = []
+    @Published var betterBallPresses: [(startHole: Int, matchStatusArray: [Int], winner: String?, winningScore: String?, winningHole: Int?)] = []
+    @Published var betterBallPressStatuses: [String] = []
+    @Published var betterBallCurrentPressStartHole: Int?
 
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
@@ -352,6 +355,32 @@ func initializeBetterBallAfterHandicapsSet() {
     func updateFinalBetterBallMatchStatus() {
         BetterBallModel.updateFinalBetterBallMatchStatus(roundViewModel: self)
     }
+
+////////////////// BETTER BALL PRESSES //////////////////
+
+func updateAllBetterBallPressStatuses(for currentHoleNumber: Int) {
+    BetterBallPressModel.updateAllBetterBallPressStatuses(roundViewModel: self, for: currentHoleNumber)
+}
+
+func calculateBetterBallPressStatus(pressIndex: Int, currentHole: Int) -> String {
+    BetterBallPressModel.calculateBetterBallPressStatus(roundViewModel: self, pressIndex: pressIndex, currentHole: currentHole)
+}
+
+func updateBetterBallPressMatchStatus(pressIndex: Int, for currentHoleNumber: Int) {
+    BetterBallPressModel.updateBetterBallPressMatchStatus(roundViewModel: self, pressIndex: pressIndex, for: currentHoleNumber)
+}
+
+func initiateBetterBallPress(atHole: Int) {
+    BetterBallPressModel.initiateBetterBallPress(roundViewModel: self, atHole: atHole)
+}
+
+func getLosingBetterBallTeam() -> String? {
+    BetterBallPressModel.getLosingTeam(roundViewModel: self)
+}
+
+func getCurrentBetterBallPressStatus() -> (leadingTeam: String?, trailingTeam: String?, score: Int)? {
+    BetterBallPressModel.getCurrentBetterBallPressStatus(roundViewModel: self)
+}
 
 ////////////////// CLEAR ROUND DATA //////////////////
 

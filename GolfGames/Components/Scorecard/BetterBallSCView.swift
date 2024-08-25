@@ -24,6 +24,9 @@ struct BetterBallSCView: View {
             if roundViewModel.isBetterBall {
                 mainMatchResultSummary()
                 mainMatchView()
+                let teamA = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team A" }
+            let teamB = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == "Team B" }
+            pressesView(teamA: teamA, teamB: teamB)
             } else {
                 Text("Better Ball match not enabled")
             }
@@ -62,17 +65,33 @@ struct BetterBallSCView: View {
             nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: false)
         }
     }
-    
-    private func nineHoleView(holes: ClosedRange<Int>, teamA: [Golfer], teamB: [Golfer], title: String, showTotal: Bool = false, showLabels: Bool = true) -> some View {
-        VStack(spacing: 0) {
-            holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, showLabel: showLabels)
-            parRow(holes: holes, showTotal: showTotal, showLabel: showLabels)
-            teamRow(for: teamA, team: "A", holes: holes, showTotal: showTotal, showLabel: showLabels)
-            matchStatusRow(for: "A", holes: holes, showTotal: showTotal, showLabel: showLabels)
-            teamRow(for: teamB, team: "B", holes: holes, showTotal: showTotal, showLabel: showLabels)
-            matchStatusRow(for: "B", holes: holes, showTotal: showTotal, showLabel: showLabels)
+
+    private func pressesView(teamA: [Golfer], teamB: [Golfer]) -> some View {
+    ForEach(roundViewModel.betterBallPresses.indices, id: \.self) { index in
+        VStack(spacing: 4) {
+            pressMatchResultSummary(pressIndex: index)
+            Text("Started at hole \(roundViewModel.betterBallPresses[index].startHole)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            HStack(spacing: 0) {
+                nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showLabels: true, pressIndex: index)
+                nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: false, pressIndex: index)
+            }
         }
+        .padding(.top, 16)
     }
+}
+    
+    private func nineHoleView(holes: ClosedRange<Int>, teamA: [Golfer], teamB: [Golfer], title: String, showTotal: Bool = false, showLabels: Bool = true, pressIndex: Int? = nil) -> some View {
+    VStack(spacing: 0) {
+        holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, showLabel: showLabels)
+        parRow(holes: holes, showTotal: showTotal, showLabel: showLabels)
+        teamRow(for: teamA, team: "A", holes: holes, showTotal: showTotal, showLabel: showLabels)
+        matchStatusRow(for: "A", holes: holes, showTotal: showTotal, showLabel: showLabels, pressIndex: pressIndex)
+        teamRow(for: teamB, team: "B", holes: holes, showTotal: showTotal, showLabel: showLabels)
+        matchStatusRow(for: "B", holes: holes, showTotal: showTotal, showLabel: showLabels, pressIndex: pressIndex)
+    }
+}
     
     private func teamRow(for team: [Golfer], team teamName: String, holes: ClosedRange<Int>, showTotal: Bool, showLabel: Bool) -> some View {
         HStack(spacing: 0) {
@@ -134,30 +153,61 @@ struct BetterBallSCView: View {
             .fontWeight(.bold)
     }
     
-    private func matchStatusRow(for team: String, holes: ClosedRange<Int>, showTotal: Bool, showLabel: Bool) -> some View {
-        HStack(spacing: 0) {
-            if showLabel {
-                Text("Match")
-                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
-                    .padding(.horizontal, 2)
-                    .background(Color(UIColor.systemGray4))
-                    .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
-                    .fontWeight(.bold)
-            }
-            ForEach(holes, id: \.self) { hole in
+    private func matchStatusRow(for team: String, holes: ClosedRange<Int>, showTotal: Bool, showLabel: Bool, pressIndex: Int? = nil) -> some View {
+    HStack(spacing: 0) {
+        if showLabel {
+            Text(pressIndex == nil ? "Match" : "Press \(pressIndex! + 1)")
+                .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
+                .padding(.horizontal, 2)
+                .background(Color(UIColor.systemGray4))
+                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                .fontWeight(.bold)
+        }
+        ForEach(holes, id: \.self) { hole in
+            if let pressIndex = pressIndex {
+                pressMatchStatusCell(for: team, hole: hole, pressIndex: pressIndex)
+            } else {
                 matchStatusCell(for: team, hole: hole)
             }
+        }
+        Color(UIColor.systemGray4)
+            .frame(width: scoreCellWidth, height: scoreCellHeight)
+        if showTotal {
             Color(UIColor.systemGray4)
                 .frame(width: scoreCellWidth, height: scoreCellHeight)
-            if showTotal {
-                Color(UIColor.systemGray4)
-                    .frame(width: scoreCellWidth, height: scoreCellHeight)
+        }
+    }
+    .font(.caption)
+}
+    private func pressMatchResultSummary(pressIndex: Int) -> some View {
+    Group {
+        let press = roundViewModel.betterBallPresses[pressIndex]
+        if let winner = press.winner, let score = press.winningScore {
+            Text("Press \(pressIndex + 1): \(winner) won \(score)")
+        } else {
+            let pressStatus = press.matchStatusArray.reduce(0, +)
+            if pressStatus == 0 {
+                Text("Press \(pressIndex + 1): All Square")
+            } else {
+                let leadingTeam = pressStatus > 0 ? "Team A" : "Team B"
+                let leadAmount = abs(pressStatus)
+                Text("Press \(pressIndex + 1): \(leadingTeam) \(leadAmount) UP")
             }
         }
-        .font(.caption)
     }
-    
-    private func matchStatusCell(for team: String, hole: Int) -> some View {
+    .font(.subheadline)
+    .foregroundColor(.primary)
+}
+
+private func matchStatusCell(for team: String, hole: Int, pressIndex: Int? = nil) -> some View {
+    if let pressIndex = pressIndex {
+        return AnyView(pressMatchStatusCell(for: team, hole: hole, pressIndex: pressIndex))
+    } else {
+        return AnyView(mainMatchStatusCell(for: team, hole: hole))
+    }
+}
+
+    private func mainMatchStatusCell(for team: String, hole: Int) -> some View {
         let statusArray = roundViewModel.betterBallFinalMatchArray ?? roundViewModel.betterBallMatchArray
         let winningHole = roundViewModel.betterBallMatchWinningHole
         let relevantHolesPlayed = roundViewModel.holesPlayed
@@ -257,6 +307,37 @@ struct BetterBallSCView: View {
         }
         .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
         .font(.caption)
+    }
+
+    private func pressMatchStatusCell(for team: String, hole: Int, pressIndex: Int) -> some View {
+    let press = roundViewModel.betterBallPresses[pressIndex]
+    let statusArray = press.matchStatusArray
+    let startHole = press.startHole
+    let winningHole = press.winningHole
+    
+    // Calculate the last relevant hole for this press
+    let lastRelevantHole = (statusArray.lastIndex(where: { $0 != 0 }) ?? -1) + startHole
+    let relevantHolesPlayed = max(lastRelevantHole, roundViewModel.currentHole)
+    
+    return Group {
+        if hole >= startHole && hole <= relevantHolesPlayed {
+            if let winningHole = winningHole, hole > winningHole {
+                Color.clear
+            } else if hole == winningHole, let winner = press.winner, let score = press.winningScore, winner == "Team \(team)" {
+                Text(BetterBallModel.formatBetterBallWinningScore(score))
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.red)
+            } else {
+                displayMatchStatus(for: team, hole: hole, startHole: startHole, statusArray: statusArray)
+            }
+        } else {
+            Color.clear
+        }
+    }
+    .frame(width: scoreCellWidth, height: scoreCellHeight)
+    .background(Color(UIColor.systemGray4))
+    .border(Color.black, width: 1)
     }
     
     private func scoreCellBackground(score: Int, par: Int) -> some View {
