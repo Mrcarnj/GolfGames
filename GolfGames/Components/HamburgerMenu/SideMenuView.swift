@@ -147,8 +147,58 @@ struct SideMenuView: View {
     
     private func discardRound() {
         print("Discarding round")
+        
+        // Clear RoundViewModel data
         roundViewModel.clearRoundData()
+        
+        // Clear additional RoundViewModel properties
+        roundViewModel.roundId = nil
+        roundViewModel.golfers = []
+        roundViewModel.selectedCourse = nil
+        roundViewModel.selectedTee = nil
+        roundViewModel.currentHole = 1
+        roundViewModel.scores = [:]
+        roundViewModel.strokeHoles = [:]
+        roundViewModel.courseHandicaps = [:]
+        
+        // Clear Match Play data
+        roundViewModel.isMatchPlay = false
+        roundViewModel.matchPlayGolfers = []
+        roundViewModel.matchPlayHandicaps = [:]
+        roundViewModel.matchPlayScores = [:]
+        roundViewModel.matchPlayHoleResults = [:]
+        roundViewModel.matchPlayStatus = nil
+        roundViewModel.matchPlayWinner = nil
+        roundViewModel.matchPlayWinningScore = nil
+        
+        // Clear Better Ball data
+        roundViewModel.isBetterBall = false
+        roundViewModel.betterBallTeamAssignments = [:]
+        roundViewModel.betterBallMatchArray = []
+        roundViewModel.betterBallMatchStatus = nil
+        roundViewModel.betterBallMatchWinner = nil
+        roundViewModel.betterBallWinningScore = nil
+        roundViewModel.betterBallHoleTallies = [:]
+        roundViewModel.betterBallTalliedHoles = []
+        roundViewModel.betterBallHoleWinners = [:]
+        roundViewModel.betterBallNetScores = [:]
+        roundViewModel.betterBallStrokeHoles = [:]
+        roundViewModel.betterBallPresses = []
+        roundViewModel.betterBallPressStatuses = []
+        roundViewModel.betterBallCurrentPressStartHole = nil
+        roundViewModel.betterBallFinalStatistics = [:]
+        
+        // Clear any other game-specific data here
+        
+        // Reset SharedViewModel if necessary
+        // Note: You might need to inject SharedViewModel into this view if it's not already available
+        // sharedViewModel.resetRoundData()
+        
+        // Navigate back to initial view
         navigateToInitialView = true
         isShowing = false
+        
+        // Force a UI update
+        roundViewModel.objectWillChange.send()
     }
 }
