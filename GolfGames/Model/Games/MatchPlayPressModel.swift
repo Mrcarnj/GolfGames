@@ -93,21 +93,24 @@ struct MatchPlayPressModel {
             }
         }
         
+        let lastHole = MatchPlayModel.getLastHole(for: roundViewModel.roundType)
+        let totalHoles = MatchPlayModel.getNumberOfHoles(for: roundViewModel.roundType)
+
         // Check if the press has been won
         let pressStatus = roundViewModel.presses[pressIndex].matchStatusArray.reduce(0, +)
-        let remainingHoles = 18 - currentHoleNumber
+        let remainingHoles = totalHoles - currentHoleNumber
         if abs(pressStatus) > remainingHoles {
             let winner = pressStatus > 0 ? golfer1.formattedName(golfers: roundViewModel.golfers) : golfer2.formattedName(golfers: roundViewModel.golfers)
             let leadAmount = abs(pressStatus)
             roundViewModel.presses[pressIndex].winner = winner
             roundViewModel.presses[pressIndex].winningScore = MatchPlayModel.formatWinningScore("\(leadAmount)&\(remainingHoles)")
             roundViewModel.presses[pressIndex].winningHole = currentHoleNumber
-        } else if currentHoleNumber == 18 && pressStatus != 0 {
-            // Handle the case where the press is won on the 18th hole
+        } else if currentHoleNumber == lastHole && pressStatus != 0 {
+            // Handle the case where the press is won on the last hole
             let winner = pressStatus > 0 ? golfer1.formattedName(golfers: roundViewModel.golfers) : golfer2.formattedName(golfers: roundViewModel.golfers)
             roundViewModel.presses[pressIndex].winner = winner
             roundViewModel.presses[pressIndex].winningScore = "1UP"
-            roundViewModel.presses[pressIndex].winningHole = 18
+            roundViewModel.presses[pressIndex].winningHole = lastHole
         }
     }
     
@@ -139,8 +142,11 @@ struct MatchPlayPressModel {
             return total + (press.matchStatusArray[hole - pressStartHole] ?? 0)
         }
         
-        let holesPlayed = currentHole - pressStartHole + 1
-        let remainingHoles = 18 - currentHole
+        let lastHole = MatchPlayModel.getLastHole(for: roundViewModel.roundType)
+        let totalHoles = MatchPlayModel.getNumberOfHoles(for: roundViewModel.roundType)
+
+        let holesPlayed = min(currentHole - pressStartHole + 1, totalHoles)
+        let remainingHoles = totalHoles - currentHole
         
         // Check if this press has already been won
         if let winner = press.winner, let winningScore = press.winningScore {
@@ -154,7 +160,7 @@ struct MatchPlayPressModel {
             roundViewModel.presses[pressIndex].winner = winner
             roundViewModel.presses[pressIndex].winningScore = winningScore
             return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
-        } else if currentHole == 18 {
+        } else if currentHole == lastHole {
             if cumulativePressScore != 0 {
                 let winner = cumulativePressScore > 0 ? player1.formattedName(golfers: roundViewModel.golfers) : player2.formattedName(golfers: roundViewModel.golfers)
                 let winningScore = "\(abs(cumulativePressScore))UP"

@@ -86,7 +86,7 @@ struct MatchPlayModel {
         // Only update if the match hasn't been finalized
         if roundViewModel.matchWinner == nil {
             // Update match status for each hole up to the current hole
-            for hole in 1...currentHoleNumber {
+            for hole in 1...min(currentHoleNumber, getLastHole(for: roundViewModel.roundType)) {
                 if let winner = roundViewModel.holeWinners[hole] {
                     if winner == player1.formattedName(golfers: roundViewModel.golfers) {
                         roundViewModel.matchStatusArray[hole - 1] = 1
@@ -101,7 +101,7 @@ struct MatchPlayModel {
                 roundViewModel.matchScore = roundViewModel.matchStatusArray[0..<hole].reduce(0, +)
                 roundViewModel.holesPlayed = hole
                 
-                let remainingHoles = 18 - roundViewModel.holesPlayed
+                let remainingHoles = getNumberOfHoles(for: roundViewModel.roundType) - roundViewModel.holesPlayed
                 
                 // Check for match win conditions
                 if abs(roundViewModel.matchScore) > remainingHoles {
@@ -111,7 +111,7 @@ struct MatchPlayModel {
                     roundViewModel.finalMatchStatusArray = roundViewModel.matchStatusArray
                     roundViewModel.matchPlayStatus = "\(roundViewModel.matchWinner!) won \(roundViewModel.winningScore!)"
                     break
-                } else if roundViewModel.holesPlayed == 18 {
+                } else if roundViewModel.holesPlayed == getLastHole(for: roundViewModel.roundType) {
                     if roundViewModel.matchScore != 0 {
                         roundViewModel.matchWinner = roundViewModel.matchScore > 0 ? player1.formattedName(golfers: roundViewModel.golfers) : player2.formattedName(golfers: roundViewModel.golfers)
                         roundViewModel.winningScore = "1UP"
@@ -121,7 +121,7 @@ struct MatchPlayModel {
                         roundViewModel.winningScore = "All Square"
                         roundViewModel.matchPlayStatus = "Match ended \(roundViewModel.winningScore!)"
                     }
-                    roundViewModel.matchWinningHole = 18
+                    roundViewModel.matchWinningHole = getLastHole(for: roundViewModel.roundType)
                     roundViewModel.finalMatchStatusArray = roundViewModel.matchStatusArray
                     break
                 }
@@ -174,9 +174,8 @@ struct MatchPlayModel {
     }
     
     static func updateFinalMatchStatus(roundViewModel: RoundViewModel) {
-        // Update main match status
-        print("Debug: MatchPlayModel updateFinalMatchStatus()")
-        updateMatchStatus(roundViewModel: roundViewModel, for: 18)
+        let lastHole = getLastHole(for: roundViewModel.roundType)
+        updateMatchStatus(roundViewModel: roundViewModel, for: lastHole)
         
         // If the main match ended with a "&0" score, update it
         if let score = roundViewModel.winningScore, score.hasSuffix("&0") {
@@ -186,7 +185,7 @@ struct MatchPlayModel {
         
         // Update and finalize all presses
         for index in roundViewModel.presses.indices {
-            MatchPlayPressModel.updatePressMatchStatus(roundViewModel: roundViewModel, pressIndex: index, for: 18)
+            MatchPlayPressModel.updatePressMatchStatus(roundViewModel: roundViewModel, pressIndex: index, for: lastHole)
             
             let press = roundViewModel.presses[index]
             let pressScore = press.matchStatusArray.reduce(0, +)
@@ -215,4 +214,21 @@ struct MatchPlayModel {
    StrokesModel.calculateGameStrokeHoles(roundViewModel: roundViewModel, golfers: matchPlayGolfers)
 }
     
+    static func getLastHole(for roundType: RoundType) -> Int {
+        switch roundType {
+        case .full18, .back9:
+            return 18
+        case .front9:
+            return 9
+        }
+    }
+
+    static func getNumberOfHoles(for roundType: RoundType) -> Int {
+        switch roundType {
+        case .full18:
+            return 18
+        case .front9, .back9:
+            return 9
+        }
+    }
 }
