@@ -52,14 +52,14 @@ struct GameSelectionView: View {
         .alert(isPresented: $showingMatchPlayInfo) {
             Alert(
                 title: Text("What is Match Play?"),
-                message: Text("Select this for 18-hole match play between 2 golfers. Match Play is a scoring format where players compete against each other hole-by-hole. The player with the lowest net score on a hole wins that hole. The match continues until one player is ahead by more holes than there are remaining to play."),
+                message: Text("Select this for match play between 2 golfers. Match Play is a scoring format where players compete against each other hole-by-hole. The player with the lowest net score on a hole wins that hole. The match continues until one player is ahead by more holes than there are remaining to play."),
                 dismissButton: .default(Text("OK"))
             )
         }
         .alert(isPresented: $showingBetterBallInfo) {
             Alert(
                 title: Text("What is Better Ball?"),
-                message: Text("Select this for 18-hole better ball between 3 or more golfers. Better Ball is a scoring format where players compete as two person teams against each other hole-by-hole. The team with the lowest net score on a hole wins that hole. The match continues until one team is ahead by more holes than there are remaining to play."),
+                message: Text("Select this for better ball between 3 or more golfers. Better Ball is a scoring format where players compete as two person teams against each other hole-by-hole. The team with the lowest net score on a hole wins that hole. The match continues until one team is ahead by more holes than there are remaining to play."),
                 dismissButton: .default(Text("OK"))
             )
         }
@@ -82,7 +82,7 @@ struct GameSelectionView: View {
                 HStack (alignment: .center) {
                     Image(systemName: "flag.fill")
                         .foregroundColor(.blue)
-                    Text("Match Play - 18 Hole Match")
+                    Text("Match Play")
                         .font(.subheadline)
                 }
             }
@@ -110,7 +110,7 @@ struct GameSelectionView: View {
                 HStack (alignment: .center) {
                     Image(systemName: "person.3.fill")
                         .foregroundColor(.green)
-                    Text("Better Ball - 18 Hole Match")
+                    Text("Better Ball")
                         .font(.subheadline)
                 }
             }

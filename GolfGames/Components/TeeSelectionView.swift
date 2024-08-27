@@ -25,6 +25,21 @@ struct TeeSelectionView: View {
 
     var body: some View {
         VStack {
+
+            Picker("Round Type", selection: $selectedRoundType) {
+            Text("18 Holes").tag(RoundType.full18)
+            Text("Front 9").tag(RoundType.front9)
+            Text("Back 9").tag(RoundType.back9)
+        }
+        .pickerStyle(SegmentedPickerStyle())
+        .padding()
+                Text("Course Handicap reflects off 18 holes. When the round begins, turn horizontal to see stroke holes for 18 or 9 holes, whichever was selected.")
+                    .multilineTextAlignment(.center)
+                    .font(.system(size: 10))
+                    .italic()
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
+                    .padding(.horizontal)
             List {
                 ForEach($sharedViewModel.golfers) { $golfer in
                     VStack(alignment: .leading) {
@@ -104,14 +119,6 @@ struct TeeSelectionView: View {
                 }
                 .padding(.horizontal)
             }
-
-            Picker("Round Type", selection: $selectedRoundType) {
-                Text("18 Holes").tag(RoundType.full18)
-                Text("Front 9").tag(RoundType.front9)
-                Text("Back 9").tag(RoundType.back9)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding()
 
             Button(action: {
                 beginRound()

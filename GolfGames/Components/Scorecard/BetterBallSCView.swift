@@ -69,18 +69,18 @@ struct BetterBallSCView: View {
         switch roundViewModel.roundType {
         case .full18:
             return AnyView(
-                HStack(spacing: 0) {
+                VStack(spacing: 0) {
                     nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showLabels: true)
-                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: false)
+                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: true)
                 }
             )
         case .front9:
             return AnyView(
-                nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showTotal: true, showLabels: true)
+                nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showTotal: false, showLabels: true)
             )
         case .back9:
             return AnyView(
-                nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: true)
+                nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: false, showLabels: true)
             )
         }
     }
@@ -102,9 +102,9 @@ struct BetterBallSCView: View {
         switch roundViewModel.roundType {
         case .full18:
             return AnyView(
-                HStack(spacing: 0) {
+                VStack(spacing: 0) {
                     nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showLabels: true, pressIndex: pressIndex)
-                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: false, pressIndex: pressIndex)
+                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: true, pressIndex: pressIndex)
                 }
             )
         case .front9:

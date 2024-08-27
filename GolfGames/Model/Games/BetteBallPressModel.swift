@@ -76,30 +76,37 @@ struct BetterBallPressModel {
     static func updateBetterBallPressMatchStatus(roundViewModel: RoundViewModel, pressIndex: Int, for currentHoleNumber: Int) {
         let press = roundViewModel.betterBallPresses[pressIndex]
         let pressStartHole = press.startHole
+        let startingHole = BetterBallModel.getStartingHole(for: roundViewModel.roundType)
         let lastHole = BetterBallModel.getLastHole(for: roundViewModel.roundType)
         
-        for hole in pressStartHole...min(currentHoleNumber, lastHole) {
+        let lowerBound = max(pressStartHole, startingHole)
+        let upperBound = min(currentHoleNumber, lastHole)
+        
+        for hole in lowerBound...upperBound {
             if let winner = roundViewModel.betterBallHoleWinners[hole] {
-                if winner == "Team A" {
-                    roundViewModel.betterBallPresses[pressIndex].matchStatusArray[hole - pressStartHole] = 1
-                } else if winner == "Team B" {
-                    roundViewModel.betterBallPresses[pressIndex].matchStatusArray[hole - pressStartHole] = -1
-                } else {
-                    roundViewModel.betterBallPresses[pressIndex].matchStatusArray[hole - pressStartHole] = 0
+                let index = hole - pressStartHole
+                if index >= 0 && index < press.matchStatusArray.count {
+                    if winner == "Team A" {
+                        roundViewModel.betterBallPresses[pressIndex].matchStatusArray[index] = 1
+                    } else if winner == "Team B" {
+                        roundViewModel.betterBallPresses[pressIndex].matchStatusArray[index] = -1
+                    } else {
+                        roundViewModel.betterBallPresses[pressIndex].matchStatusArray[index] = 0
+                    }
                 }
             }
         }
         
         // Check if the press has been won
-        let pressStatus = roundViewModel.betterBallPresses[pressIndex].matchStatusArray.reduce(0, +)
-        let remainingHoles = BetterBallModel.getNumberOfHoles(for: roundViewModel.roundType) - (currentHoleNumber - pressStartHole + 1)
+        let pressStatus = roundViewModel.betterBallPresses[pressIndex].matchStatusArray[0..<(upperBound - pressStartHole + 1)].reduce(0, +)
+        let remainingHoles = BetterBallModel.getNumberOfHoles(for: roundViewModel.roundType) - (upperBound - pressStartHole + 1)
         if abs(pressStatus) > remainingHoles {
             let winner = pressStatus > 0 ? "Team A" : "Team B"
             let leadAmount = abs(pressStatus)
             roundViewModel.betterBallPresses[pressIndex].winner = winner
             roundViewModel.betterBallPresses[pressIndex].winningScore = BetterBallModel.formatBetterBallWinningScore("\(leadAmount)&\(remainingHoles)")
-            roundViewModel.betterBallPresses[pressIndex].winningHole = currentHoleNumber
-        } else if currentHoleNumber == lastHole && pressStatus != 0 {
+            roundViewModel.betterBallPresses[pressIndex].winningHole = upperBound
+        } else if upperBound == lastHole && pressStatus != 0 {
             // Handle the case where the press is won on the last hole
             let winner = pressStatus > 0 ? "Team A" : "Team B"
             roundViewModel.betterBallPresses[pressIndex].winner = winner
@@ -132,6 +139,7 @@ struct BetterBallPressModel {
         }
         
         let press = roundViewModel.betterBallPresses[pressIndex]
+        let startingHole = BetterBallModel.getStartingHole(for: roundViewModel.roundType)
         let lastHole = BetterBallModel.getLastHole(for: roundViewModel.roundType)
         let totalHoles = BetterBallModel.getNumberOfHoles(for: roundViewModel.roundType)
         
@@ -141,13 +149,16 @@ struct BetterBallPressModel {
         }
         
         let pressStartHole = press.startHole
-        let relevantHoles = pressStartHole...min(currentHole, lastHole)
+        let lowerBound = max(pressStartHole, startingHole)
+        let upperBound = min(currentHole, lastHole)
+        let relevantHoles = lowerBound...upperBound
         
         let cumulativePressScore = relevantHoles.reduce(0) { total, hole in
-            return total + (press.matchStatusArray[hole - pressStartHole] ?? 0)
+            let index = hole - pressStartHole
+            return total + (index >= 0 && index < press.matchStatusArray.count ? press.matchStatusArray[index] : 0)
         }
         
-        let holesPlayed = min(currentHole, lastHole) - pressStartHole + 1
+        let holesPlayed = upperBound - lowerBound + 1
         let remainingHoles = totalHoles - holesPlayed
         
         // Check for press win conditions
@@ -157,7 +168,7 @@ struct BetterBallPressModel {
             roundViewModel.betterBallPresses[pressIndex].winner = winner
             roundViewModel.betterBallPresses[pressIndex].winningScore = winningScore
             return "Press \(pressIndex + 1): \(winner) won \(winningScore)"
-        } else if currentHole == lastHole {
+        } else if upperBound == lastHole {
             if cumulativePressScore != 0 {
                 let winner = cumulativePressScore > 0 ? "Team A" : "Team B"
                 let winningScore = "\(abs(cumulativePressScore))UP"

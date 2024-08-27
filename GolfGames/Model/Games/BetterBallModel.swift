@@ -102,27 +102,24 @@ struct BetterBallModel {
         roundViewModel.currentHole = currentHoleNumber
         guard roundViewModel.isBetterBall else { return }
         
+        let startingHole = getStartingHole(for: roundViewModel.roundType)
         let lastHole = getLastHole(for: roundViewModel.roundType)
         let totalHoles = getNumberOfHoles(for: roundViewModel.roundType)
         
         // Reset match status array if recalculating from the first hole
-        if currentHoleNumber == getStartingHole(for: roundViewModel.roundType) {
+        if currentHoleNumber == startingHole {
             roundViewModel.betterBallMatchArray = Array(repeating: 0, count: totalHoles)
-        }
-
-        if currentHoleNumber <= (roundViewModel.betterBallMatchWinningHole ?? lastHole) {
             roundViewModel.betterBallMatchWinner = nil
             roundViewModel.betterBallWinningScore = nil
             roundViewModel.betterBallMatchWinningHole = nil
         }
-        
-        let previousWinningHole = roundViewModel.betterBallMatchWinningHole
-        let lastHoleToUpdate = min(currentHoleNumber, previousWinningHole ?? lastHole)
+
+        let lastHoleToUpdate = min(currentHoleNumber, lastHole)
         
         // Update match status for each hole up to the last hole to update
-        for hole in getStartingHole(for: roundViewModel.roundType)...lastHoleToUpdate {
+        for hole in startingHole...lastHoleToUpdate {
             if let winner = roundViewModel.betterBallHoleWinners[hole] {
-                let index = hole - getStartingHole(for: roundViewModel.roundType)
+                let index = hole - startingHole
                 if winner == "Team A" {
                     roundViewModel.betterBallMatchArray[index] = 1
                 } else if winner == "Team B" {
@@ -133,8 +130,8 @@ struct BetterBallModel {
             }
             
             // Calculate cumulative status
-            let matchScore = roundViewModel.betterBallMatchArray[0..<(hole - getStartingHole(for: roundViewModel.roundType) + 1)].reduce(0, +)
-            let holesPlayed = hole - getStartingHole(for: roundViewModel.roundType) + 1
+            let matchScore = roundViewModel.betterBallMatchArray[0..<(hole - startingHole + 1)].reduce(0, +)
+            let holesPlayed = hole - startingHole + 1
             let remainingHoles = totalHoles - holesPlayed
             
             // Check for match win conditions
