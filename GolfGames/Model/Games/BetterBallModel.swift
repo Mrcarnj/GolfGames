@@ -11,7 +11,7 @@ struct BetterBallModel {
        // print("Debug: Better Ball Team Assignments: \(roundViewModel.betterBallTeamAssignments)")
        // print("Debug: Golfers in round: \(roundViewModel.golfers.map { "\($0.fullName) (ID: \($0.id))" })")
         
-        roundViewModel.betterBallMatchArray = Array(repeating: 0, count: 18)
+        roundViewModel.betterBallMatchArray = Array(repeating: 0, count: getNumberOfHoles(for: roundViewModel.roundType))
         roundViewModel.betterBallMatchStatus = "All Square"
         
         // Calculate Better Ball stroke holes
@@ -99,82 +99,86 @@ struct BetterBallModel {
     }
     
     static func updateBetterBallMatchStatus(roundViewModel: RoundViewModel, for currentHoleNumber: Int) {
-    roundViewModel.currentHole = currentHoleNumber
-    guard roundViewModel.isBetterBall else { return }
-    
-    // Reset match status array if recalculating from the first hole
-    if currentHoleNumber == 1 {
-        roundViewModel.betterBallMatchArray = Array(repeating: 0, count: 18)
-    }
+        roundViewModel.currentHole = currentHoleNumber
+        guard roundViewModel.isBetterBall else { return }
+        
+        let lastHole = getLastHole(for: roundViewModel.roundType)
+        let totalHoles = getNumberOfHoles(for: roundViewModel.roundType)
+        
+        // Reset match status array if recalculating from the first hole
+        if currentHoleNumber == getStartingHole(for: roundViewModel.roundType) {
+            roundViewModel.betterBallMatchArray = Array(repeating: 0, count: totalHoles)
+        }
 
-    if currentHoleNumber <= (roundViewModel.betterBallMatchWinningHole ?? 18) {
-    roundViewModel.betterBallMatchWinner = nil
-    roundViewModel.betterBallWinningScore = nil
-    roundViewModel.betterBallMatchWinningHole = nil
-}
-    
-    let previousWinningHole = roundViewModel.betterBallMatchWinningHole
-    let lastHoleToUpdate = min(currentHoleNumber, previousWinningHole ?? 18)
-    
-    // Update match status for each hole up to the last hole to update
-    for hole in 1...lastHoleToUpdate {
-        if let winner = roundViewModel.betterBallHoleWinners[hole] {
-            if winner == "Team A" {
-                roundViewModel.betterBallMatchArray[hole - 1] = 1
-            } else if winner == "Team B" {
-                roundViewModel.betterBallMatchArray[hole - 1] = -1
-            } else {
-                roundViewModel.betterBallMatchArray[hole - 1] = 0
-            }
+        if currentHoleNumber <= (roundViewModel.betterBallMatchWinningHole ?? lastHole) {
+            roundViewModel.betterBallMatchWinner = nil
+            roundViewModel.betterBallWinningScore = nil
+            roundViewModel.betterBallMatchWinningHole = nil
         }
         
-        // Calculate cumulative status
-        let matchScore = roundViewModel.betterBallMatchArray[0..<hole].reduce(0, +)
-        let holesPlayed = hole
-        let remainingHoles = 18 - holesPlayed
+        let previousWinningHole = roundViewModel.betterBallMatchWinningHole
+        let lastHoleToUpdate = min(currentHoleNumber, previousWinningHole ?? lastHole)
         
-        // Check for match win conditions
-        if abs(matchScore) > remainingHoles {
-            roundViewModel.betterBallMatchWinner = matchScore > 0 ? "Team A" : "Team B"
-            roundViewModel.betterBallWinningScore = formatBetterBallWinningScore("\(abs(matchScore))&\(remainingHoles)")
-            roundViewModel.betterBallMatchWinningHole = hole
-            roundViewModel.betterBallMatchStatus = "\(roundViewModel.betterBallMatchWinner!) won \(roundViewModel.betterBallWinningScore!)"
-            break
-        } else if hole == 18 {
-            if matchScore != 0 {
-                roundViewModel.betterBallMatchWinner = matchScore > 0 ? "Team A" : "Team B"
-                roundViewModel.betterBallWinningScore = "1UP"
-                roundViewModel.betterBallMatchStatus = "\(roundViewModel.betterBallMatchWinner!) won \(roundViewModel.betterBallWinningScore!)"
-            } else {
-                roundViewModel.betterBallMatchWinner = "Tie"
-                roundViewModel.betterBallWinningScore = "All Square"
-                roundViewModel.betterBallMatchStatus = "Match ended All Square"
-            }
-            roundViewModel.betterBallMatchWinningHole = 18
-        } else {
-            // Update betterBallMatchStatus string
-            if matchScore == 0 {
-                roundViewModel.betterBallMatchStatus = "All Square thru \(holesPlayed)"
-            } else {
-                let leadingTeam = matchScore > 0 ? "Team A" : "Team B"
-                let absScore = abs(matchScore)
-                if absScore == remainingHoles {
-                    roundViewModel.betterBallMatchStatus = "\(leadingTeam) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+        // Update match status for each hole up to the last hole to update
+        for hole in getStartingHole(for: roundViewModel.roundType)...lastHoleToUpdate {
+            if let winner = roundViewModel.betterBallHoleWinners[hole] {
+                let index = hole - getStartingHole(for: roundViewModel.roundType)
+                if winner == "Team A" {
+                    roundViewModel.betterBallMatchArray[index] = 1
+                } else if winner == "Team B" {
+                    roundViewModel.betterBallMatchArray[index] = -1
                 } else {
-                    roundViewModel.betterBallMatchStatus = "\(leadingTeam) \(absScore)UP thru \(holesPlayed)"
+                    roundViewModel.betterBallMatchArray[index] = 0
+                }
+            }
+            
+            // Calculate cumulative status
+            let matchScore = roundViewModel.betterBallMatchArray[0..<(hole - getStartingHole(for: roundViewModel.roundType) + 1)].reduce(0, +)
+            let holesPlayed = hole - getStartingHole(for: roundViewModel.roundType) + 1
+            let remainingHoles = totalHoles - holesPlayed
+            
+            // Check for match win conditions
+            if abs(matchScore) > remainingHoles {
+                roundViewModel.betterBallMatchWinner = matchScore > 0 ? "Team A" : "Team B"
+                roundViewModel.betterBallWinningScore = formatBetterBallWinningScore("\(abs(matchScore))&\(remainingHoles)")
+                roundViewModel.betterBallMatchWinningHole = hole
+                roundViewModel.betterBallMatchStatus = "\(roundViewModel.betterBallMatchWinner!) won \(roundViewModel.betterBallWinningScore!)"
+                break
+            } else if hole == lastHole {
+                if matchScore != 0 {
+                    roundViewModel.betterBallMatchWinner = matchScore > 0 ? "Team A" : "Team B"
+                    roundViewModel.betterBallWinningScore = "1UP"
+                    roundViewModel.betterBallMatchStatus = "\(roundViewModel.betterBallMatchWinner!) won \(roundViewModel.betterBallWinningScore!)"
+                } else {
+                    roundViewModel.betterBallMatchWinner = "Tie"
+                    roundViewModel.betterBallWinningScore = "All Square"
+                    roundViewModel.betterBallMatchStatus = "Match ended All Square"
+                }
+                roundViewModel.betterBallMatchWinningHole = lastHole
+            } else {
+                // Update betterBallMatchStatus string
+                if matchScore == 0 {
+                    roundViewModel.betterBallMatchStatus = "All Square thru \(holesPlayed)"
+                } else {
+                    let leadingTeam = matchScore > 0 ? "Team A" : "Team B"
+                    let absScore = abs(matchScore)
+                    if absScore == remainingHoles {
+                        roundViewModel.betterBallMatchStatus = "\(leadingTeam) \(absScore)UP with \(remainingHoles) to play (Dormie)"
+                    } else {
+                        roundViewModel.betterBallMatchStatus = "\(leadingTeam) \(absScore)UP thru \(holesPlayed)"
+                    }
                 }
             }
         }
+        
+        // Update press statuses
+        BetterBallPressModel.updateAllBetterBallPressStatuses(roundViewModel: roundViewModel, for: currentHoleNumber)
+        
+        print("Debug: BetterBallModel updateBetterBallMatchStatus() - Updated match status for hole \(currentHoleNumber): \(roundViewModel.betterBallMatchArray)")
+        print("Better Ball Match Status: \(roundViewModel.betterBallMatchStatus ?? "N/A")")
+        
+        roundViewModel.objectWillChange.send()
     }
-    
-    // Update press statuses
-    BetterBallPressModel.updateAllBetterBallPressStatuses(roundViewModel: roundViewModel, for: currentHoleNumber)
-    
-    print("Debug: BetterBallModel updateBetterBallMatchStatus() - Updated match status for hole \(currentHoleNumber): \(roundViewModel.betterBallMatchArray)")
-    print("Better Ball Match Status: \(roundViewModel.betterBallMatchStatus ?? "N/A")")
-    
-    roundViewModel.objectWillChange.send()
-}
     
     static func recalculateBetterBallTallies(roundViewModel: RoundViewModel, upToHole: Int) {
     // print("Debug: Entering recalculateBetterBallTallies for hole \(upToHole)")
@@ -186,9 +190,9 @@ struct BetterBallModel {
     
     roundViewModel.betterBallHoleTallies = [:]
     roundViewModel.betterBallTalliedHoles = []
-    roundViewModel.betterBallMatchArray = Array(repeating: 0, count: 18)
+    roundViewModel.betterBallMatchArray = Array(repeating: 0, count: getNumberOfHoles(for: roundViewModel.roundType))
     
-    for holeNumber in 1...upToHole {
+    for holeNumber in getStartingHole(for: roundViewModel.roundType)...upToHole {
        // print("Debug: Updating tallies for hole \(holeNumber)")
         updateBetterBallTallies(roundViewModel: roundViewModel, for: holeNumber)
         updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: upToHole)
@@ -203,7 +207,7 @@ struct BetterBallModel {
     static func updateFinalBetterBallMatchStatus(roundViewModel: RoundViewModel) {
         // Update main Better Ball match status
         print("Debug: BetterBallModel updateFinalBetterBallMatchStatus()")
-        updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: 18)
+        updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: getLastHole(for: roundViewModel.roundType))
         
         // If the main match ended with a "&0" score, update it
         if let score = roundViewModel.betterBallWinningScore, score.hasSuffix("&0") {
@@ -240,7 +244,7 @@ struct BetterBallModel {
         return score
     }
     static func resetBetterBallTallyForHole(roundViewModel: RoundViewModel, holeNumber: Int) {
-        roundViewModel.betterBallMatchArray[holeNumber - 1] = 0
+        roundViewModel.betterBallMatchArray[holeNumber - getStartingHole(for: roundViewModel.roundType)] = 0
         roundViewModel.betterBallHoleWinners[holeNumber] = nil
     }
     
@@ -271,4 +275,31 @@ struct BetterBallModel {
    // print("Debug: calculateTeamScore for hole \(holeNumber), team scores: \(scores)")
     return scores.min()
 }
+
+    static func getLastHole(for roundType: RoundType) -> Int {
+        switch roundType {
+        case .full18, .back9:
+            return 18
+        case .front9:
+            return 9
+        }
+    }
+
+    static func getNumberOfHoles(for roundType: RoundType) -> Int {
+        switch roundType {
+        case .full18:
+            return 18
+        case .front9, .back9:
+            return 9
+        }
+    }
+
+    static func getStartingHole(for roundType: RoundType) -> Int {
+        switch roundType {
+        case .full18, .front9:
+            return 1
+        case .back9:
+            return 10
+        }
+    }
 }

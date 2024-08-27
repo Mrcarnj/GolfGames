@@ -74,9 +74,12 @@ struct MatchPlayModel {
         roundViewModel.currentHole = currentHoleNumber
         guard roundViewModel.isMatchPlay, let (player1, player2) = roundViewModel.matchPlayGolfers else { return }
         
-        // Reset match status array if recalculating from an earlier hole
-        if currentHoleNumber == 1 {
-            roundViewModel.matchStatusArray = Array(repeating: 0, count: 18)
+        let startingHole = getStartingHole(for: roundViewModel.roundType)
+        let lastHole = getLastHole(for: roundViewModel.roundType)
+        
+        // Reset match status array if recalculating from the first hole of the round
+        if currentHoleNumber == startingHole {
+            roundViewModel.matchStatusArray = Array(repeating: 0, count: getNumberOfHoles(for: roundViewModel.roundType))
             roundViewModel.matchWinner = nil
             roundViewModel.winningScore = nil
             roundViewModel.matchWinningHole = nil
@@ -85,21 +88,25 @@ struct MatchPlayModel {
         
         // Only update if the match hasn't been finalized
         if roundViewModel.matchWinner == nil {
+            // Determine the range of holes to update
+            let holeRange = max(startingHole, min(currentHoleNumber, lastHole))
+            
             // Update match status for each hole up to the current hole
-            for hole in 1...min(currentHoleNumber, getLastHole(for: roundViewModel.roundType)) {
+            for hole in startingHole...holeRange {
                 if let winner = roundViewModel.holeWinners[hole] {
+                    let index = hole - startingHole
                     if winner == player1.formattedName(golfers: roundViewModel.golfers) {
-                        roundViewModel.matchStatusArray[hole - 1] = 1
+                        roundViewModel.matchStatusArray[index] = 1
                     } else if winner == player2.formattedName(golfers: roundViewModel.golfers) {
-                        roundViewModel.matchStatusArray[hole - 1] = -1
+                        roundViewModel.matchStatusArray[index] = -1
                     } else {
-                        roundViewModel.matchStatusArray[hole - 1] = 0
+                        roundViewModel.matchStatusArray[index] = 0
                     }
                 }
                 
                 // Calculate cumulative status
-                roundViewModel.matchScore = roundViewModel.matchStatusArray[0..<hole].reduce(0, +)
-                roundViewModel.holesPlayed = hole
+                roundViewModel.matchScore = roundViewModel.matchStatusArray[0..<(hole - startingHole + 1)].reduce(0, +)
+                roundViewModel.holesPlayed = hole - startingHole + 1
                 
                 let remainingHoles = getNumberOfHoles(for: roundViewModel.roundType) - roundViewModel.holesPlayed
                 
@@ -111,7 +118,7 @@ struct MatchPlayModel {
                     roundViewModel.finalMatchStatusArray = roundViewModel.matchStatusArray
                     roundViewModel.matchPlayStatus = "\(roundViewModel.matchWinner!) won \(roundViewModel.winningScore!)"
                     break
-                } else if roundViewModel.holesPlayed == getLastHole(for: roundViewModel.roundType) {
+                } else if hole == lastHole {
                     if roundViewModel.matchScore != 0 {
                         roundViewModel.matchWinner = roundViewModel.matchScore > 0 ? player1.formattedName(golfers: roundViewModel.golfers) : player2.formattedName(golfers: roundViewModel.golfers)
                         roundViewModel.winningScore = "1UP"
@@ -121,7 +128,7 @@ struct MatchPlayModel {
                         roundViewModel.winningScore = "All Square"
                         roundViewModel.matchPlayStatus = "Match ended \(roundViewModel.winningScore!)"
                     }
-                    roundViewModel.matchWinningHole = getLastHole(for: roundViewModel.roundType)
+                    roundViewModel.matchWinningHole = lastHole
                     roundViewModel.finalMatchStatusArray = roundViewModel.matchStatusArray
                     break
                 }
@@ -229,6 +236,15 @@ struct MatchPlayModel {
             return 18
         case .front9, .back9:
             return 9
+        }
+    }
+
+    static func getStartingHole(for roundType: RoundType) -> Int {
+        switch roundType {
+        case .full18, .front9:
+            return 1
+        case .back9:
+            return 10
         }
     }
 }
