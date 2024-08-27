@@ -41,21 +41,18 @@ struct BetterBallModel {
         var teamB: [Golfer] = []
         
         for golfer in roundViewModel.golfers {
-            //print("Debug: getTeams - Processing golfer: \(golfer.fullName), ID: \(golfer.id)")
             if let assignment = roundViewModel.betterBallTeamAssignments[golfer.id] {
                 if assignment == "Team A" {
                     teamA.append(golfer)
-                    //print("Debug: getTeams - Added \(golfer.fullName) to Team A")
                 } else if assignment == "Team B" {
                     teamB.append(golfer)
-                   // print("Debug: getTeams - Added \(golfer.fullName) to Team B")
                 }
             } else {
                 print("Debug: getTeams - No assignment found for golfer: \(golfer.fullName)")
             }
         }
         
-       // print("Debug: getTeams - Team A count: \(teamA.count), Team B count: \(teamB.count)")
+        // Allow for uneven teams, but ensure each team has at least one player
         return (!teamA.isEmpty && !teamB.isEmpty) ? (teamA, teamB) : nil
     }
     
@@ -268,10 +265,9 @@ struct BetterBallModel {
     }
     
     private static func calculateTeamScore(roundViewModel: RoundViewModel, team: [Golfer], for holeNumber: Int) -> Int? {
-    let scores = team.compactMap { roundViewModel.betterBallNetScores[holeNumber]?[$0.id] }
-   // print("Debug: calculateTeamScore for hole \(holeNumber), team scores: \(scores)")
-    return scores.min()
-}
+        let scores = team.compactMap { roundViewModel.betterBallNetScores[holeNumber]?[$0.id] }
+        return scores.min()  // This already handles teams of any size
+    }
 
     static func getLastHole(for roundType: RoundType) -> Int {
         switch roundType {

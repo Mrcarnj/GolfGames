@@ -86,7 +86,7 @@ struct ProfileView: View {
                         
                         Spacer()
                         
-                        Text("2.3.5")
+                        Text("2.4.1")
                             .font(.subheadline)
                             .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
                     }

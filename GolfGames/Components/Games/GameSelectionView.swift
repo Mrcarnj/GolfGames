@@ -278,10 +278,20 @@ struct GameSelectionView: View {
             .cornerRadius(10)
             .font(.headline)
     }
-    .disabled((sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) || (isBetterBall && (betterBallTeamAssignments.values.filter { $0 == "Team A" }.count != 2 ||
-                            betterBallTeamAssignments.values.filter { $0 == "Team B" }.count != 2)))
+    .disabled(isBeginRoundDisabled())
 }
-    
+
+private func isBeginRoundDisabled() -> Bool {
+    if sharedViewModel.isMatchPlay {
+        return selectedMatchPlayGolfers.count != 2
+    } else if isBetterBall {
+        let teamACount = betterBallTeamAssignments.values.filter { $0 == "Team A" }.count
+        let teamBCount = betterBallTeamAssignments.values.filter { $0 == "Team B" }.count
+        return teamACount == 0 || teamBCount == 0 || teamACount + teamBCount < 2
+    }
+    return true
+}
+
     private func initializeSelectedGolfers() {
         if sharedViewModel.golfers.count >= 2 {
             selectedMatchPlayGolfers = Array(sharedViewModel.golfers.prefix(2))
