@@ -15,6 +15,7 @@ struct TeeSelectionView: View {
     @State private var navigateToRoundView = false
     @State private var currentHoleIndex = 0
     @State private var showGameSelection = false
+    @State private var selectedRoundType: RoundType = .full18
 
     var allTeesSelected: Bool {
         sharedViewModel.golfers.allSatisfy { golfer in
@@ -104,6 +105,14 @@ struct TeeSelectionView: View {
                 .padding(.horizontal)
             }
 
+            Picker("Round Type", selection: $selectedRoundType) {
+                Text("18 Holes").tag(RoundType.full18)
+                Text("Front 9").tag(RoundType.front9)
+                Text("Back 9").tag(RoundType.back9)
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding()
+
             Button(action: {
                 beginRound()
             }) {
@@ -121,7 +130,8 @@ struct TeeSelectionView: View {
             NavigationLink(
                 destination: HoleView(
                     teeId: roundViewModel.selectedTee?.id ?? "",
-                    holeNumber: 1
+                    holeNumber: roundViewModel.getStartingHoleNumber(),
+                    roundType: roundViewModel.roundType
                 )
                 .environmentObject(authViewModel)
                 .environmentObject(roundViewModel)
@@ -141,6 +151,9 @@ struct TeeSelectionView: View {
         .onAppear {
             setDefaultTees()
            // print("Default tees set: \(sharedViewModel.golfers.map { "\($0.fullName) (Tee: \($0.tee?.tee_name ?? "N/A"), CH: \($0.playingHandicap ?? 0))" })")
+        }
+        .onChange(of: selectedRoundType) { newValue in
+            roundViewModel.roundType = newValue
         }
     }
 

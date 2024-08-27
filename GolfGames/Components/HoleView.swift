@@ -20,7 +20,7 @@ struct HoleView: View {
     @State private var navigateToFriendsList = false
     
     let teeId: String
-    let initialHoleIndex: Int
+    let roundType: RoundType
     
     @State private var currentHoleIndex: Int
     @State private var scoreInputs: [String: String] = [:]
@@ -38,17 +38,38 @@ struct HoleView: View {
     @State private var showingPressConfirmation = false
     @State private var scoresChecked = false
     
-    init(teeId: String, holeNumber: Int) {
+    private var startingHoleIndex: Int {
+        switch roundType {
+        case .full18, .front9:
+            return 0
+        case .back9:
+            return 9
+        }
+    }
+
+    private var endingHoleIndex: Int {
+        switch roundType {
+        case .full18:
+            return 17
+        case .front9:
+            return 8
+        case .back9:
+            return 17
+        }
+    }
+    
+    init(teeId: String, holeNumber: Int, roundType: RoundType) {
         self.teeId = teeId
-        self.initialHoleIndex = holeNumber - 1
-        self._currentHoleIndex = State(initialValue: holeNumber - 1)
+        self.roundType = roundType
+        let initialHole = holeNumber ?? (roundType == .back9 ? 10 : 1)
+        self._currentHoleIndex = State(initialValue: initialHole - 1)
         self._scoreInputs = State(initialValue: [:])
         self._showMissingScores = State(initialValue: false)
         self._missingScores = State(initialValue: [:])
         self._holesLoaded = State(initialValue: false)
         self._orientation = State(initialValue: .unknown)
         self._scores = State(initialValue: [:])
-        self._currentHole = State(initialValue: holeNumber)
+        self._currentHole = State(initialValue: initialHole)
     }
     
     var hole: Hole? {
@@ -57,6 +78,7 @@ struct HoleView: View {
         }
         return singleRoundViewModel.holes[currentHoleIndex]
     }
+
     
     var body: some View {
         GeometryReader { geometry in
@@ -196,7 +218,7 @@ struct HoleView: View {
     
     private var holeNavigation: some View {
         HStack {
-            if currentHoleIndex > 0 {
+            if currentHoleIndex > startingHoleIndex {
                 Button(action: {
                     currentHoleIndex -= 1
                     updateScoresForCurrentHole()
@@ -212,7 +234,7 @@ struct HoleView: View {
             
             Spacer()
             
-            if currentHoleIndex < singleRoundViewModel.holes.count - 1 {
+            if currentHoleIndex < endingHoleIndex {
                 Button(action: {
                     if roundViewModel.isMatchPlay {
                         MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
@@ -227,7 +249,6 @@ struct HoleView: View {
                     }
                     
                     if roundViewModel.isBetterBall {
-                       // print("Debug: Calling recalculateBetterBallTallies from HoleView")
                         BetterBallModel.recalculateBetterBallTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
                         BetterBallModel.updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
                         
@@ -353,7 +374,7 @@ struct HoleView: View {
     
     private var checkScoresButton: some View {
         Group {
-            if currentHoleIndex == 17 && roundViewModel.allScoresEntered(for: currentHoleIndex + 1) {
+            if currentHoleIndex == endingHoleIndex && roundViewModel.allScoresEntered(for: currentHoleIndex + 1) {
                 Button("Check For Missing Scores") {
                     checkScores()
                     scoresChecked = true
@@ -464,19 +485,19 @@ struct HoleView: View {
         DragGesture()
             .onEnded { gesture in
                 let threshold: CGFloat = 50
-                if gesture.translation.width > threshold && currentHoleIndex > 0 {
+                if gesture.translation.width > threshold && currentHoleIndex > startingHoleIndex {
                     currentHoleIndex -= 1
                     updateScoresForCurrentHole()
-                } else if gesture.translation.width < -threshold && currentHoleIndex < singleRoundViewModel.holes.count - 1 {
+                } else if gesture.translation.width < -threshold && currentHoleIndex < endingHoleIndex {
                     if roundViewModel.isMatchPlay {
                         MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
                         MatchPlayModel.updateMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
                     }
                     if roundViewModel.isBetterBall {
-                        //print("Debug: Calling recalculateBetterBallTallies from HoleView")
                         BetterBallModel.recalculateBetterBallTallies(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
                         BetterBallModel.updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: currentHoleIndex + 1)
                     }
+                    
                     currentHoleIndex += 1
                     updateScoresForCurrentHole()
                 }
@@ -555,12 +576,27 @@ struct HoleView: View {
         private func checkScores() {
             showMissingScores = true
             for golfer in roundViewModel.golfers {
-                missingScores[golfer.id] = roundViewModel.getMissingScores(for: golfer.id)
+                missingScores[golfer.id] = getMissingScoresForRoundType(golferId: golfer.id)
             }
             
             // If there are no missing scores, update the final match status
             if missingScores.values.allSatisfy({ $0.isEmpty }) {
-                MatchPlayModel.updateFinalMatchStatus(roundViewModel: roundViewModel)
+                if roundViewModel.isMatchPlay {
+                    MatchPlayModel.updateFinalMatchStatus(roundViewModel: roundViewModel)
+                } else if roundViewModel.isBetterBall {
+                    BetterBallModel.updateFinalBetterBallMatchStatus(roundViewModel: roundViewModel)
+                }
+            }
+        }
+        
+        private func getMissingScoresForRoundType(golferId: String) -> [Int] {
+            switch roundViewModel.roundType {
+            case .full18:
+                return roundViewModel.getMissingScores(for: golferId)
+            case .front9:
+                return roundViewModel.getMissingScores(for: golferId).filter { $0 <= 9 }
+            case .back9:
+                return roundViewModel.getMissingScores(for: golferId).filter { $0 > 9 }
             }
         }
         
@@ -611,7 +647,7 @@ struct HoleView: View {
     
     struct HoleView_Previews: PreviewProvider {
         static var previews: some View {
-            HoleView(teeId: "mockTeeId", holeNumber: 1)
+            HoleView(teeId: "mockTeeId", holeNumber: 1, roundType: .full18)
                 .environmentObject(AuthViewModel(mockUser: User.MOCK_USER))
                 .environmentObject(RoundViewModel())
                 .environmentObject(SingleRoundViewModel())

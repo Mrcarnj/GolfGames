@@ -24,8 +24,15 @@ struct LandscapeStrokePlayScorecardView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                nineHoleView(holes: 1...9, title: "Out", showFirstColumn: true)
-                nineHoleView(holes: 10...18, title: "In", showTotal: true, showFirstColumn: false)
+                switch roundViewModel.roundType {
+                case .full18:
+                    nineHoleView(holes: 1...9, title: "Out", showFirstColumn: true)
+                    nineHoleView(holes: 10...18, title: "In", showTotal: true, showFirstColumn: false)
+                case .front9:
+                    nineHoleView(holes: 1...9, title: "Out", showTotal: false, showFirstColumn: true)
+                case .back9:
+                    nineHoleView(holes: 10...18, title: "In", showTotal: false, showFirstColumn: true)
+                }
             }
         }
         .background(colorScheme == .light ? Color.white : Color.black)
@@ -120,7 +127,7 @@ struct LandscapeStrokePlayScorecardView: View {
                 .background(Color(UIColor.systemGray4))
                 .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
                 .fontWeight(.bold)
-            if showTotal {
+            if showTotal && roundViewModel.roundType == .full18 {
                 let grandTotal = singleRoundViewModel.holes.reduce(0) { total, hole in
                     total + (isGross ? roundViewModel.grossScores[hole.holeNumber]?[golfer.id] ?? 0 : roundViewModel.netStrokePlayScores[hole.holeNumber]?[golfer.id] ?? 0)
                 }

@@ -15,12 +15,19 @@ struct Round: Identifiable, Codable {
     var teeName: String
     var golfers: [Golfer]
     var date: Date
+    var roundType: RoundType
     
     struct Golfer: Identifiable, Codable {
         var id: String
         var fullName: String
         var handicap: Float
     }
+}
+
+enum RoundType: String, Codable {
+    case full18
+    case front9
+    case back9
 }
 
 

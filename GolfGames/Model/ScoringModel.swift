@@ -62,9 +62,12 @@ struct ScoringModel {
     
     static func checkScores(roundViewModel: RoundViewModel) -> [String: [Int]] {
         var missingScores: [String: [Int]] = [:]
-        for golfer in roundViewModel.golfers {
-            missingScores[golfer.id] = roundViewModel.getMissingScores(for: golfer.id)
+    let holeRange = roundViewModel.roundType == .back9 ? 10...18 : 1...(roundViewModel.roundType == .front9 ? 9 : 18)
+    for golfer in roundViewModel.golfers {
+        missingScores[golfer.id] = holeRange.filter { hole in
+            roundViewModel.grossScores[hole]?[golfer.id] == nil
         }
+    }
         
         // If there are no missing scores, update the final match status
         if missingScores.values.allSatisfy({ $0.isEmpty }) {

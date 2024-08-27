@@ -25,6 +25,7 @@ class RoundViewModel: ObservableObject {
     @Published var golfers: [Golfer] = []
     @Published var currentHole: Int = 1 // Track the current hole
     @Published var holes: [String: [Hole]] = [:] // Dictionary with teeId as key and array of Holes as value
+    @Published var roundType: RoundType = .full18
     @Published var matchPlayStatus: String?
     @Published var isMatchPlay: Bool = false // Track whether it's a match play game
     @Published var matchPlayStrokeHoles: [String: [Int]] = [:]
@@ -98,7 +99,8 @@ class RoundViewModel: ObservableObject {
             courseName: course.name,
             teeName: tee.tee_name,
             golfers: roundGolfers,
-            date: Date()
+            date: Date(),
+            roundType: self.roundType
         )
         
         if isMatchPlay && golfers.count >= 2 {
@@ -133,6 +135,9 @@ class RoundViewModel: ObservableObject {
         holeWinners = [:]
         holeTallies = [:]
         talliedHoles = []
+        
+        // Initialize currentHoleIndex based on roundType
+        self.currentHole = (self.roundType == .back9) ? 10 : 1
     }
     
     func fetchPars(for courseId: String, teeId: String, user: User, completion: @escaping ([Int: Int]) -> Void) {
@@ -254,6 +259,11 @@ func calculateStrokePlayStrokeHoles(holes: [Hole]) {
     
     func updateScore(for hole: Int, golferId: String, score: Int) {
         ScoringModel.updateScore(roundViewModel: self, for: hole, golferId: golferId, score: score)
+        
+        let lastHole = (roundType == .front9) ? 9 : 18
+        if hole == lastHole {
+            updateFinalMatchStatus()
+        }
     }
     
 ////////////////// MATCH PLAY //////////////////
@@ -413,12 +423,23 @@ func clearRoundData() {
         print("Number of presses after clearing: \(presses.count)")
         print("Number of press statuses after clearing: \(pressStatuses.count)")
         
+        roundType = .full18
+        
         objectWillChange.send()
     }
 
     func forceUIUpdate() {
         objectWillChange.send()
     }
+
+    func getStartingHoleNumber() -> Int {
+    switch roundType {
+    case .full18, .front9:
+        return 1
+    case .back9:
+        return 10
+    }
+}
 }
 
 extension RoundViewModel {
