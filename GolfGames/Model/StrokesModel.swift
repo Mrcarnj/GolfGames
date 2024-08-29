@@ -82,4 +82,23 @@ static func calculateBetterBallStrokeHoles(roundViewModel: RoundViewModel, golfe
     
     print("Debug StrokesModel: Better Ball Stroke Holes - \(golfer.fullName): \(roundViewModel.betterBallStrokeHoles[golfer.id] ?? [])")
 }
+
+static func calculateNinePointStrokeHoles(roundViewModel: RoundViewModel) {
+    let golfers = roundViewModel.golfers
+    let lowestHandicapPlayer = golfers.min { roundViewModel.courseHandicaps[$0.id] ?? 0 < roundViewModel.courseHandicaps[$1.id] ?? 0 }
+    let lowestHandicap = roundViewModel.courseHandicaps[lowestHandicapPlayer?.id ?? ""] ?? 0
+    
+    for player in golfers {
+        let playerHandicap = roundViewModel.courseHandicaps[player.id] ?? 0
+        let ninePointHandicap = max(0, playerHandicap - lowestHandicap)
+        
+        if let playerStrokeHoles = roundViewModel.strokeHoles[player.id] {
+            roundViewModel.ninePointStrokeHoles[player.id] = Array(playerStrokeHoles.prefix(ninePointHandicap))
+        } else {
+            roundViewModel.ninePointStrokeHoles[player.id] = []
+        }
+        
+        print("Debug: Nine Point Stroke Holes for \(player.fullName): \(roundViewModel.ninePointStrokeHoles[player.id] ?? [])")
+    }
+}
 }

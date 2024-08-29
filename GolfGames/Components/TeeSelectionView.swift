@@ -25,21 +25,14 @@ struct TeeSelectionView: View {
 
     var body: some View {
         VStack {
-
             Picker("Round Type", selection: $selectedRoundType) {
-            Text("18 Holes").tag(RoundType.full18)
-            Text("Front 9").tag(RoundType.front9)
-            Text("Back 9").tag(RoundType.back9)
-        }
-        .pickerStyle(SegmentedPickerStyle())
-        .padding()
-                Text("Course Handicap reflects off 18 holes. When the round begins, turn horizontal to see stroke holes for 18 or 9 holes, whichever was selected.")
-                    .multilineTextAlignment(.center)
-                    .font(.system(size: 10))
-                    .italic()
-                    .foregroundColor(.secondary)
-                    .padding(.bottom)
-                    .padding(.horizontal)
+                Text("18 Holes").tag(RoundType.full18)
+                Text("Front 9").tag(RoundType.front9)
+                Text("Back 9").tag(RoundType.back9)
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding()
+            
             List {
                 ForEach($sharedViewModel.golfers) { $golfer in
                     VStack(alignment: .leading) {
@@ -164,6 +157,42 @@ struct TeeSelectionView: View {
         }
     }
 
+    private func beginRound() {
+        // Update RoundViewModel with the latest golfer information
+        roundViewModel.golfers = sharedViewModel.golfers
+        roundViewModel.selectedCourse = sharedViewModel.selectedCourse
+        roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
+        roundViewModel.isNinePoint = roundViewModel.isNinePoint // Make sure this is set
+        
+        // Ensure all golfers have course handicaps and tees set
+        for (index, golfer) in roundViewModel.golfers.enumerated() {
+            if let teeId = sharedViewModel.golferTeeSelections[golfer.id],
+               let tee = singleRoundViewModel.tees.first(where: { $0.id == teeId }) {
+                let courseHandicap = HandicapCalculator.calculateCourseHandicap(
+                    handicapIndex: golfer.handicap,
+                    slopeRating: tee.slope_rating,
+                    courseRating: tee.course_rating,
+                    par: tee.course_par
+                )
+                roundViewModel.golfers[index].tee = tee
+                roundViewModel.golfers[index].courseHandicap = courseHandicap
+                roundViewModel.courseHandicaps[golfer.id] = courseHandicap
+                
+                print("Debug TeeSelectionView: Set course handicap for \(golfer.fullName): \(courseHandicap)")
+            } else {
+                print("Warning: No tee selected for golfer \(golfer.fullName)")
+            }
+        }
+        
+        if let firstGolfer = roundViewModel.golfers.first,
+           let firstGolferTee = firstGolfer.tee {
+            roundViewModel.selectedTee = firstGolferTee
+        }
+        
+        // Calculate stroke holes for all game types
+        loadHolesData()
+    }
+
     private func loadHolesData() {
         guard let courseId = sharedViewModel.selectedCourse?.id else { return }
         
@@ -209,6 +238,12 @@ struct TeeSelectionView: View {
         if sharedViewModel.isMatchPlay {
             StrokesModel.calculateGameStrokeHoles(roundViewModel: roundViewModel, golfers: roundViewModel.golfers)
         }
+        
+        if roundViewModel.isNinePoint {
+            StrokesModel.calculateNinePointStrokeHoles(roundViewModel: roundViewModel)
+        }
+        
+        roundViewModel.initializeBetterBallAfterHandicapsSet()
     }
 
     private func createRound() {
@@ -256,40 +291,6 @@ struct TeeSelectionView: View {
         sharedViewModel.objectWillChange.send()
     }
     
-    private func beginRound() {
-        // Update RoundViewModel with the latest golfer information
-        roundViewModel.golfers = sharedViewModel.golfers
-        roundViewModel.selectedCourse = sharedViewModel.selectedCourse
-        roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
-        
-        // Ensure all golfers have course handicaps and tees set
-        for (index, golfer) in roundViewModel.golfers.enumerated() {
-            if let teeId = sharedViewModel.golferTeeSelections[golfer.id],
-               let tee = singleRoundViewModel.tees.first(where: { $0.id == teeId }) {
-                let courseHandicap = HandicapCalculator.calculateCourseHandicap(
-                    handicapIndex: golfer.handicap,
-                    slopeRating: tee.slope_rating,
-                    courseRating: tee.course_rating,
-                    par: tee.course_par
-                )
-                roundViewModel.golfers[index].tee = tee
-                roundViewModel.golfers[index].courseHandicap = courseHandicap // Changed from playingHandicap to courseHandicap
-                roundViewModel.courseHandicaps[golfer.id] = courseHandicap
-                
-                print("Debug TeeSelectionView: Set course handicap for \(golfer.fullName): \(courseHandicap)")
-            } else {
-                print("Warning: No tee selected for golfer \(golfer.fullName)")
-            }
-        }
-        
-        if let firstGolfer = roundViewModel.golfers.first,
-           let firstGolferTee = firstGolfer.tee {
-            roundViewModel.selectedTee = firstGolferTee
-        }
-        roundViewModel.initializeBetterBallAfterHandicapsSet()
-        loadHolesData()
-    }
-
     private func formatHandicap(_ handicap: Float) -> String {
         if handicap < 0 {
             return String(format: "+%.1f", abs(handicap))

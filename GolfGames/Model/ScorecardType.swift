@@ -11,4 +11,5 @@ enum ScorecardType {
     case strokePlay
     case matchPlay
     case betterBall
+    case ninePoint
 }

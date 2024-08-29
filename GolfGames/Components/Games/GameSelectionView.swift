@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct GameSelectionView: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var sharedViewModel: SharedViewModel
     @EnvironmentObject var roundViewModel: RoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -20,6 +21,8 @@ struct GameSelectionView: View {
     @State private var refreshID = UUID()
     @State private var isBetterBall = false
     @State private var betterBallTeamAssignments: [String: String] = [:]
+    @State private var isNinePoint = false
+    @State private var showingNinePointInfo = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -36,6 +39,9 @@ struct GameSelectionView: View {
             if isBetterBall {
             betterBallInfoSection
         }
+            if isNinePoint {
+                ninePointInfoSection
+            }
             Spacer()
             
             beginRoundButton
@@ -44,7 +50,7 @@ struct GameSelectionView: View {
         .padding()
         .background(Color(.systemBackground))
         .navigationTitle("Select Games")
-        .onAppear { 
+        .onAppear {
             printDebugInfo()
             initializeSelectedGolfers()
             initializeTeamAssignments()
@@ -52,14 +58,21 @@ struct GameSelectionView: View {
         .alert(isPresented: $showingMatchPlayInfo) {
             Alert(
                 title: Text("What is Match Play?"),
-                message: Text("Select this for match play between 2 golfers. Match Play is a scoring format where players compete against each other hole-by-hole. The player with the lowest net score on a hole wins that hole. The match continues until one player is ahead by more holes than there are remaining to play."),
+                message: Text("Select this for 18-hole match play between 2 golfers. Match Play is a scoring format where players compete against each other hole-by-hole. The player with the lowest net score on a hole wins that hole. The match continues until one player is ahead by more holes than there are remaining to play."),
                 dismissButton: .default(Text("OK"))
             )
         }
         .alert(isPresented: $showingBetterBallInfo) {
             Alert(
                 title: Text("What is Better Ball?"),
-                message: Text("Select this for better ball between 3 or more golfers. Better Ball is a scoring format where players compete as two person teams against each other hole-by-hole. The team with the lowest net score on a hole wins that hole. The match continues until one team is ahead by more holes than there are remaining to play."),
+                message: Text("Select this for 18-hole better ball between 3 or more golfers. Better Ball is a scoring format where players compete as two person teams against each other hole-by-hole. The team with the lowest net score on a hole wins that hole. The match continues until one team is ahead by more holes than there are remaining to play."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+        .alert(isPresented: $showingNinePointInfo) {
+            Alert(
+                title: Text("What is 9 Point?"),
+                message: Text("9 Point is a 3-player game where each hole is worth 9 points. Points are distributed based on net scores: 5 for lowest, 3 for middle, and 1 for highest. Ties split points evenly. The player with the most points at the end of the round wins."),
                 dismissButton: .default(Text("OK"))
             )
         }
@@ -73,23 +86,64 @@ struct GameSelectionView: View {
     }
     
     private var gameToggleSection: some View {
-    VStack(alignment: .leading, spacing: 10) {
-        Text("Available Games")
-            .font(.headline)
-        
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Available Games")
+                .font(.headline)
+            
+            // Match Play toggle
+            gameToggle(isOn: $sharedViewModel.isMatchPlay,
+                       imageName: "flag.fill",
+                       text: "Match Play",
+                       action: showMatchPlayInfo)
+                .onChange(of: sharedViewModel.isMatchPlay) { newValue in
+                    if newValue {
+                        isBetterBall = false
+                        isNinePoint = false
+                    }
+                }
+            
+            // Better Ball toggle
+            if sharedViewModel.golfers.count >= 3 {
+                gameToggle(isOn: $isBetterBall,
+                           imageName: "person.3.fill",
+                           text: "Better Ball",
+                           action: showBetterBallInfo)
+                    .onChange(of: isBetterBall) { newValue in
+                        if newValue {
+                            sharedViewModel.isMatchPlay = false
+                            isNinePoint = false
+                        }
+                    }
+            }
+            
+            // Nine Point toggle
+            if sharedViewModel.golfers.count == 3 {
+                gameToggle(isOn: $isNinePoint,
+                           imageName: "9.alt.square.fill",
+                           text: "9 Point",
+                           action: showNinePointInfo)
+                    .onChange(of: isNinePoint) { newValue in
+                        if newValue {
+                            sharedViewModel.isMatchPlay = false
+                            isBetterBall = false
+                        }
+                    }
+            }
+        }
+    }
+
+    private func gameToggle(isOn: Binding<Bool>, imageName: String, text: String, action: @escaping () -> Void) -> some View {
         HStack {
-            Toggle(isOn: $sharedViewModel.isMatchPlay) {
-                HStack (alignment: .center) {
-                    Image(systemName: "flag.fill")
-                        .foregroundColor(.blue)
-                    Text("Match Play")
+            Toggle(isOn: isOn) {
+                HStack(alignment: .center) {
+                    Image(systemName: imageName)
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                    Text(text)
                         .font(.subheadline)
                 }
             }
             
-            Button(action: {
-                showMatchPlayInfo()
-            }) {
+            Button(action: action) {
                 Image(systemName: "info.circle")
                     .foregroundColor(.blue)
             }
@@ -97,41 +151,7 @@ struct GameSelectionView: View {
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(10)
-        .onChange(of: sharedViewModel.isMatchPlay) { newValue in
-            if newValue {
-                roundViewModel.initializeMatchPlay()
-                isBetterBall = false
-            }
-        }
-        
-        if sharedViewModel.golfers.count >= 3 {
-            HStack {
-            Toggle(isOn: $isBetterBall) {
-                HStack (alignment: .center) {
-                    Image(systemName: "person.3.fill")
-                        .foregroundColor(.green)
-                    Text("Better Ball")
-                        .font(.subheadline)
-                }
-            }
-            Button(action: {
-                showBetterBallInfo()
-            }) {
-                Image(systemName: "info.circle")
-                    .foregroundColor(.blue)
-            }
-            }
-            .padding()
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(10)
-            .onChange(of: isBetterBall) { newValue in
-                if newValue {
-                    sharedViewModel.isMatchPlay = false
-                }
-            }
-        }
     }
-}
     
     private var matchPlayGolferSelectionSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -255,17 +275,55 @@ struct GameSelectionView: View {
     }
 }
 
+    private var ninePointInfoSection: some View {
+        Group {
+            if isNinePoint {
+                let ninePointHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
+                let lowestHandicapGolfer = sharedViewModel.golfers.min { ninePointHandicaps[$0.id] ?? 0 < ninePointHandicaps[$1.id] ?? 0 }
+                
+                VStack(alignment: .center, spacing: 10) {
+                    Text("9 Point Players")
+                        .font(.headline)
+                    
+                    ForEach(sharedViewModel.golfers, id: \.id) { golfer in
+                        HStack {
+                            Text(roundViewModel.formattedGolferName(for: golfer))
+                                .font(.subheadline)
+                            
+                            if golfer.id == lowestHandicapGolfer?.id {
+                                Text("0 strokes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else if let handicap = ninePointHandicaps[golfer.id], handicap > 0 {
+                                Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
+            }
+        }
+    }
+
     private var beginRoundButton: some View {
     Button(action: {
         if sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count == 2 {
             roundViewModel.setMatchPlayGolfers(golfer1: selectedMatchPlayGolfers[0], golfer2: selectedMatchPlayGolfers[1])
         } else if isBetterBall {
-            // Ensure golfers are set in RoundViewModel
             roundViewModel.golfers = sharedViewModel.golfers
             
-            // Filter out "Not Playing" assignments
             let validAssignments = betterBallTeamAssignments.filter { $0.value != "Not Playing" }
             roundViewModel.setBetterBallTeams(validAssignments)
+        } else if isNinePoint {
+            roundViewModel.golfers = sharedViewModel.golfers
+            roundViewModel.initializeNinePoint()
         }
         onBeginRound()
         presentationMode.wrappedValue.dismiss()
@@ -278,20 +336,12 @@ struct GameSelectionView: View {
             .cornerRadius(10)
             .font(.headline)
     }
-    .disabled(isBeginRoundDisabled())
+    .disabled((sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) || 
+              (isBetterBall && (betterBallTeamAssignments.values.filter { $0 == "Team A" }.count != 2 ||
+                                betterBallTeamAssignments.values.filter { $0 == "Team B" }.count != 2)) ||
+              (isNinePoint && sharedViewModel.golfers.count != 3))
 }
-
-private func isBeginRoundDisabled() -> Bool {
-    if sharedViewModel.isMatchPlay {
-        return selectedMatchPlayGolfers.count != 2
-    } else if isBetterBall {
-        let teamACount = betterBallTeamAssignments.values.filter { $0 == "Team A" }.count
-        let teamBCount = betterBallTeamAssignments.values.filter { $0 == "Team B" }.count
-        return teamACount == 0 || teamBCount == 0 || teamACount + teamBCount < 2
-    }
-    return true
-}
-
+    
     private func initializeSelectedGolfers() {
         if sharedViewModel.golfers.count >= 2 {
             selectedMatchPlayGolfers = Array(sharedViewModel.golfers.prefix(2))
@@ -343,6 +393,9 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
     }
     private func showBetterBallInfo() {
         showingBetterBallInfo = true
+    }
+    private func showNinePointInfo() {
+        showingNinePointInfo = true
     }
 
     private func initializeTeamAssignments() {

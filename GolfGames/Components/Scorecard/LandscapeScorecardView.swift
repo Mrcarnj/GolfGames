@@ -55,6 +55,11 @@ struct LandscapeScorecardView: View {
                                 betterBallScorecard(geometry: geometry)
                                 scoreLegend
                                     .padding(.top, -10)
+                            case .ninePoint:
+                                ninePointScorecard(geometry: geometry)
+                                    .padding(.top, -10)
+                            @unknown default:
+                                Text("Unsupported scorecard type")
                             }
                         }
                         .frame(width: geometry.size.width * 0.95 * scale)
@@ -93,6 +98,9 @@ struct LandscapeScorecardView: View {
         if roundViewModel.isBetterBall {
             Text("Better Ball").tag(ScorecardType.betterBall)
         }
+        if roundViewModel.isNinePoint {
+            Text("Nine Point").tag(ScorecardType.ninePoint)
+        }
     }
     .pickerStyle(SegmentedPickerStyle())
 }
@@ -109,6 +117,11 @@ struct LandscapeScorecardView: View {
     
     private func betterBallScorecard(geometry: GeometryProxy) -> some View {
         BetterBallSCView()
+            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    }
+    
+    private func ninePointScorecard(geometry: GeometryProxy) -> some View {
+        NinePointSCView()
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
     

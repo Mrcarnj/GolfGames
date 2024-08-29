@@ -69,9 +69,12 @@ struct ScorecardView: View {
             }
         )
         .onChange(of: selectedScorecardType) { newValue in
-            if newValue == .matchPlay {
+            switch newValue {
+            case .matchPlay, .betterBall, .ninePoint:
                 AppDelegate.setOrientation(to: .landscapeRight)
-            } else {
+            case .strokePlay:
+                AppDelegate.lockOrientation(.allButUpsideDown)
+            @unknown default:
                 AppDelegate.lockOrientation(.allButUpsideDown)
             }
         }
@@ -85,7 +88,7 @@ struct ScorecardView: View {
     
     private var portraitLayout: some View {
         VStack(spacing: 10) {
-            if roundViewModel.isMatchPlay {
+            if roundViewModel.isMatchPlay || roundViewModel.isBetterBall || roundViewModel.isNinePoint {
                 scorecardTypePicker
             }
             
@@ -95,10 +98,17 @@ struct ScorecardView: View {
             
             if let golfer = selectedGolfer {
                 Spacer()
-                if selectedScorecardType == .strokePlay {
+                switch selectedScorecardType {
+                case .strokePlay:
                     scoreCardView(for: golfer)
-                } else {
+                case .matchPlay:
                     MatchPlaySCView()
+                        .environmentObject(roundViewModel)
+                case .betterBall:
+                    BetterBallSCView()
+                        .environmentObject(roundViewModel)
+                case .ninePoint:
+                    NinePointSCView()
                         .environmentObject(roundViewModel)
                 }
                 scoreLegend
@@ -113,7 +123,15 @@ struct ScorecardView: View {
     private var scorecardTypePicker: some View {
         Picker("Scorecard Type", selection: $selectedScorecardType) {
             Text("Stroke Play").tag(ScorecardType.strokePlay)
-            Text("Match Play").tag(ScorecardType.matchPlay)
+            if roundViewModel.isMatchPlay {
+                Text("Match Play").tag(ScorecardType.matchPlay)
+            }
+            if roundViewModel.isBetterBall {
+                Text("Better Ball").tag(ScorecardType.betterBall)
+            }
+            if roundViewModel.isNinePoint {
+                Text("Nine Point").tag(ScorecardType.ninePoint)
+            }
         }
         .pickerStyle(SegmentedPickerStyle())
         .padding(.horizontal)

@@ -69,6 +69,10 @@ class RoundViewModel: ObservableObject {
     @Published var betterBallPresses: [(startHole: Int, matchStatusArray: [Int], winner: String?, winningScore: String?, winningHole: Int?)] = []
     @Published var betterBallPressStatuses: [String] = []
     @Published var betterBallCurrentPressStartHole: Int?
+    @Published var isNinePoint: Bool = false
+    @Published var ninePointScores: [Int: [String: Int]] = [:]
+    @Published var ninePointTotalScores: [String: Int] = [:]
+    @Published var ninePointStrokeHoles: [String: [Int]] = [:]
 
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
@@ -391,6 +395,21 @@ func getLosingBetterBallTeam() -> String? {
 func getCurrentBetterBallPressStatus() -> (leadingTeam: String?, trailingTeam: String?, score: Int)? {
     BetterBallPressModel.getCurrentBetterBallPressStatus(roundViewModel: self)
 }
+
+////////////////// 9 POINT  //////////////////
+func initializeNinePoint() {
+    NinePointModel.initializeNinePoint(roundViewModel: self)
+}
+
+func updateNinePointScore(for holeNumber: Int) {
+    NinePointModel.updateNinePointScore(roundViewModel: self, holeNumber: holeNumber)
+}
+
+func resetNinePointScore(for holeNumber: Int) {
+    NinePointModel.resetNinePointScore(roundViewModel: self, holeNumber: holeNumber)
+}
+
+
 
 ////////////////// CLEAR ROUND DATA //////////////////
 
