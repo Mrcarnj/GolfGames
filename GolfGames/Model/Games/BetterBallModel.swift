@@ -52,7 +52,7 @@ struct BetterBallModel {
             }
         }
         
-        // Allow for uneven teams, but ensure each team has at least one player
+        // Ensure at least one player in each team
         return (!teamA.isEmpty && !teamB.isEmpty) ? (teamA, teamB) : nil
     }
     

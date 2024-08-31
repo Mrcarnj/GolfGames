@@ -40,7 +40,17 @@ class FriendsViewModel: ObservableObject {
             }
 
             self.friends = documents.compactMap { try? $0.data(as: Golfer.self) }
+            self.sortFriends()
             completion?()
+        }
+    }
+
+    // Add this new method to sort friends
+    private func sortFriends() {
+        self.friends.sort { (golfer1, golfer2) -> Bool in
+            let name1 = golfer1.lastNameFirstFormat()
+            let name2 = golfer2.lastNameFirstFormat()
+            return name1 < name2
         }
     }
 
@@ -59,6 +69,7 @@ class FriendsViewModel: ObservableObject {
                     completion(.failure(error))
                 } else {
                     self.friends.append(newFriend)
+                    self.sortFriends()
                     print("Friend added successfully: \(newFriend.fullName)")
                     completion(.success(()))
                 }
@@ -99,6 +110,7 @@ class FriendsViewModel: ObservableObject {
                         if let index = self.friends.firstIndex(where: { $0.id == friend.id }) {
                             self.friends[index] = updatedFriend
                         }
+                        self.sortFriends()
                         print("Friend updated successfully: \(updatedFriend.fullName)")
                         completion(.success(()))
                     }

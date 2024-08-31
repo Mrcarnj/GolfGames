@@ -69,18 +69,18 @@ struct BetterBallSCView: View {
         switch roundViewModel.roundType {
         case .full18:
             return AnyView(
-                VStack(spacing: 0) {
-                    nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showLabels: true)
-                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: true)
+                HStack(spacing: 0) {
+                    nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showFirstColumn: true)
+                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showFirstColumn: false)
                 }
             )
         case .front9:
             return AnyView(
-                nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showTotal: false, showLabels: true)
+                nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showTotal: false, showFirstColumn: true)
             )
         case .back9:
             return AnyView(
-                nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: false, showLabels: true)
+                nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: false, showFirstColumn: true)
             )
         }
     }
@@ -103,29 +103,29 @@ struct BetterBallSCView: View {
         case .full18:
             return AnyView(
                 VStack(spacing: 0) {
-                    nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showLabels: true, pressIndex: pressIndex)
-                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: true, pressIndex: pressIndex)
+                    nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showFirstColumn: true, pressIndex: pressIndex)
+                    nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showFirstColumn: false, pressIndex: pressIndex)
                 }
             )
         case .front9:
             return AnyView(
-                nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showTotal: true, showLabels: true, pressIndex: pressIndex)
+                nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showTotal: true, showFirstColumn: true, pressIndex: pressIndex)
             )
         case .back9:
             return AnyView(
-                nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showLabels: true, pressIndex: pressIndex)
+                nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showFirstColumn: true, pressIndex: pressIndex)
             )
         }
     }
 
-    private func nineHoleView(holes: ClosedRange<Int>, teamA: [Golfer], teamB: [Golfer], title: String, showTotal: Bool = false, showLabels: Bool = true, pressIndex: Int? = nil) -> some View {
+    private func nineHoleView(holes: ClosedRange<Int>, teamA: [Golfer], teamB: [Golfer], title: String, showTotal: Bool = false, showFirstColumn: Bool, pressIndex: Int? = nil) -> some View {
     VStack(spacing: 0) {
-        holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, showLabel: showLabels)
-        parRow(holes: holes, showTotal: showTotal, showLabel: showLabels)
-        teamRow(for: teamA, team: "A", holes: holes, showTotal: showTotal, showLabel: showLabels)
-        matchStatusRow(for: "A", holes: holes, showTotal: showTotal, showLabel: showLabels, pressIndex: pressIndex)
-        teamRow(for: teamB, team: "B", holes: holes, showTotal: showTotal, showLabel: showLabels)
-        matchStatusRow(for: "B", holes: holes, showTotal: showTotal, showLabel: showLabels, pressIndex: pressIndex)
+        holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, showLabel: showFirstColumn)
+        parRow(holes: holes, showTotal: showTotal, showLabel: showFirstColumn)
+        teamRow(for: teamA, team: "A", holes: holes, showTotal: showTotal, showLabel: showFirstColumn)
+        matchStatusRow(for: "A", holes: holes, showTotal: showTotal, showLabel: showFirstColumn, pressIndex: pressIndex)
+        teamRow(for: teamB, team: "B", holes: holes, showTotal: showTotal, showLabel: showFirstColumn)
+        matchStatusRow(for: "B", holes: holes, showTotal: showTotal, showLabel: showFirstColumn, pressIndex: pressIndex)
     }
 }
     

@@ -18,7 +18,17 @@ struct NinePointSCView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            mainNinePointView()
+            HStack(spacing: 0) {
+                switch roundViewModel.roundType {
+                case .full18:
+                    nineHoleView(holes: 1...9, title: "Out", showFirstColumn: true)
+                    nineHoleView(holes: 10...18, title: "In", showTotal: true, showFirstColumn: false)
+                case .front9:
+                    nineHoleView(holes: 1...9, title: "Out", showTotal: false, showFirstColumn: true)
+                case .back9:
+                    nineHoleView(holes: 10...18, title: "In", showTotal: false, showFirstColumn: true)
+                }
+            }
         }
         .background(colorScheme == .light ? Color.white : Color.black)
         .cornerRadius(10)
@@ -26,116 +36,87 @@ struct NinePointSCView: View {
         .padding(.horizontal, 10)
     }
     
-    private func mainNinePointView() -> some View {
+    private func nineHoleView(holes: ClosedRange<Int>, title: String, showTotal: Bool = false, showFirstColumn: Bool) -> some View {
         VStack(spacing: 0) {
-            holeRow()
-            parRow()
+            holeRow(title: "Hole", holes: holes, total: title, showTotal: showTotal, showFirstColumn: showFirstColumn)
+            parRow(holes: holes, showTotal: showTotal, showFirstColumn: showFirstColumn)
             ForEach(roundViewModel.golfers, id: \.id) { golfer in
-                playerRow(for: golfer)
+                playerRow(for: golfer, holes: holes, showTotal: showTotal, showFirstColumn: showFirstColumn)
             }
         }
     }
     
-    private func holeRow() -> some View {
+    private func holeRow(title: String, holes: ClosedRange<Int>, total: String, showTotal: Bool, showFirstColumn: Bool) -> some View {
         HStack(spacing: 0) {
-            Text("Hole")
-                .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .center)
-                .padding(.horizontal, 2)
-                .background(Color(UIColor.systemTeal))
-            ForEach(1...9, id: \.self) { hole in
+            if showFirstColumn {
+                Text(title)
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .center)
+                    .padding(.horizontal, 2)
+                    .background(Color(UIColor.systemTeal))
+            }
+            ForEach(holes, id: \.self) { hole in
                 Text("\(hole)")
                     .frame(width: scoreCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemTeal))
             }
-            Text("Out")
+            Text(total)
                 .frame(width: scoreCellWidth, height: scoreCellHeight)
                 .background(Color(UIColor.systemTeal))
-            ForEach(10...18, id: \.self) { hole in
-                Text("\(hole)")
+            if showTotal {
+                Text("Tot")
                     .frame(width: scoreCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemTeal))
             }
-            Text("In")
-                .frame(width: scoreCellWidth, height: scoreCellHeight)
-                .background(Color(UIColor.systemTeal))
-            Text("Tot")
-                .frame(width: scoreCellWidth, height: scoreCellHeight)
-                .background(Color(UIColor.systemTeal))
         }
         .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
         .font(.caption)
     }
     
-    private func parRow() -> some View {
+    private func parRow(holes: ClosedRange<Int>, showTotal: Bool, showFirstColumn: Bool) -> some View {
         HStack(spacing: 0) {
-            Text("Par")
-                .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .center)
-                .padding(.horizontal, 2)
-                .background(Color(UIColor.systemTeal))
-            ForEach(1...18, id: \.self) { hole in
-                if hole == 10 {
-                    let frontNinePar = (1...9).reduce(0) { total, h in
-                        total + (singleRoundViewModel.holes.first(where: { $0.holeNumber == h })?.par ?? 0)
-                    }
-                    Text("\(frontNinePar)")
-                        .frame(width: scoreCellWidth, height: scoreCellHeight)
-                        .background(Color(UIColor.systemTeal))
-                }
+            if showFirstColumn {
+                Text("Par")
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .center)
+                    .padding(.horizontal, 2)
+                    .background(Color(UIColor.systemTeal))
+            }
+            ForEach(holes, id: \.self) { hole in
                 if let holeData = singleRoundViewModel.holes.first(where: { $0.holeNumber == hole }) {
                     Text("\(holeData.par)")
                         .frame(width: scoreCellWidth, height: scoreCellHeight)
                         .background(Color(UIColor.systemTeal))
                 }
             }
-            let backNinePar = (10...18).reduce(0) { total, h in
-                total + (singleRoundViewModel.holes.first(where: { $0.holeNumber == h })?.par ?? 0)
-            }
-            Text("\(backNinePar)")
-                .frame(width: scoreCellWidth, height: scoreCellHeight)
-                .background(Color(UIColor.systemTeal))
-            let totalPar = singleRoundViewModel.holes.reduce(0) { $0 + $1.par }
+            let totalPar = singleRoundViewModel.holes.filter { holes.contains($0.holeNumber) }.reduce(0) { $0 + $1.par }
             Text("\(totalPar)")
                 .frame(width: scoreCellWidth, height: scoreCellHeight)
                 .background(Color(UIColor.systemTeal))
+            if showTotal {
+                let grandTotalPar = singleRoundViewModel.holes.reduce(0) { $0 + $1.par }
+                Text("\(grandTotalPar)")
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
+                    .background(Color(UIColor.systemTeal))
+            }
         }
         .foregroundColor(colorScheme == .light ? Color.white : Color.primary)
         .font(.caption)
     }
     
-    private func playerRow(for golfer: Golfer) -> some View {
+    private func playerRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool, showFirstColumn: Bool) -> some View {
         HStack(spacing: 0) {
-            Text(golfer.firstName)
-                .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .center)
-                .padding(.horizontal, 2)
-                .background(Color(UIColor.systemGray4))
-                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
-                .fontWeight(.bold)
-            
-            ForEach(1...18, id: \.self) { hole in
-                if hole == 10 {
-                    let frontNinePoints = (1...9).reduce(0) { total, h in
-                        total + (roundViewModel.ninePointScores[h]?[golfer.id] ?? 0)
-                    }
-                    Text("\(frontNinePoints)")
-                        .frame(width: scoreCellWidth, height: scoreCellHeight)
-                        .background(Color(UIColor.systemGray4))
-                        .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
-                        .fontWeight(.bold)
-                }
+            if showFirstColumn {
+                Text(golfer.firstName)
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .center)
+                    .padding(.horizontal, 2)
+                    .background(Color(UIColor.systemGray4))
+                    .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                    .fontWeight(.bold)
+            }
+            ForEach(holes, id: \.self) { hole in
                 ninePointScoreCell(for: golfer, hole: hole)
                     .frame(width: scoreCellWidth, height: scoreCellHeight)
             }
-            
-            let backNinePoints = (10...18).reduce(0) { total, hole in
-                total + (roundViewModel.ninePointScores[hole]?[golfer.id] ?? 0)
-            }
-            Text("\(backNinePoints)")
-                .frame(width: scoreCellWidth, height: scoreCellHeight)
-                .background(Color(UIColor.systemGray4))
-                .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
-                .fontWeight(.bold)
-            
-            let totalPoints = (1...18).reduce(0) { total, hole in
+            let totalPoints = holes.reduce(0) { total, hole in
                 total + (roundViewModel.ninePointScores[hole]?[golfer.id] ?? 0)
             }
             Text("\(totalPoints)")
@@ -143,6 +124,16 @@ struct NinePointSCView: View {
                 .background(Color(UIColor.systemGray4))
                 .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
                 .fontWeight(.bold)
+            if showTotal {
+                let grandTotal = (1...18).reduce(0) { total, hole in
+                    total + (roundViewModel.ninePointScores[hole]?[golfer.id] ?? 0)
+                }
+                Text("\(grandTotal)")
+                    .frame(width: scoreCellWidth, height: scoreCellHeight)
+                    .background(Color(UIColor.systemGray4))
+                    .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)
+                    .fontWeight(.bold)
+            }
         }
         .font(.caption)
     }

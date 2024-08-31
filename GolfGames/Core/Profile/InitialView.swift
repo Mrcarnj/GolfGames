@@ -18,7 +18,7 @@ struct InititalView: View {
             NavigationStack {
                 GeometryReader { geometry in
                     ZStack {
-                        mainContent(for: user)
+                        mainContent(for: user, geometry: geometry)
                         
                         if showMenu {
                             Color.black.opacity(0.3)
@@ -71,22 +71,67 @@ struct InititalView: View {
     }
     
     @ViewBuilder
-    private func mainContent(for user: User) -> some View {
+    private func mainContent(for user: User, geometry: GeometryProxy) -> some View {
         VStack {
             welcomeMessage(for: user)
 
-            Image("golfgamble_bag")
-                .resizable()
-                .cornerRadius(10)
-                .scaledToFill()
-                .frame(width: 100, height: 120)
-                .padding(.vertical, 32)
-                .shadow(radius: 10)
+            Spacer()
 
-            newRoundButtons()
+            VStack(spacing: 20) {
+                Image("golfgamble_bag")
+                    .resizable()
+                    .cornerRadius(10)
+                    .scaledToFit()
+                    .frame(height: 120)
+                    .shadow(radius: 10)
+
+                newRoundButtons(geometry: geometry)
+            }
 
             Spacer()
 
+            recentRoundsSection
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private func welcomeMessage(for user: User) -> some View {
+        Text("Welcome, \(user.fullname)!")
+            .padding(.top, 35)
+    }
+
+    @ViewBuilder
+    private func newRoundButtons(geometry: GeometryProxy) -> some View {
+        VStack(spacing: 15) {
+            NavigationLink(destination: SingleRoundSetupView()) {
+                Text("New Single Round")
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 48)
+                    .foregroundColor(.white)
+                    .background(Color(.systemTeal))
+                    .cornerRadius(10)
+            }
+            .frame(width: min(geometry.size.width - 32, 300))
+
+            // Uncomment and adjust if you want to add the Multiple Rounds button
+            // Button {
+            //     // Action for Multiple Rounds
+            // } label: {
+            //     Text("New Multiple Rounds")
+            //         .frame(maxWidth: .infinity)
+            //         .frame(height: 48)
+            //         .foregroundColor(.white)
+            //         .background(Color(.systemTeal))
+            //         .cornerRadius(10)
+            // }
+            // .frame(width: min(geometry.size.width - 32, 300))
+        }
+    }
+
+    @ViewBuilder
+    private var recentRoundsSection: some View {
+        VStack {
             Text("Recent Rounds")
                 .font(.headline)
                 .padding(.top, 20)
@@ -101,43 +146,6 @@ struct InititalView: View {
                 }
             }
         }
-        .onAppear {
-            roundsViewModel.fetchRecentRounds(for: user)
-        }
-    }
-
-    @ViewBuilder
-    private func welcomeMessage(for user: User) -> some View {
-        Text("Welcome, \(user.fullname)!")
-            .padding(.top, 35)
-    }
-
-    @ViewBuilder
-    private func newRoundButtons() -> some View {
-        NavigationLink(destination: SingleRoundSetupView()) {
-            HStack {
-                Text("New Single Round")
-                Image(systemName: "plus")
-            }
-            .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-            .foregroundColor(.white)
-            .background(Color(.systemTeal))
-            .cornerRadius(10)
-        }
-// MULTIPLE ROUND BUTTON
-//        Button {
-//            // Action for Multiple Rounds
-//        } label: {
-//            HStack {
-//                Text("New Multiple Rounds")
-//                Image(systemName: "plus")
-//            }
-//        }
-        .frame(width: UIScreen.main.bounds.width - 32, height: 48)
-        .foregroundColor(.white)
-        .background(Color(.systemTeal))
-        .cornerRadius(10)
-        .padding(.top, 15)
     }
 }
 

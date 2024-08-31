@@ -53,4 +53,23 @@ struct Golfer: Identifiable, Equatable, Codable, Hashable {
             return String(firstName)
         }
     }
+    
+    // New method for last name formatting
+    func lastNameFirstFormat() -> String {
+        let components = fullName.split(separator: " ")
+        if components.count > 1 {
+            let lastName = components.last!
+            let firstNameInitial = components.first!.prefix(1)
+            return "\(lastName), \(firstNameInitial)."
+        } else {
+            return fullName
+        }
+    }
+}
+
+// Extension to allow sorting of Golfers by last name
+extension Array where Element == Golfer {
+    func sortedByLastName() -> [Golfer] {
+        return self.sorted { $0.lastNameFirstFormat() < $1.lastNameFirstFormat() }
+    }
 }

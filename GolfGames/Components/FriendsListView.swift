@@ -66,12 +66,12 @@ struct FriendsListView: View {
             .onDelete(perform: deleteFriends)
 
             Text("Tip: Long press on a friend to edit them. Update their handicaps to their current handicap index before each round.")
-                    .italic()
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .listRowBackground(Color.clear)
-                    .padding(.vertical, 8)
+                .italic()
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .listRowBackground(Color.clear)
+                .padding(.vertical, 8)
         }
     }
 
@@ -137,7 +137,7 @@ struct FriendRow: View {
 
     var body: some View {
         HStack {
-            Text(friend.fullName)
+            Text(friend.lastNameFirstFormat())
             Spacer()
             HStack(spacing: 10) {
                 Text(formatHandicap(friend.handicap))

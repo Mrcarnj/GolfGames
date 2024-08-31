@@ -227,53 +227,51 @@ struct GameSelectionView: View {
     }
 }
     private var betterBallInfoSection: some View {
-    Group {
-        if isBetterBall {
-            let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
-            let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Better Ball Teams")
-                    .font(.headline)
+        Group {
+            if isBetterBall {
+                let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
+                let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
                 
-                ForEach(sharedViewModel.golfers, id: \.id) { golfer in
-                    HStack {
-                        Text(roundViewModel.formattedGolferName(for: golfer))
-                            .font(.subheadline)
-                        
-                        
-                        
-                        if golfer.id == lowestHandicapGolfer?.id {
-                            Text("0 strokes")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        } else if let handicap = betterBallHandicaps[golfer.id], handicap > 0 {
-                            Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Better Ball Teams")
+                        .font(.headline)
+                    
+                    ForEach(sharedViewModel.golfers, id: \.id) { golfer in
+                        HStack {
+                            Text(roundViewModel.formattedGolferName(for: golfer))
+                                .font(.subheadline)
+                            
+                            if golfer.id == lowestHandicapGolfer?.id {
+                                Text("0 strokes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            } else if let handicap = betterBallHandicaps[golfer.id], handicap > 0 {
+                                Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
 
-                        Picker("Team", selection: Binding(
-                            get: { self.betterBallTeamAssignments[golfer.id] ?? "Not Playing" },
-                            set: { self.betterBallTeamAssignments[golfer.id] = $0 }
-                        )) {
-                            Text("Team A").tag("Team A")
-                            Text("Team B").tag("Team B")
-                            Text("Not Playing").tag("Not Playing")
+                            Picker("Team", selection: Binding(
+                                get: { self.betterBallTeamAssignments[golfer.id] ?? "Not Playing" },
+                                set: { self.betterBallTeamAssignments[golfer.id] = $0 }
+                            )) {
+                                Text("Team A").tag("Team A")
+                                Text("Team B").tag("Team B")
+                                Text("Not Playing").tag("Not Playing")
+                            }
+                            .pickerStyle(MenuPickerStyle())
                         }
-                        .pickerStyle(MenuPickerStyle())
                     }
                 }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(10)
         }
     }
-}
 
     private var ninePointInfoSection: some View {
         Group {
@@ -337,8 +335,7 @@ struct GameSelectionView: View {
             .font(.headline)
     }
     .disabled((sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) || 
-              (isBetterBall && (betterBallTeamAssignments.values.filter { $0 == "Team A" }.count != 2 ||
-                                betterBallTeamAssignments.values.filter { $0 == "Team B" }.count != 2)) ||
+              (isBetterBall && !isValidBetterBallSetup()) ||
               (isNinePoint && sharedViewModel.golfers.count != 3))
 }
     
@@ -399,17 +396,28 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
     }
 
     private func initializeTeamAssignments() {
-    let golfers = sharedViewModel.golfers
-    for (index, golfer) in golfers.enumerated() {
-        if index < 2 {
-            betterBallTeamAssignments[golfer.id] = "Team A"
-        } else if index < 4 {
-            betterBallTeamAssignments[golfer.id] = "Team B"
-        } else {
-            betterBallTeamAssignments[golfer.id] = "Not Playing"
+        let golfers = sharedViewModel.golfers
+        for (index, golfer) in golfers.enumerated() {
+            if index == 0 {
+                betterBallTeamAssignments[golfer.id] = "Team A"
+            } else if index < 3 {
+                betterBallTeamAssignments[golfer.id] = "Team B"
+            } else if index == 3 {
+                betterBallTeamAssignments[golfer.id] = "Team B"
+            } else {
+                betterBallTeamAssignments[golfer.id] = "Not Playing"
+            }
         }
     }
-}
+
+    private func isValidBetterBallSetup() -> Bool {
+        let teamACounts = betterBallTeamAssignments.values.filter { $0 == "Team A" }.count
+        let teamBCounts = betterBallTeamAssignments.values.filter { $0 == "Team B" }.count
+        return (teamACounts == 1 && teamBCounts == 2) || 
+               (teamACounts == 2 && teamBCounts == 1) || 
+               (teamACounts == 1 && teamBCounts == 3) ||
+               (teamACounts == 2 && teamBCounts == 2)
+    }
 
 }
 
