@@ -18,7 +18,10 @@ struct InititalView: View {
             NavigationStack {
                 GeometryReader { geometry in
                     ZStack {
-                        mainContent(for: user, geometry: geometry)
+                        ScrollView {
+                            mainContent(for: user, geometry: geometry)
+                                .frame(minHeight: geometry.size.height)
+                        }
                         
                         if showMenu {
                             Color.black.opacity(0.3)
@@ -93,12 +96,14 @@ struct InititalView: View {
             recentRoundsSection
         }
         .padding()
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
     private func welcomeMessage(for user: User) -> some View {
         Text("Welcome, \(user.fullname)!")
             .padding(.top, 35)
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 
     @ViewBuilder
@@ -113,20 +118,8 @@ struct InititalView: View {
                     .cornerRadius(10)
             }
             .frame(width: min(geometry.size.width - 32, 300))
-
-            // Uncomment and adjust if you want to add the Multiple Rounds button
-            // Button {
-            //     // Action for Multiple Rounds
-            // } label: {
-            //     Text("New Multiple Rounds")
-            //         .frame(maxWidth: .infinity)
-            //         .frame(height: 48)
-            //         .foregroundColor(.white)
-            //         .background(Color(.systemTeal))
-            //         .cornerRadius(10)
-            // }
-            // .frame(width: min(geometry.size.width - 32, 300))
         }
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
@@ -135,17 +128,21 @@ struct InititalView: View {
             Text("Recent Rounds")
                 .font(.headline)
                 .padding(.top, 20)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             if roundsViewModel.recentRounds.isEmpty {
                 Text("No recent rounds")
                     .foregroundColor(.gray)
                     .padding()
+                    .frame(maxWidth: .infinity, alignment: .center)
             } else {
                 ScrollView {
                     RecentRoundsListView(roundsViewModel: roundsViewModel)
+                        .frame(maxWidth: .infinity)
                 }
             }
         }
+        .frame(maxWidth: .infinity)
     }
 }
 

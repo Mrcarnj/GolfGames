@@ -448,9 +448,3 @@ struct MatchPlaySCView_Previews: PreviewProvider {
             .environmentObject(AuthViewModel())
     }
 }
-
-extension Golfer {
-    var firstName: String {
-        fullName.components(separatedBy: " ").first ?? fullName
-    }
-}

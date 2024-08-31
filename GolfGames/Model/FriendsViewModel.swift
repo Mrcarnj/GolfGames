@@ -47,10 +47,10 @@ class FriendsViewModel: ObservableObject {
 
     // Add this new method to sort friends
     private func sortFriends() {
-        self.friends.sort { (golfer1, golfer2) -> Bool in
-            let name1 = golfer1.lastNameFirstFormat()
-            let name2 = golfer2.lastNameFirstFormat()
-            return name1 < name2
+        self.friends = self.friends.sorted { (golfer1: Golfer, golfer2: Golfer) -> Bool in
+            let name1 = golfer1.fullName.split(separator: " ").last.map(String.init) ?? golfer1.fullName
+            let name2 = golfer2.fullName.split(separator: " ").last.map(String.init) ?? golfer2.fullName
+            return name1.lowercased() < name2.lowercased()
         }
     }
 

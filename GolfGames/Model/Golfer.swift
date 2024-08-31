@@ -36,6 +36,15 @@ struct Golfer: Identifiable, Equatable, Codable, Hashable {
         hasher.combine(id)
     }
     
+    var firstName: String {
+        fullName.split(separator: " ").first.map(String.init) ?? fullName
+    }
+
+    var lastName: String? {
+        let components = fullName.split(separator: " ")
+        return components.count > 1 ? components.last.map(String.init) : nil
+    }
+
     func formattedName(golfers: [Golfer]) -> String {
         let nameComponents = fullName.split(separator: " ")
         

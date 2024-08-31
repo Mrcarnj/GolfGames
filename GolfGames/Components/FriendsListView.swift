@@ -137,7 +137,7 @@ struct FriendRow: View {
 
     var body: some View {
         HStack {
-            Text(friend.lastNameFirstFormat())
+            Text(friend.fullName)
             Spacer()
             HStack(spacing: 10) {
                 Text(formatHandicap(friend.handicap))

@@ -336,12 +336,12 @@ struct HoleView: View {
     private var scoreHeaderView: some View {
         HStack {
             Text("Golfer")
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer()
             Text("Score")
-                .frame(width: 50)
+                .frame(width: 90, alignment: .trailing)
             if roundViewModel.isMatchPlay || roundViewModel.isBetterBall {
                 Text("Press")
-                    .frame(width: 50)
+                    .frame(width: 90, alignment: .trailing)
             }
         }
         .frame(maxWidth: .infinity)
@@ -349,8 +349,6 @@ struct HoleView: View {
         .fontWeight(.bold)
         .foregroundColor(Color.primary)
         .background(Color.secondary)
-        .lineLimit(1)
-        .minimumScaleFactor(0.5)
     }
     
     private var golferScoresView: some View {
@@ -358,8 +356,6 @@ struct HoleView: View {
             HStack {
                 Text(golfer.formattedName(golfers: roundViewModel.golfers))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
                 
                 ScoreInputView(
                     scoreInputs: $scoreInputs,
@@ -368,11 +364,9 @@ struct HoleView: View {
                     updateScore: updateScore
                 )
                 .focused($focusedField, equals: golfer.id)
-                .frame(width: 50)
                 
                 if roundViewModel.isMatchPlay || roundViewModel.isBetterBall {
                     pressButton(for: golfer)
-                        .frame(width: 50)
                 }
             }
             .padding(.horizontal)
@@ -381,8 +375,6 @@ struct HoleView: View {
                 Text("Golfer \(golfer.formattedName(golfers: roundViewModel.golfers)) is missing scores for holes: \(missingHoles.map(String.init).joined(separator: ", "))")
                     .font(.caption)
                     .foregroundColor(.red)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.5)
             }
         }
     }
@@ -447,47 +439,49 @@ struct HoleView: View {
                         }) {
                             Text("Press")
                                 .font(.system(size: 12, weight: .semibold))
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .frame(width: 50, height: 24)
                                 .background(Color.blue)
                                 .foregroundColor(.white)
-                                .cornerRadius(8)
-                                .minimumScaleFactor(0.5)
+                                .cornerRadius(12)
+                                .shadow(color: .gray.opacity(0.3), radius: 2, x: 0, y: 1)
                         }
                     }
                 }
+                .frame(width: 60, height: 30)
             }
         }
     }
     
     private func betterBallPressButton(for golfer: Golfer) -> some View {
-        Group {
-            if let (leadingTeam, trailingTeam, score) = BetterBallPressModel.getCurrentBetterBallPressStatus(roundViewModel: roundViewModel) {
-                ZStack {
-                    if score == 0 {
-                        Text("")
-                            .font(.system(size: 10))
-                            .foregroundColor(.gray)
-                    } else if let trailingTeam = trailingTeam,
-                              roundViewModel.betterBallTeamAssignments[golfer.id] == trailingTeam,
-                              isFirstPlayerOfTeam(golfer, team: trailingTeam),
-                              (roundViewModel.betterBallMatchWinner == nil || !roundViewModel.betterBallPresses.isEmpty),
-                              !scoresChecked && currentHoleIndex < 17 {
-                        Button(action: {
-                            showingPressConfirmation = true
-                        }) {
-                            Text("Press")
-                                .font(.system(size: 12, weight: .semibold))
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                                .minimumScaleFactor(0.5)
-                        }
+    Group {
+        if let (leadingTeam, trailingTeam, score) = BetterBallPressModel.getCurrentBetterBallPressStatus(roundViewModel: roundViewModel) {
+            ZStack {
+                if score == 0 {
+                    Text("")
+                        .font(.system(size: 10))
+                        .foregroundColor(.gray)
+                } else if let trailingTeam = trailingTeam,
+                          roundViewModel.betterBallTeamAssignments[golfer.id] == trailingTeam,
+                          isFirstPlayerOfTeam(golfer, team: trailingTeam),
+                          (roundViewModel.betterBallMatchWinner == nil || !roundViewModel.betterBallPresses.isEmpty),
+                          !scoresChecked && currentHoleIndex < 17 {
+                    Button(action: {
+                        showingPressConfirmation = true
+                    }) {
+                        Text("Press")
+                            .font(.system(size: 12, weight: .semibold))
+                            .frame(width: 50, height: 24)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                            .shadow(color: .gray.opacity(0.3), radius: 2, x: 0, y: 1)
                     }
                 }
             }
         }
     }
+    .frame(width: 60, height: 30)
+}
     
     private func isFirstPlayerOfTeam(_ golfer: Golfer, team: String) -> Bool {
         let teamPlayers = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == team }
@@ -743,12 +737,11 @@ struct HoleView: View {
             ))
             .keyboardType(.numberPad)
             .focused($focusedField, equals: golfer.id)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: 50, height: 50)
             .background(colorScheme == .dark ? Color.white : Color.gray.opacity(0.2))
             .foregroundColor(colorScheme == .dark ? .black : .primary)
             .cornerRadius(5)
             .multilineTextAlignment(.center)
-            .minimumScaleFactor(0.5)
             .overlay(
                 Group {
                     if strokeHoleInfo.isStrokeHole {
