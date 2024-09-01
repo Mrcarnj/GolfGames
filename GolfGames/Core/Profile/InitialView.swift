@@ -18,10 +18,7 @@ struct InititalView: View {
             NavigationStack {
                 GeometryReader { geometry in
                     ZStack {
-                        ScrollView {
-                            mainContent(for: user, geometry: geometry)
-                                .frame(minHeight: geometry.size.height)
-                        }
+                        mainContent(for: user, geometry: geometry)
                         
                         if showMenu {
                             Color.black.opacity(0.3)
@@ -77,6 +74,7 @@ struct InititalView: View {
     private func mainContent(for user: User, geometry: GeometryProxy) -> some View {
         VStack {
             welcomeMessage(for: user)
+            .padding(.bottom, 20)
 
             Spacer()
 
@@ -97,6 +95,9 @@ struct InititalView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
+        .onAppear {
+            roundsViewModel.fetchRecentRounds(for: user)
+        }
     }
 
     @ViewBuilder
@@ -108,18 +109,16 @@ struct InititalView: View {
 
     @ViewBuilder
     private func newRoundButtons(geometry: GeometryProxy) -> some View {
-        VStack(spacing: 15) {
-            NavigationLink(destination: SingleRoundSetupView()) {
+        NavigationLink(destination: SingleRoundSetupView()) {
+            HStack {
                 Text("New Single Round")
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .foregroundColor(.white)
-                    .background(Color(.systemTeal))
-                    .cornerRadius(10)
+                Image(systemName: "plus")
             }
-            .frame(width: min(geometry.size.width - 32, 300))
+            .frame(width: UIScreen.main.bounds.width - 32, height: 48)
+            .foregroundColor(.white)
+            .background(Color(.systemTeal))
+            .cornerRadius(10)
         }
-        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder

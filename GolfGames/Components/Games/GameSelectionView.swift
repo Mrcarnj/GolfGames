@@ -120,7 +120,7 @@ struct GameSelectionView: View {
             if sharedViewModel.golfers.count == 3 {
                 gameToggle(isOn: $isNinePoint,
                            imageName: "9.alt.square.fill",
-                           text: "9 Point",
+                           text: "9 Point (Baseball)",
                            action: showNinePointInfo)
                     .onChange(of: isNinePoint) { newValue in
                         if newValue {

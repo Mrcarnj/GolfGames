@@ -15,7 +15,9 @@ class RecentRoundsModel: ObservableObject {
         let db = Firestore.firestore()
         let roundsRef = db.collection("users").document(user.id).collection("rounds")
         
-        roundsRef.getDocuments { snapshot, error in
+        roundsRef.getDocuments { [weak self] snapshot, error in
+            guard let self = self else { return }
+            
             if let error = error {
                 print("Error fetching rounds: \(error.localizedDescription)")
                 return
@@ -53,6 +55,8 @@ class RecentRoundsModel: ObservableObject {
                     if let firstGolfer = golfers.first,
                        let totalScore = firstGolfer["grossTotal"] as? Int {
                         
+                        let scoreDifferential = self.calculateScoreDifferential(totalScore: totalScore, courseRating: courseRating, slopeRating: slopeRating)
+                        
                         let roundResult = RoundResult(
                             id: document.documentID,
                             course: course,
@@ -60,12 +64,13 @@ class RecentRoundsModel: ObservableObject {
                             totalScore: totalScore,
                             tees: tees,
                             courseRating: courseRating,
-                            slopeRating: slopeRating
+                            slopeRating: slopeRating,
+                            scoreDifferential: scoreDifferential
                         )
                         roundResults.append(roundResult)
                         
                         print("Found round result for round ID: \(document.documentID)")
-                        print("Course: \(course), Date: \(date), Total Score: \(totalScore), Tees: \(tees), Course Rating: \(courseRating), Slope Rating: \(slopeRating)")
+                        print("Course: \(course), Date: \(date), Total Score: \(totalScore), Tees: \(tees), Course Rating: \(courseRating), Slope Rating: \(slopeRating), Score Differential: \(scoreDifferential)")
                     }
                 }
                 
@@ -77,6 +82,11 @@ class RecentRoundsModel: ObservableObject {
             }
         }
     }
+    
+    private func calculateScoreDifferential(totalScore: Int, courseRating: Float, slopeRating: Float) -> Float {
+        let differential = (113 / slopeRating) * (Float(totalScore) - courseRating)
+        return (differential * 10).rounded() / 10
+    }
 }
 
 struct RoundResult: Identifiable {
@@ -87,4 +97,5 @@ struct RoundResult: Identifiable {
     var tees: String
     var courseRating: Float
     var slopeRating: Float
+    var scoreDifferential: Float
 }

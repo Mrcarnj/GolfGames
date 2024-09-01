@@ -27,7 +27,7 @@ struct RecentRoundsListView: View {
                     Spacer()
                     Text("(\(String(format: "%.1f", round.courseRating))/\(Int(round.slopeRating)))")
                     Spacer()
-                    Text("\(round.totalScore)")
+                    Text("\(round.totalScore) / \(round.scoreDifferential, specifier: "%.1f")")
                         .fontWeight(.bold)
                 }
                 .font(.system(size: 10))
