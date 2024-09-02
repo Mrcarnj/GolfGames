@@ -25,56 +25,58 @@ struct GameSelectionView: View {
     @State private var showingNinePointInfo = false
     
     var body: some View {
-        VStack(spacing: 20) {
-            gameSelectionHeader
-            
-            gameToggleSection
-            
-            if sharedViewModel.isMatchPlay {
+        ScrollView {
+            VStack(spacing: 20) {
+                gameSelectionHeader
                 
-                    matchPlayGolferSelectionSection
-                    matchPlayInfoSection
+                gameToggleSection
                 
+                if sharedViewModel.isMatchPlay {
+                    
+                        matchPlayGolferSelectionSection
+                        matchPlayInfoSection
+                    
+                }
+                if isBetterBall {
+                betterBallInfoSection
             }
-            if isBetterBall {
-            betterBallInfoSection
-        }
-            if isNinePoint {
-                ninePointInfoSection
+                if isNinePoint {
+                    ninePointInfoSection
+                }
+                Spacer()
+                
+                beginRoundButton
             }
-            Spacer()
-            
-            beginRoundButton
-        }
-        .id(refreshID) // Force view refresh
-        .padding()
-        .background(Color(.systemBackground))
-        .navigationTitle("Select Games")
-        .onAppear {
-            printDebugInfo()
-            initializeSelectedGolfers()
-            initializeTeamAssignments()
-        }
-        .alert(isPresented: $showingMatchPlayInfo) {
-            Alert(
-                title: Text("What is Match Play?"),
-                message: Text("Select this for 18-hole match play between 2 golfers. Match Play is a scoring format where players compete against each other hole-by-hole. The player with the lowest net score on a hole wins that hole. The match continues until one player is ahead by more holes than there are remaining to play."),
-                dismissButton: .default(Text("OK"))
-            )
-        }
-        .alert(isPresented: $showingBetterBallInfo) {
-            Alert(
-                title: Text("What is Better Ball?"),
-                message: Text("Select this for 18-hole better ball between 3 or more golfers. Better Ball is a scoring format where players compete as two person teams against each other hole-by-hole. The team with the lowest net score on a hole wins that hole. The match continues until one team is ahead by more holes than there are remaining to play."),
-                dismissButton: .default(Text("OK"))
-            )
-        }
-        .alert(isPresented: $showingNinePointInfo) {
-            Alert(
-                title: Text("What is 9 Point?"),
-                message: Text("9 Point is a 3-player game where each hole is worth 9 points. Points are distributed based on net scores: 5 for lowest, 3 for middle, and 1 for highest. Ties split points evenly. The player with the most points at the end of the round wins."),
-                dismissButton: .default(Text("OK"))
-            )
+            .id(refreshID) // Force view refresh
+            .padding()
+            .background(Color(.systemBackground))
+            .navigationTitle("Select Games")
+            .onAppear {
+                printDebugInfo()
+                initializeSelectedGolfers()
+                initializeTeamAssignments()
+            }
+            .alert(isPresented: $showingMatchPlayInfo) {
+                Alert(
+                    title: Text("What is Match Play?"),
+                    message: Text("Select this for 18-hole match play between 2 golfers. Match Play is a scoring format where players compete against each other hole-by-hole. The player with the lowest net score on a hole wins that hole. The match continues until one player is ahead by more holes than there are remaining to play."),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+            .alert(isPresented: $showingBetterBallInfo) {
+                Alert(
+                    title: Text("What is Better Ball?"),
+                    message: Text("Select this for 18-hole better ball between 3 or more golfers. Better Ball is a scoring format where players compete as two person teams against each other hole-by-hole. The team with the lowest net score on a hole wins that hole. The match continues until one team is ahead by more holes than there are remaining to play."),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+            .alert(isPresented: $showingNinePointInfo) {
+                Alert(
+                    title: Text("What is 9 Point?"),
+                    message: Text("9 Point is a 3-player game where each hole is worth 9 points. Points are distributed based on net scores: 5 for lowest, 3 for middle, and 1 for highest. Ties split points evenly. The player with the most points at the end of the round wins."),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
         }
     }
     
@@ -96,10 +98,6 @@ struct GameSelectionView: View {
                        text: "Match Play",
                        action: showMatchPlayInfo)
                 .onChange(of: sharedViewModel.isMatchPlay) { newValue in
-                    if newValue {
-                        isBetterBall = false
-                        isNinePoint = false
-                    }
                 }
             
             // Better Ball toggle
@@ -109,10 +107,6 @@ struct GameSelectionView: View {
                            text: "Better Ball",
                            action: showBetterBallInfo)
                     .onChange(of: isBetterBall) { newValue in
-                        if newValue {
-                            sharedViewModel.isMatchPlay = false
-                            isNinePoint = false
-                        }
                     }
             }
             
@@ -123,10 +117,6 @@ struct GameSelectionView: View {
                            text: "9 Point (Baseball)",
                            action: showNinePointInfo)
                     .onChange(of: isNinePoint) { newValue in
-                        if newValue {
-                            sharedViewModel.isMatchPlay = false
-                            isBetterBall = false
-                        }
                     }
             }
         }
@@ -312,17 +302,30 @@ struct GameSelectionView: View {
 
     private var beginRoundButton: some View {
     Button(action: {
+        // Update roundViewModel with the selected game types
+        roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
+        roundViewModel.isBetterBall = isBetterBall
+        roundViewModel.isNinePoint = isNinePoint
+        
+        // Set up Match Play if selected
         if sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count == 2 {
             roundViewModel.setMatchPlayGolfers(golfer1: selectedMatchPlayGolfers[0], golfer2: selectedMatchPlayGolfers[1])
-        } else if isBetterBall {
-            roundViewModel.golfers = sharedViewModel.golfers
-            
+        }
+        
+        // Set up Better Ball if selected
+        if isBetterBall {
             let validAssignments = betterBallTeamAssignments.filter { $0.value != "Not Playing" }
             roundViewModel.setBetterBallTeams(validAssignments)
-        } else if isNinePoint {
-            roundViewModel.golfers = sharedViewModel.golfers
+        }
+        
+        // Set up Nine Point if selected
+        if isNinePoint {
             roundViewModel.initializeNinePoint()
         }
+        
+        // Ensure all selected golfers are included in the round
+        roundViewModel.golfers = sharedViewModel.golfers
+        
         onBeginRound()
         presentationMode.wrappedValue.dismiss()
     }) {
@@ -334,9 +337,12 @@ struct GameSelectionView: View {
             .cornerRadius(10)
             .font(.headline)
     }
-    .disabled((sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) || 
-              (isBetterBall && !isValidBetterBallSetup()) ||
-              (isNinePoint && sharedViewModel.golfers.count != 3))
+    .disabled(
+        (sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) ||
+        (isBetterBall && !isValidBetterBallSetup()) ||
+        (isNinePoint && sharedViewModel.golfers.count != 3) ||
+        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint) // Disable if no game type is selected
+    )
 }
     
     private func initializeSelectedGolfers() {

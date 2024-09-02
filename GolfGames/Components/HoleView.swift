@@ -1,5 +1,6 @@
 
 
+
 //
 //  HoleView.swift
 //  GolfGames
@@ -38,6 +39,7 @@ struct HoleView: View {
     @State private var showingPressConfirmation = false
     @State private var scoresChecked = false
     @State private var showNinePointWinner = false
+    @State private var currentCarouselPage = 0
     
     private var startingHoleIndex: Int {
         switch roundType {
@@ -285,13 +287,12 @@ struct HoleView: View {
         VStack {
             HoleDetailsView(hole: hole)
             
+            gameStatusCarousel
+            
+            scoreHeaderView
+            
             ScrollView {
                 VStack {
-                    BetterBallTeamsView()
-                    NinePointScoresView(showWinner: $showNinePointWinner)
-                    matchStatusView
-                    pressStatusesView
-                    scoreHeaderView
                     golferScoresView
                     checkScoresButton
                     reviewRoundButton
@@ -301,14 +302,84 @@ struct HoleView: View {
         .gesture(holeNavigationGesture)
     }
     
+    private var gameStatusCarousel: some View {
+        let pages = carouselPages
+        
+        return VStack {
+            TabView(selection: $currentCarouselPage) {
+                ForEach(0..<pages.count, id: \.self) { index in
+                    pages[index]
+                        .tag(index)
+                }
+            }
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))  // Hide default indicators
+            .frame(height: 150)  // Adjust this height as needed
+            
+            // Custom page indicators
+            if pages.count > 1 {
+                HStack(spacing: 8) {
+                    ForEach(0..<pages.count, id: \.self) { index in
+                        Circle()
+                            .fill(index == currentCarouselPage ? Color.blue : Color.gray)
+                            .frame(width: 8, height: 8)
+                    }
+                }
+                .padding(.top, 8)
+            }
+        }
+    }
+    
+    private var carouselPages: [AnyView] {
+        var pages: [AnyView] = []
+
+        print("Debug: isMatchPlay: \(roundViewModel.isMatchPlay)")
+        print("Debug: isBetterBall: \(roundViewModel.isBetterBall)")
+        print("Debug: isNinePoint: \(roundViewModel.isNinePoint)")
+
+        if roundViewModel.isMatchPlay {
+            pages.append(AnyView(
+                VStack {
+                    matchStatusView
+                    pressStatusesView
+                }
+            ))
+        }
+
+        if roundViewModel.isBetterBall {
+            pages.append(AnyView(BetterBallTeamsView()))
+        }
+
+        if roundViewModel.isNinePoint {
+            pages.append(AnyView(NinePointScoresView(showWinner: $showNinePointWinner)))
+        }
+
+        // If no game types are selected, show a default view
+        if pages.isEmpty {
+            pages.append(AnyView(
+                Text("No game types selected")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+            ))
+        }
+
+        print("Debug: Number of carousel pages: \(pages.count)")
+
+        return pages
+    }
+    
     private var matchStatusView: some View {
         Group {
             if roundViewModel.isMatchPlay {
-                Text(roundViewModel.matchPlayStatus ?? "")
+                if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
+                                Text("\(golfer1.firstName) vs \(golfer2.firstName)")
+                                    .font(.subheadline)
+                                    .padding(.top, 5)
+                            }
+                Text(roundViewModel.matchPlayStatus ?? "Match Play Status Not Available")
                     .font(.headline)
                     .padding(.vertical, 5)
             } else if roundViewModel.isBetterBall {
-                Text(roundViewModel.betterBallMatchStatus ?? "")
+                Text(roundViewModel.betterBallMatchStatus ?? "Better Ball Status Not Available")
                     .font(.headline)
                     .padding(.vertical, 5)
             }

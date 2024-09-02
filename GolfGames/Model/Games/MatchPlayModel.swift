@@ -212,14 +212,32 @@ struct MatchPlayModel {
     }
     
     static func initializeMatchPlay(roundViewModel: RoundViewModel) {
-    guard roundViewModel.isMatchPlay, roundViewModel.golfers.count >= 2 else { return }
+        guard roundViewModel.isMatchPlay, roundViewModel.golfers.count >= 2 else { return }
 
-    // If matchPlayGolfers is not set, use all golfers in the round
-    let matchPlayGolfers = roundViewModel.matchPlayGolfers.map { [$0.0, $0.1] } ?? roundViewModel.golfers
+        // If matchPlayGolfers is not set, use all golfers in the round
+        let matchPlayGolfers = roundViewModel.matchPlayGolfers.map { [$0.0, $0.1] } ?? roundViewModel.golfers
 
-    print("Debug: MatchPlayModel - Initializing Match Play")
-   StrokesModel.calculateGameStrokeHoles(roundViewModel: roundViewModel, golfers: matchPlayGolfers)
-}
+        print("Debug: MatchPlayModel - Initializing Match Play")
+        StrokesModel.calculateGameStrokeHoles(roundViewModel: roundViewModel, golfers: matchPlayGolfers)
+
+        // Initialize match status
+        roundViewModel.matchStatusArray = Array(repeating: 0, count: getNumberOfHoles(for: roundViewModel.roundType))
+        roundViewModel.matchScore = 0
+        roundViewModel.holesPlayed = 0
+        roundViewModel.matchPlayStatus = "All Square thru 0"
+
+        // Reset other match-related properties
+        roundViewModel.matchWinner = nil
+        roundViewModel.winningScore = nil
+        roundViewModel.matchWinningHole = nil
+        roundViewModel.finalMatchStatusArray = nil
+
+        // Clear existing presses and statuses
+        roundViewModel.presses = []
+        roundViewModel.pressStatuses = []
+
+        print("Debug: MatchPlayModel - Match Play initialized with status: \(roundViewModel.matchPlayStatus ?? "N/A")")
+    }
     
     static func getLastHole(for roundType: RoundType) -> Int {
         switch roundType {
