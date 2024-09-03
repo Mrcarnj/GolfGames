@@ -107,7 +107,7 @@ struct MatchPlaySCView: View {
             if let winner = roundViewModel.matchWinner, let score = roundViewModel.winningScore {
                 Text("\(winner) won \(score)")
             } else if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
-                Text("\(golfer1.fullName) vs \(golfer2.fullName)")
+                Text("\(golfer1.firstName) \(golfer1.lastName) vs \(golfer2.firstName) \(golfer2.lastName)")
             } else {
                 Text("Match play not set up")
             }
@@ -130,7 +130,7 @@ struct MatchPlaySCView: View {
                     } else {
                         let leadingGolfer = pressStatus > 0 ? golfer1 : golfer2
                         let leadAmount = abs(pressStatus)
-                        Text("Press \(pressIndex + 1): \(leadingGolfer.fullName) \(leadAmount) UP")
+                        Text("Press \(pressIndex + 1): \(leadingGolfer.firstName) \(leadingGolfer.lastName) \(leadAmount) UP")
                     }
                 }
             } else {
@@ -211,7 +211,7 @@ struct MatchPlaySCView: View {
     func playerRow(for golfer: Golfer, holes: ClosedRange<Int>, showTotal: Bool = false, showLabel: Bool = true) -> some View {
         HStack(spacing: 0) {
             if showLabel {
-                Text(golfer.firstName)
+                Text("\(golfer.firstName) \(golfer.lastName.prefix(1)).")
                     .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
                     .padding(.horizontal, 2)
                     .background(Color(UIColor.systemGray4))

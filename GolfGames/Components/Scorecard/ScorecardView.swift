@@ -237,7 +237,8 @@ struct ScorecardView: View {
             "golfers": roundViewModel.golfers.map { golfer in
                 [
                     "id": golfer.id,
-                    "name": golfer.fullName,
+                    "firstName": golfer.firstName,
+                    "lastName": golfer.lastName,
                     "handicap": golfer.handicap,
                     "grossTotal": roundViewModel.grossScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) },
                     "netTotal": roundViewModel.netStrokePlayScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
@@ -519,7 +520,7 @@ struct ScorecardView: View {
     private var golferPicker: some View {
         Picker("Select Golfer", selection: $selectedGolferId) {
             ForEach(roundViewModel.golfers) { golfer in
-                Text(golfer.fullName).tag(golfer.id as String?)
+                Text("\(golfer.firstName) \(golfer.lastName)").tag(golfer.id as String?)
             }
         }
         .pickerStyle(MenuPickerStyle())
@@ -658,6 +659,15 @@ extension ScorecardView {
         ]
         let dateSize = (dateString as NSString).size(withAttributes: dateAttrs)
         dateString.draw(with: CGRect(x: finalSize.width - dateSize.width - horizontalPadding - 5, y: 20, width: dateSize.width, height: 20), options: .usesLineFragmentOrigin, attributes: dateAttrs, context: nil)
+        
+        // Draw golfer name in top right
+        let golferName = "\(golfer.firstName) \(golfer.lastName)"
+        let nameAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 12),
+            .foregroundColor: UIColor.label
+        ]
+        let nameSize = (golferName as NSString).size(withAttributes: nameAttrs)
+        golferName.draw(with: CGRect(x: finalSize.width - nameSize.width - horizontalPadding - 5, y: 20, width: nameSize.width, height: 20), options: .usesLineFragmentOrigin, attributes: nameAttrs, context: nil)
         
         // Draw the scorecard
         scorecardImage.draw(at: CGPoint(x: 0, y: headerHeight))

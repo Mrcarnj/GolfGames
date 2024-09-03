@@ -17,7 +17,8 @@ import SwiftUI
 struct RegistrationView: View {
     @State private var email = ""
     @State private var password = ""
-    @State private var fullname = ""
+    @State private var firstName = ""
+    @State private var lastName = ""
     @State private var confirmPassword = ""
     @State private var handicap = ""
     @State private var ghinNumber = ""
@@ -47,9 +48,14 @@ struct RegistrationView: View {
                     .autocapitalization(.none)
                     .focused($isFocused)
                     
-                    InputView(text: $fullname,
-                              title: "Full Name",
-                              placeholder: "John Smith")
+                    InputView(text: $firstName,
+                              title: "First Name",
+                              placeholder: "John")
+                    .focused($isFocused)
+                    
+                    InputView(text: $lastName,
+                              title: "Last Name",
+                              placeholder: "Smith")
                     .focused($isFocused)
                     
                     ZStack (alignment: .trailing){
@@ -131,7 +137,8 @@ struct RegistrationView: View {
                         do {
                             try await viewModel.createUser(withEmail: email,
                                                            password: password,
-                                                           fullname: fullname,
+                                                           firstName: firstName,
+                                                           lastName: lastName,
                                                            handicap: handicapValue,
                                                            ghinNumber: ghinNumberValue)
                         } catch {
@@ -177,7 +184,8 @@ extension RegistrationView: AuthenticationFormProtocol{
    var formIsValid: Bool {
        return !email.isEmpty
        && email.contains("@")
-       && !fullname.isEmpty
+       && !firstName.isEmpty
+       && !lastName.isEmpty
        && !password.isEmpty
        && password.count > 5
        && password == confirmPassword

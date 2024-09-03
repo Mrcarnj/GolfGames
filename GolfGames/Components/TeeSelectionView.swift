@@ -37,7 +37,7 @@ struct TeeSelectionView: View {
                 ForEach($sharedViewModel.golfers) { $golfer in
                     VStack(alignment: .leading) {
                         HStack {
-                            Text(golfer.fullName)
+                            Text("\(golfer.firstName) \(String(golfer.lastName.prefix(1))).")
                                 .font(.headline)
                             Spacer ()
                             Text("HCP:")
@@ -81,7 +81,6 @@ struct TeeSelectionView: View {
                                             sharedViewModel.golfers[index].courseHandicap = courseHandicap
                                         }
                                     }
-                                  //  print("\(golfer.fullName) selected \(tee.tee_name)")
                                 }
                             ),
                             courseHandicap: Binding(
@@ -302,7 +301,7 @@ struct TeeSelectionView: View {
 
 struct TeeSelectionView_Previews: PreviewProvider {
     static var previews: some View {
-        let mockGolfer = Golfer(id: UUID().uuidString, fullName: "Mock Golfer", handicap: 10.0)
+        let mockGolfer = Golfer(id: UUID().uuidString, firstName: "Mock", lastName: "Golfer", handicap: 10.0)
         let mockCourse = Course(id: "courseId", name: "Mock Course", location: "Mock Location")
 
         return TeeSelectionView()

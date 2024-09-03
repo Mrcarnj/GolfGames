@@ -102,7 +102,7 @@ struct InititalView: View {
 
     @ViewBuilder
     private func welcomeMessage(for user: User) -> some View {
-        Text("Welcome, \(user.fullname)!")
+        Text("Welcome, \(user.firstName)!")
             .padding(.top, 35)
             .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -146,7 +146,7 @@ struct InititalView: View {
 }
 
 #Preview {
-    let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
+    let mockUser = User(id: "mockId", firstName: "Mock", lastName: "User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
     return InititalView()
         .environmentObject(SingleRoundViewModel())
         .environmentObject(AuthViewModel(mockUser: mockUser))

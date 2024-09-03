@@ -40,6 +40,8 @@ class SharedViewModel: ObservableObject {
         roundId = nil
         golferTeeSelections = [:]
         isMatchPlay = false
+        holes = [:]
+        matchPlayHandicap = 0
     }
 
     func createNewRound(isMatchPlay: Bool) {

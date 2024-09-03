@@ -11,7 +11,8 @@ struct CreateFriendView: View {
     @ObservedObject var viewModel: FriendsViewModel
     @Binding var friendToEdit: Golfer?
     @Environment(\.presentationMode) var presentationMode
-    @State private var fullName = ""
+    @State private var firstName = ""
+    @State private var lastName = ""
     @State private var ghinNumber = ""
     @State private var handicap = ""
     @State private var isPlusHandicap = false
@@ -22,7 +23,8 @@ struct CreateFriendView: View {
         NavigationView {
             Form {
                 Section(header: Text("Friend Information")) {
-                    TextField("Full Name", text: $fullName)
+                    TextField("First Name", text: $firstName)
+                    TextField("Last Name", text: $lastName)
                     TextField("GHIN (Optional)", text: $ghinNumber)
                         .keyboardType(.numberPad)
                     HStack {
@@ -50,7 +52,8 @@ struct CreateFriendView: View {
         }
         .onAppear {
             if let friend = friendToEdit {
-                fullName = friend.fullName
+                firstName = friend.firstName
+                lastName = friend.lastName
                 ghinNumber = friend.ghinNumber.map(String.init) ?? ""
                 if friend.handicap < 0 {
                     isPlusHandicap = true
@@ -71,7 +74,7 @@ struct CreateFriendView: View {
             handicapValue = -handicapValue
         }
         
-        viewModel.addFriend(fullName: fullName, ghinNumber: ghinNumberValue, handicap: handicapValue) { result in
+        viewModel.addFriend(firstName: firstName, lastName: lastName, ghinNumber: ghinNumberValue, handicap: handicapValue) { result in
             handleResult(result)
         }
     }
@@ -87,14 +90,14 @@ struct CreateFriendView: View {
         
         guard let friend = friendToEdit else { return }
         
-        viewModel.updateFriend(friend, fullName: fullName, ghinNumber: ghinNumberValue, handicap: handicapValue) { result in
+        viewModel.updateFriend(friend, firstName: firstName, lastName: lastName, ghinNumber: ghinNumberValue, handicap: handicapValue) { result in
             handleResult(result)
         }
     }
 
     private func validateInput() -> Bool {
-        guard !fullName.isEmpty else {
-            alertMessage = "Please enter a name"
+        guard !firstName.isEmpty && !lastName.isEmpty else {
+            alertMessage = "Please enter both first and last name"
             showAlert = true
             return false
         }

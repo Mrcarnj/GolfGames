@@ -8,8 +8,6 @@ struct BetterBallModel {
         }
         
         print("Debug: BetterBallModel - Initializing Better Ball")
-       // print("Debug: Better Ball Team Assignments: \(roundViewModel.betterBallTeamAssignments)")
-       // print("Debug: Golfers in round: \(roundViewModel.golfers.map { "\($0.fullName) (ID: \($0.id))" })")
         
         roundViewModel.betterBallMatchArray = Array(repeating: 0, count: getNumberOfHoles(for: roundViewModel.roundType))
         roundViewModel.betterBallMatchStatus = "All Square"
@@ -24,8 +22,8 @@ struct BetterBallModel {
         roundViewModel.betterBallNetScores = [:]
         
         if let (teamA, teamB) = getTeams(roundViewModel: roundViewModel) {
-            print("Team A: \(teamA.map { $0.fullName })")
-            print("Team B: \(teamB.map { $0.fullName })")
+            print("Team A: \(teamA.map { "\($0.firstName) \($0.lastName)" })")
+            print("Team B: \(teamB.map { "\($0.firstName) \($0.lastName)" })")
         } else {
             print("Error: Better Ball teams not properly set")
         }
@@ -48,7 +46,7 @@ struct BetterBallModel {
                     teamB.append(golfer)
                 }
             } else {
-                print("Debug: getTeams - No assignment found for golfer: \(golfer.fullName)")
+                print("Debug: getTeams - No assignment found for golfer: \(golfer.firstName) \(golfer.lastName)")
             }
         }
         
@@ -56,16 +54,13 @@ struct BetterBallModel {
         return (!teamA.isEmpty && !teamB.isEmpty) ? (teamA, teamB) : nil
     }
     
-    
     static func updateBetterBallScore(roundViewModel: RoundViewModel, golferId: String, currentHoleNumber: Int, scoreInt: Int) {
         let isStrokeHole = roundViewModel.betterBallStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
         let betterBallNetScore = isStrokeHole ? scoreInt - 1 : scoreInt
         
         roundViewModel.betterBallNetScores[currentHoleNumber, default: [:]][golferId] = betterBallNetScore
         
-       // let logMessage = "Better Ball Model updateBetterBallScore() - Score updated - Golfer: \(roundViewModel.golfers.first(where: { $0.id == golferId })?.formattedName(golfers: roundViewModel.golfers) ?? "Unknown"), Hole: \(currentHoleNumber), Gross Score: \(scoreInt), Better Ball Net Score: \(betterBallNetScore), Better Ball Stroke Hole: \(isStrokeHole)"
-        
-        //print(logMessage)
+        // ... (rest of the code remains the same)
     }
     
     static func updateBetterBallTallies(roundViewModel: RoundViewModel, for currentHoleNumber: Int) {
@@ -176,28 +171,24 @@ struct BetterBallModel {
     }
     
     static func recalculateBetterBallTallies(roundViewModel: RoundViewModel, upToHole: Int) {
-    // print("Debug: Entering recalculateBetterBallTallies for hole \(upToHole)")
-    
-    guard roundViewModel.isBetterBall, getTeams(roundViewModel: roundViewModel) != nil else {
-        print("Error: Better Ball not active or teams not set")
-        return
+        guard roundViewModel.isBetterBall, getTeams(roundViewModel: roundViewModel) != nil else {
+            print("Error: Better Ball not active or teams not set")
+            return
+        }
+        
+        roundViewModel.betterBallHoleTallies = [:]
+        roundViewModel.betterBallTalliedHoles = []
+        roundViewModel.betterBallMatchArray = Array(repeating: 0, count: getNumberOfHoles(for: roundViewModel.roundType))
+        
+        for holeNumber in getStartingHole(for: roundViewModel.roundType)...upToHole {
+            updateBetterBallTallies(roundViewModel: roundViewModel, for: holeNumber)
+            updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: upToHole)
+        }
+        
+        print("Debug: BetterBallModel recalculateBetterBallTallies() - Recalculated tallies up to hole \(upToHole)")
+        print("Better Ball Match Array: \(roundViewModel.betterBallMatchArray)")
+        print("Better Ball Match Status: \(roundViewModel.betterBallMatchStatus ?? "N/A")")
     }
-    
-    roundViewModel.betterBallHoleTallies = [:]
-    roundViewModel.betterBallTalliedHoles = []
-    roundViewModel.betterBallMatchArray = Array(repeating: 0, count: getNumberOfHoles(for: roundViewModel.roundType))
-    
-    for holeNumber in getStartingHole(for: roundViewModel.roundType)...upToHole {
-       // print("Debug: Updating tallies for hole \(holeNumber)")
-        updateBetterBallTallies(roundViewModel: roundViewModel, for: holeNumber)
-        updateBetterBallMatchStatus(roundViewModel: roundViewModel, for: upToHole)
-    }
-    
-    print("Debug: BetterBallModel recalculateBetterBallTallies() - Recalculated tallies up to hole \(upToHole)")
-    print("Better Ball Match Array: \(roundViewModel.betterBallMatchArray)")
-    // print("Better Ball Hole Tallies: \(roundViewModel.betterBallHoleTallies)")
-    print("Better Ball Match Status: \(roundViewModel.betterBallMatchStatus ?? "N/A")")
-}
     
     static func updateFinalBetterBallMatchStatus(roundViewModel: RoundViewModel) {
         // Update main Better Ball match status
@@ -261,7 +252,7 @@ struct BetterBallModel {
                 roundViewModel.betterBallStrokeHoles[player.id] = Array(playerStrokeHoles.prefix(betterBallHandicap))
             }
             
-            print("Debug: Better Ball Stroke Holes for \(player.fullName): \(roundViewModel.betterBallStrokeHoles[player.id] ?? [])")
+            print("Debug: Better Ball Stroke Holes for \(player.firstName) \(player.lastName): \(roundViewModel.betterBallStrokeHoles[player.id] ?? [])")
         }
     }
     

@@ -11,7 +11,8 @@ struct ProfileView: View {
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var viewModel: AuthViewModel
     @State private var isEditing = false
-    @State private var editedFullname = ""
+    @State private var editedFirstName = ""
+    @State private var editedLastName = ""
     @State private var editedEmail = ""
     @State private var editedHandicap = ""
     @State private var editedGHIN = ""
@@ -33,17 +34,23 @@ struct ProfileView: View {
                         
                         VStack(alignment: .leading, spacing: 4) {
                             if isEditing {
-                                TextField("Full Name", text: $editedFullname)
+                                TextField("First Name", text: $editedFirstName)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                TextField("Last Name", text: $editedLastName)
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                 TextField("Email", text: $editedEmail)
                                     .font(.footnote)
                                     .foregroundStyle(.gray)
                             } else {
-                                Text(user.fullname)
+                                Text(user.firstName)
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .padding(.top, 4)
+                                Text(user.lastName)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
                                 Text(user.email)
                                     .font(.footnote)
                                     .foregroundStyle(.gray)
@@ -86,7 +93,7 @@ struct ProfileView: View {
                         
                         Spacer()
                         
-                        Text("2.4.2")
+                        Text("2.4.3")
                             .font(.subheadline)
                             .foregroundStyle(colorScheme == .dark ? Color.white : Color(.gray))
                     }
@@ -126,7 +133,8 @@ struct ProfileView: View {
     }
     
     private func initializeEditFields(with user: User) {
-        editedFullname = user.fullname
+        editedFirstName = user.firstName
+        editedLastName = user.lastName
         editedEmail = user.email
         editedHandicap = user.handicap != nil ? String(format: "%.1f", user.handicap!) : ""
         editedGHIN = user.ghinNumber != nil ? String(user.ghinNumber!) : ""
@@ -137,7 +145,8 @@ struct ProfileView: View {
         
         let updatedUser = User(
             id: user.id,
-            fullname: editedFullname,
+            firstName: editedFirstName,
+            lastName: editedLastName,
             email: editedEmail,
             handicap: Float(editedHandicap),
             ghinNumber: Int(editedGHIN)
@@ -158,7 +167,7 @@ struct ProfileView: View {
 }
 
 #Preview {
-    let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
+    let mockUser = User(id: "mockId", firstName: "Mock", lastName: "User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
     return ProfileView()
         .environmentObject(SingleRoundViewModel())
         .environmentObject(AuthViewModel(mockUser: mockUser))

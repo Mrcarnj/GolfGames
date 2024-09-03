@@ -117,7 +117,7 @@ struct AddGolfersView: View {
                 )
         .onAppear {
             if let user = authViewModel.currentUser {
-                sharedViewModel.currentUserGolfer = Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)
+                sharedViewModel.currentUserGolfer = Golfer(id: user.id, firstName: user.firstName, lastName: user.lastName, handicap: user.handicap ?? 0.0)
             }
             if let course = selectedCourse {
                 sharedViewModel.selectedCourse = course
@@ -133,7 +133,7 @@ struct GolferRow: View {
 
     var body: some View {
         HStack {
-            Text(golfer.fullName)
+            Text("\(golfer.firstName) \(golfer.lastName)")
             Spacer()
             if !isCurrentUser {
                 Button(action: {
@@ -147,17 +147,17 @@ struct GolferRow: View {
     }
 }
 
-struct AddGolfersView_Previews: PreviewProvider {
-    static var previews: some View {
-        let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
-        let mockCourse = Course(id: "courseId", name: "Mock Course", location: "Mock Location")
-
-        return AddGolfersView(
-            selectedCourse: mockCourse
-        )
-        .environmentObject(SingleRoundViewModel())
-        .environmentObject(AuthViewModel(mockUser: mockUser))
-        .environmentObject(RoundViewModel())
-        .environmentObject(SharedViewModel())
-    }
-}
+//struct AddGolfersView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        let mockUser = User(id: "mockId", fullname: "Mock User", email: "mockuser@example.com", handicap: 10.0, ghinNumber: 123456)
+//        let mockCourse = Course(id: "courseId", name: "Mock Course", location: "Mock Location")
+//
+//        return AddGolfersView(
+//            selectedCourse: mockCourse
+//        )
+//        .environmentObject(SingleRoundViewModel())
+//        .environmentObject(AuthViewModel(mockUser: mockUser))
+//        .environmentObject(RoundViewModel())
+//        .environmentObject(SharedViewModel())
+//    }
+//}

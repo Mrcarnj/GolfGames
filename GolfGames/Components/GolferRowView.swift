@@ -16,7 +16,7 @@ struct GolferRowView: View {
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
-                Text(golfer.fullName)
+                Text("\(golfer.firstName) \(String(golfer.lastName.prefix(1))).")
                     .font(.subheadline)
                     .foregroundColor(Color.primary)
                 Spacer()

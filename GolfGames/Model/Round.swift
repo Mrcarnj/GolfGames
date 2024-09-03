@@ -19,8 +19,13 @@ struct Round: Identifiable, Codable {
     
     struct Golfer: Identifiable, Codable {
         var id: String
-        var fullName: String
+        var firstName: String
+        var lastName: String
         var handicap: Float
+        
+        var fullName: String {
+            return "\(firstName) \(lastName)"
+        }
     }
 }
 
@@ -29,9 +34,6 @@ enum RoundType: String, Codable {
     case front9
     case back9
 }
-
-
-
 
 extension DateFormatter {
     static let shortDate: DateFormatter = {

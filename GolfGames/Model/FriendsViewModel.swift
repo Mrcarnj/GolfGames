@@ -45,22 +45,21 @@ class FriendsViewModel: ObservableObject {
         }
     }
 
-    // Add this new method to sort friends
     private func sortFriends() {
         self.friends = self.friends.sorted { (golfer1: Golfer, golfer2: Golfer) -> Bool in
-            let name1 = golfer1.fullName.split(separator: " ").last.map(String.init) ?? golfer1.fullName
-            let name2 = golfer2.fullName.split(separator: " ").last.map(String.init) ?? golfer2.fullName
-            return name1.lowercased() < name2.lowercased()
+            let name1 = golfer1.lastName.lowercased()
+            let name2 = golfer2.lastName.lowercased()
+            return name1 < name2 || (name1 == name2 && golfer1.firstName.lowercased() < golfer2.firstName.lowercased())
         }
     }
 
-    func addFriend(fullName: String, ghinNumber: Int?, handicap: Float, completion: @escaping (Result<Void, Error>) -> Void) {
+    func addFriend(firstName: String, lastName: String, ghinNumber: Int?, handicap: Float, completion: @escaping (Result<Void, Error>) -> Void) {
         guard let userId = userId else {
             completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User ID not set"])))
             return
         }
 
-        let newFriend = Golfer(fullName: fullName, handicap: handicap, ghinNumber: ghinNumber)
+        let newFriend = Golfer(firstName: firstName, lastName: lastName, handicap: handicap, ghinNumber: ghinNumber)
         
         do {
             try db.collection("users").document(userId).collection("friends").document(newFriend.id).setData(from: newFriend) { error in
@@ -70,7 +69,7 @@ class FriendsViewModel: ObservableObject {
                 } else {
                     self.friends.append(newFriend)
                     self.sortFriends()
-                    print("Friend added successfully: \(newFriend.fullName)")
+                    print("Friend added successfully: \(newFriend.firstName) \(newFriend.lastName)")
                     completion(.success(()))
                 }
             }
@@ -88,36 +87,36 @@ class FriendsViewModel: ObservableObject {
                 print("Error removing friend: \(error.localizedDescription)")
             } else {
                 self.friends.removeAll { $0.id == friend.id }
-                print("Friend removed successfully: \(friend.fullName)")
+                print("Friend removed successfully: \(friend.firstName) \(friend.lastName)")
             }
         }
     }
     
-    func updateFriend(_ friend: Golfer, fullName: String, ghinNumber: Int?, handicap: Float, completion: @escaping (Result<Void, Error>) -> Void) {
-            guard let userId = userId else {
-                completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User ID not set"])))
-                return
-            }
-
-            let updatedFriend = Golfer(id: friend.id, fullName: fullName, handicap: handicap, ghinNumber: ghinNumber)
-            
-            do {
-                try db.collection("users").document(userId).collection("friends").document(friend.id).setData(from: updatedFriend) { error in
-                    if let error = error {
-                        print("Error updating friend: \(error.localizedDescription)")
-                        completion(.failure(error))
-                    } else {
-                        if let index = self.friends.firstIndex(where: { $0.id == friend.id }) {
-                            self.friends[index] = updatedFriend
-                        }
-                        self.sortFriends()
-                        print("Friend updated successfully: \(updatedFriend.fullName)")
-                        completion(.success(()))
-                    }
-                }
-            } catch {
-                print("Error updating friend: \(error.localizedDescription)")
-                completion(.failure(error))
-            }
+    func updateFriend(_ friend: Golfer, firstName: String, lastName: String, ghinNumber: Int?, handicap: Float, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let userId = userId else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User ID not set"])))
+            return
         }
+
+        let updatedFriend = Golfer(id: friend.id, firstName: firstName, lastName: lastName, handicap: handicap, ghinNumber: ghinNumber)
+        
+        do {
+            try db.collection("users").document(userId).collection("friends").document(friend.id).setData(from: updatedFriend) { error in
+                if let error = error {
+                    print("Error updating friend: \(error.localizedDescription)")
+                    completion(.failure(error))
+                } else {
+                    if let index = self.friends.firstIndex(where: { $0.id == friend.id }) {
+                        self.friends[index] = updatedFriend
+                    }
+                    self.sortFriends()
+                    print("Friend updated successfully: \(updatedFriend.firstName) \(updatedFriend.lastName)")
+                    completion(.success(()))
+                }
+            }
+        } catch {
+            print("Error updating friend: \(error.localizedDescription)")
+            completion(.failure(error))
+        }
+    }
 }

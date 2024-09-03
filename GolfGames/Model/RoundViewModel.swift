@@ -91,11 +91,11 @@ class RoundViewModel: ObservableObject {
         
         print("Course and tee selected: \(course.name), \(tee.tee_name)")
         
-        self.golfers = [Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0)] + additionalGolfers
+        self.golfers = [Golfer(id: user.id, firstName: user.firstName, lastName: user.lastName, handicap: user.handicap ?? 0.0)] + additionalGolfers
         print("Golfers for this round: \(self.golfers.map { $0.formattedName(golfers: self.golfers) })")
         
         let roundGolfers = self.golfers.map { golfer in
-            Round.Golfer(id: golfer.id, fullName: golfer.fullName, handicap: golfer.handicap)
+            Round.Golfer(id: golfer.id, firstName: golfer.firstName, lastName: golfer.lastName, handicap: golfer.handicap)
         }
         
         let round = Round(
@@ -197,7 +197,7 @@ class RoundViewModel: ObservableObject {
     func printDebugInfo() {
         print("RoundViewModel Debug Info:")
         print("Number of golfers: \(golfers.count)")
-        print("Golfers: \(golfers)")
+        print("Golfers: \(golfers.map { "\($0.firstName) \($0.lastName)" })")
         print("Scores: \(grossScores)")
         print("Stroke Holes: \(strokeHoles)")
     }
@@ -414,38 +414,84 @@ func resetNinePointScore(for holeNumber: Int) {
 ////////////////// CLEAR ROUND DATA //////////////////
 
 func clearRoundData() {
-        print("Clearing round data...")
-        print("Number of presses before clearing: \(presses.count)")
-        print("Number of press statuses before clearing: \(pressStatuses.count)")
-        
-        // Reset all round-related data
-        roundId = nil
-        selectedCourse = nil
-        selectedTee = nil
-        golfers = []
-        grossScores = [:]
-        netStrokePlayScores = [:]
-        matchPlayNetScores = [:]
-        strokeHoles = [:]
-        matchPlayStrokeHoles = [:]
-        holeWinners = [:]
-        matchScore = 0
-        holesPlayed = 0
-        matchWinner = nil
-        winningScore = nil
-        matchPlayGolfers = nil
-        
-        presses.removeAll()
-        pressStatuses.removeAll()
-        currentPressStartHole = nil
-        
-        print("Number of presses after clearing: \(presses.count)")
-        print("Number of press statuses after clearing: \(pressStatuses.count)")
-        
-        roundType = .full18
-        
-        objectWillChange.send()
-    }
+    print("Clearing round data...")
+    
+    // Reset basic round information
+    roundId = nil
+    selectedCourse = nil
+    selectedTee = nil
+    selectedLocation = nil
+    golfers = []
+    currentHole = 1
+    roundType = .full18
+    selectedScorecardType = .strokePlay
+    
+    // Clear scores and pars
+    grossScores = [:]
+    netStrokePlayScores = [:]
+    pars = [:]
+    courseHandicaps = [:]
+    strokeHoles = [:]
+    
+    // Clear Match Play data
+    isMatchPlay = false
+    matchPlayStatus = nil
+    matchPlayStrokeHoles = [:]
+    matchPlayHandicap = 0
+    matchPlayNetScores = [:]
+    previousHoleWinner = nil
+    holeWinners = [:]
+    holeTallies = [:]
+    matchScore = 0
+    holesPlayed = 0
+    lastUpdatedHole = 0
+    talliedHoles = []
+    matchWinner = nil
+    winningScore = nil
+    matchStatus = [:]
+    matchStatusArray = Array(repeating: 0, count: 18)
+    finalMatchStatusArray = nil
+    matchWinningHole = nil
+    matchPlayGolfers = nil
+    matchPlayHandicaps = [:]
+    
+    // Clear Match Play Presses
+    presses = []
+    pressStatuses = []
+    currentPressStartHole = nil
+    
+    // Clear Better Ball data
+    isBetterBall = false
+    betterBallMatchArray = Array(repeating: 0, count: 18)
+    betterBallFinalMatchArray = nil
+    betterBallMatchStatus = nil
+    betterBallTeamAssignments = [:]
+    betterBallNetScores = [:]
+    betterBallHoleWinners = [:]
+    betterBallHoleTallies = [:]
+    betterBallMatchScore = 0
+    betterBallMatchWinner = nil
+    betterBallWinningScore = nil
+    betterBallMatchWinningHole = nil
+    betterBallHandicaps = [:]
+    betterBallFinalStatistics = [:]
+    betterBallStrokeHoles = [:]
+    betterBallTalliedHoles = []
+    
+    // Clear Better Ball Presses
+    betterBallPresses = []
+    betterBallPressStatuses = []
+    betterBallCurrentPressStartHole = nil
+    
+    // Clear Nine Point data
+    isNinePoint = false
+    ninePointScores = [:]
+    ninePointTotalScores = [:]
+    ninePointStrokeHoles = [:]
+    
+    print("Round data cleared successfully.")
+    objectWillChange.send()
+}
 
     func forceUIUpdate() {
         objectWillChange.send()

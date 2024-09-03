@@ -150,7 +150,7 @@ struct GameSelectionView: View {
             
             ForEach(sharedViewModel.golfers) { golfer in
                 HStack {
-                    Text(golfer.fullName)
+                    Text("\(golfer.firstName) \(golfer.lastName.prefix(1)).")
                     Spacer()
                     if selectedMatchPlayGolfers.contains(where: { $0.id == golfer.id }) {
                         Image(systemName: "checkmark")
@@ -181,21 +181,21 @@ struct GameSelectionView: View {
                     .font(.headline)
                 
                 HStack(spacing: 20) {
-                    PlayerAvatar(name: golfer1.fullName)
+                    PlayerAvatar(name: "\(golfer1.firstName) \(golfer1.lastName.prefix(1)).")
                     Text("vs")
                         .font(.subheadline)
                         .foregroundColor(.primary)
-                    PlayerAvatar(name: golfer2.fullName)
+                    PlayerAvatar(name: "\(golfer2.firstName) \(golfer2.lastName.prefix(1)).")
                 }
                 
                 if let handicap1 = matchPlayHandicaps[golfer1.id],
                    let handicap2 = matchPlayHandicaps[golfer2.id] {
                     if handicap1 > 0 {
-                        Text("\(golfer1.fullName) gets \(handicap1) stroke\(handicap1 == 1 ? "" : "s")")
+                        Text("\(golfer1.firstName) \(golfer1.lastName) gets \(handicap1) stroke\(handicap1 == 1 ? "" : "s")")
                             .font(.subheadline)
                             .foregroundColor(.primary)
                     } else if handicap2 > 0 {
-                        Text("\(golfer2.fullName) gets \(handicap2) stroke\(handicap2 == 1 ? "" : "s")")
+                        Text("\(golfer2.firstName) \(golfer2.lastName) gets \(handicap2) stroke\(handicap2 == 1 ? "" : "s")")
                             .font(.subheadline)
                             .foregroundColor(.primary)
                     } else {
@@ -388,7 +388,7 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
     private func printDebugInfo() {
         print("Debug: GameSelectionView - Match Play: \(sharedViewModel.isMatchPlay)")
         print("Debug: GameSelectionView - Match Play Handicap: \(sharedViewModel.matchPlayHandicap)")
-        print("Debug: GameSelectionView - Golfers: \(sharedViewModel.golfers.map { "\($0.fullName) (Handicap: \($0.handicap), Course Handicap: \($0.courseHandicap ?? 0))" })")
+        print("Debug: GameSelectionView - Golfers: \(sharedViewModel.golfers.map { "\($0.firstName) \($0.lastName) (Handicap: \($0.handicap), Course Handicap: \($0.courseHandicap ?? 0))" })")
     }
     
     private func showMatchPlayInfo() {

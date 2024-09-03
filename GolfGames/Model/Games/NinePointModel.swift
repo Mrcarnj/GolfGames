@@ -23,7 +23,7 @@ struct NinePointModel {
         roundViewModel.ninePointScores = [:]
         roundViewModel.ninePointTotalScores = [:]
         
-        print("Nine Point initialized for golfers: \(roundViewModel.golfers.map { $0.fullName })")
+        print("Nine Point initialized for golfers: \(roundViewModel.golfers.map { "\($0.firstName) \($0.lastName)" })")
     }
     
     static func updateNinePointScore(roundViewModel: RoundViewModel, holeNumber: Int) {
@@ -123,13 +123,13 @@ struct NinePointModel {
             if let golfer = roundViewModel.golfers.first(where: { $0.id == result.key }) {
                 let position = index + 1
                 let positionSuffix = getPositionSuffix(position)
-                resultString += "\(position)\(positionSuffix): \(golfer.fullName) - \(result.value) points\n"
+                resultString += "\(position)\(positionSuffix): \(golfer.firstName) \(golfer.lastName) - \(result.value) points\n"
             }
         }
         
         if let winner = sortedResults.first {
             if let winningGolfer = roundViewModel.golfers.first(where: { $0.id == winner.key }) {
-                resultString += "\nWinner: \(winningGolfer.fullName) with \(winner.value) points!"
+                resultString += "\nWinner: \(winningGolfer.firstName) \(winningGolfer.lastName) with \(winner.value) points!"
             }
         }
         

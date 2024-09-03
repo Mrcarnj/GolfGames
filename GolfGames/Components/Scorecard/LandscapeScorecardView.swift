@@ -128,7 +128,7 @@ struct LandscapeScorecardView: View {
     private var golferPicker: some View {
         Picker("Select Golfer", selection: $selectedGolferId) {
             ForEach(roundViewModel.golfers) { golfer in
-                Text(golfer.fullName).tag(golfer.id as String?)
+                Text("\(golfer.firstName) \(golfer.lastName)").tag(golfer.id as String?)
             }
         }
         .pickerStyle(MenuPickerStyle())
@@ -175,7 +175,8 @@ struct LandscapeScorecardView: View {
             "golfers": roundViewModel.golfers.map { golfer in
                 [
                     "id": golfer.id,
-                    "name": golfer.fullName,
+                    "firstName": golfer.firstName,
+                    "lastName": golfer.lastName,
                     "handicap": golfer.handicap,
                     "grossTotal": roundViewModel.grossScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) },
                     "netTotal": roundViewModel.netStrokePlayScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }

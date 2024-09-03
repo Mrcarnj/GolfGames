@@ -27,52 +27,60 @@ class AuthViewModel: ObservableObject {
     }
     
     init(mockUser: User) {
-           self.currentUser = mockUser
-           self.userSession = nil // Set this to nil or a mock FirebaseAuth.User if needed
-       }
+        self.currentUser = mockUser
+        self.userSession = nil // Set this to nil or a mock FirebaseAuth.User if needed
+    }
     
     func signIn(withEmail email: String, password: String) async throws {
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             self.userSession = result.user
             await fetchUser()
+            
+            // Check if migration has been performed
+            if !UserDefaults.hasPerformedMigration {
+                await migrateExistingUsers()
+                await migrateExistingFriends()
+                UserDefaults.hasPerformedMigration = true
+            }
         } catch {
             print("DEBUG: Failed to log in with error \(error.localizedDescription)")
+            throw error
         }
     }
     
-    func createUser(withEmail email: String, password:String, fullname:String, handicap: Float?, ghinNumber: Int?) async throws {
+    func createUser(withEmail email: String, password: String, firstName: String, lastName: String, handicap: Float?, ghinNumber: Int?) async throws {
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
             self.userSession = result.user
-            let user = User(id: result.user.uid, fullname: fullname, email: email, handicap: handicap, ghinNumber: ghinNumber)
+            let user = User(id: result.user.uid, firstName: firstName, lastName: lastName, email: email, handicap: handicap, ghinNumber: ghinNumber)
             let encodedUser = try Firestore.Encoder().encode(user)
             try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
             await fetchUser()
         } catch {
-            print ("DEBUG: Failed to created user with error \(error.localizedDescription)")
+            print("DEBUG: Failed to create user with error \(error.localizedDescription)")
+            throw error
         }
     }
     
-    func signOut(){
+    func signOut() {
         do {
-            try Auth.auth().signOut() //signs out user on backend
-            self.userSession = nil //wipes out user session and takes back to login screen
-            self.currentUser = nil //wipes out current user data model
+            try Auth.auth().signOut()
+            self.userSession = nil
+            self.currentUser = nil
         } catch {
-            print ("DEDUG: Failed to sign out with error \(error.localizedDescription)")
+            print("DEBUG: Failed to sign out with error \(error.localizedDescription)")
         }
     }
     
-    func deleteAccount(){
-        
+    func deleteAccount() {
+        // Implementation needed
     }
     
     func fetchUser() async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         guard let snapshot = try? await Firestore.firestore().collection("users").document(uid).getDocument() else { return }
-        self.currentUser = try? snapshot.data(as:User.self)
-        
+        self.currentUser = try? snapshot.data(as: User.self)
     }
     
     func updateUserProfile(_ updatedUser: User) async throws {
@@ -89,11 +97,73 @@ class AuthViewModel: ObservableObject {
             throw error
         }
     }
+    
+    // Add a migration function to update existing users
+    func migrateExistingUsers() async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let userRef = Firestore.firestore().collection("users").document(uid)
+        
+        do {
+            let snapshot = try await userRef.getDocument()
+            if let data = snapshot.data(), let fullName = data["fullname"] as? String {
+                let nameParts = fullName.components(separatedBy: " ")
+                let firstName = nameParts.first ?? ""
+                let lastName = nameParts.dropFirst().joined(separator: " ")
+                
+                try await userRef.updateData([
+                    "firstName": firstName,
+                    "lastName": lastName,
+                    "fullname": FieldValue.delete()
+                ])
+                
+                print("User migrated successfully")
+            }
+        } catch {
+            print("Error migrating user: \(error.localizedDescription)")
+        }
+    }
+    
+    // Add a migration function to update existing friends
+    func migrateExistingFriends() async {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let db = Firestore.firestore()
+        let friendsRef = db.collection("users").document(uid).collection("friends")
+        
+        do {
+            let snapshot = try await friendsRef.getDocuments()
+            for document in snapshot.documents {
+                let data = document.data()
+                if let fullName = data["fullName"] as? String {
+                    let nameParts = fullName.components(separatedBy: " ")
+                    let firstName = nameParts.first ?? ""
+                    let lastName = nameParts.dropFirst().joined(separator: " ")
+                    
+                    try await friendsRef.document(document.documentID).updateData([
+                        "firstName": firstName,
+                        "lastName": lastName,
+                        "fullName": FieldValue.delete()
+                    ])
+                    
+                    print("Friend migrated successfully: \(fullName)")
+                }
+            }
+            print("All friends migrated successfully")
+        } catch {
+            print("Error migrating friends: \(error.localizedDescription)")
+        }
+    }
+}
+
+extension UserDefaults {
+    static var hasPerformedMigration: Bool {
+        get { UserDefaults.standard.bool(forKey: "hasPerformedMigration") }
+        set { UserDefaults.standard.set(newValue, forKey: "hasPerformedMigration") }
+    }
 }
 
 class MockAuthViewModel: AuthViewModel {
     override init() {
         super.init()
-        self.currentUser = User.MOCK_USER
+        self.currentUser = User(id: NSUUID().uuidString, firstName: "Tiger", lastName: "Woods", email: "tiger@tgl.com", handicap: 1.2, ghinNumber: 1709023)
     }
 }

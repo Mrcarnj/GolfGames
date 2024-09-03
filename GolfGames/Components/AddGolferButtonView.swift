@@ -73,7 +73,7 @@ struct AddGolferButtonView: View {
 }
 
 func convertUserToGolfer(user: User) -> Golfer {
-    return Golfer(id: user.id, fullName: user.fullname, handicap: user.handicap ?? 0.0, ghinNumber: user.ghinNumber, isChecked: false)
+    return Golfer(id: user.id, firstName: user.firstName, lastName: user.lastName, handicap: user.handicap ?? 0.0, ghinNumber: user.ghinNumber, isChecked: false)
 }
 
 struct AddGolferButtonView_Previews: PreviewProvider {
