@@ -186,14 +186,6 @@ struct HoleView: View {
                 secondaryButton: .cancel()
             )
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    focusedField = nil
-                }
-            }
-        }
     }
     
     private var customNavigationBar: some View {
@@ -310,10 +302,11 @@ struct HoleView: View {
                 ForEach(0..<pages.count, id: \.self) { index in
                     pages[index]
                         .tag(index)
+                        .frame(height: getPageHeight(for: index))
                 }
             }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))  // Hide default indicators
-            .frame(height: 150)  // Adjust this height as needed
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            .frame(height: getMaxPageHeight())
             
             // Custom page indicators
             if pages.count > 1 {
@@ -329,20 +322,29 @@ struct HoleView: View {
         }
     }
     
+    private func getPageHeight(for index: Int) -> CGFloat {
+        switch index {
+        case 0 where roundViewModel.isMatchPlay:
+            return CGFloat(100 + (roundViewModel.pressStatuses.count * 20))
+        case 0 where roundViewModel.isBetterBall:
+            return CGFloat(120 + (roundViewModel.betterBallPressStatuses.count * 15))
+        case 0 where roundViewModel.isNinePoint:
+            return CGFloat(80 + (roundViewModel.golfers.count * 25))
+        default:
+            return 150
+        }
+    }
+    
+    private func getMaxPageHeight() -> CGFloat {
+        let heights = (0..<carouselPages.count).map { getPageHeight(for: $0) }
+        return heights.max() ?? 150
+    }
+    
     private var carouselPages: [AnyView] {
         var pages: [AnyView] = []
 
-        print("Debug: isMatchPlay: \(roundViewModel.isMatchPlay)")
-        print("Debug: isBetterBall: \(roundViewModel.isBetterBall)")
-        print("Debug: isNinePoint: \(roundViewModel.isNinePoint)")
-
         if roundViewModel.isMatchPlay {
-            pages.append(AnyView(
-                VStack {
-                    matchStatusView
-                    pressStatusesView
-                }
-            ))
+            pages.append(AnyView(matchStatusView))
         }
 
         if roundViewModel.isBetterBall {
@@ -362,47 +364,137 @@ struct HoleView: View {
             ))
         }
 
-        print("Debug: Number of carousel pages: \(pages.count)")
-
         return pages
     }
     
     private var matchStatusView: some View {
-        Group {
+        VStack(alignment: .center, spacing: 8) {
             if roundViewModel.isMatchPlay {
                 if let (golfer1, golfer2) = roundViewModel.matchPlayGolfers {
-                                Text("\(golfer1.firstName) vs \(golfer2.firstName)")
-                                    .font(.subheadline)
-                                    .padding(.top, 5)
-                            }
+                    Text("\(golfer1.firstName) vs \(golfer2.firstName)")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                
                 Text(roundViewModel.matchPlayStatus ?? "Match Play Status Not Available")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.blue)
+                    .padding(.vertical, 4)
+                
+                if !roundViewModel.pressStatuses.isEmpty {
+                    Text("Presses")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .padding(.top, 4)
+                    
+                    ForEach(roundViewModel.pressStatuses, id: \.self) { pressStatus in
+                        Text(pressStatus)
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private struct BetterBallTeamsView: View {
+        @EnvironmentObject var roundViewModel: RoundViewModel
+        
+        var body: some View {
+            VStack(alignment: .center, spacing: 4) {
+                Text("Better Ball")
                     .font(.headline)
-                    .padding(.vertical, 5)
-            } else if roundViewModel.isBetterBall {
+                    .padding(.bottom, 2)
+                
+                ForEach(["Team A", "Team B"], id: \.self) { team in
+                    HStack {
+                        Text("\(team):")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        
+                        let teamMembers = roundViewModel.golfers
+                            .filter { roundViewModel.betterBallTeamAssignments[$0.id] == team }
+                            .map { $0.formattedName(golfers: roundViewModel.golfers) }
+                            .joined(separator: " / ")
+                        
+                        Text(teamMembers)
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Divider()
+                    .padding(.vertical, 2)
+                
+                betterBallStatusSection
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(8)
+            .fixedSize(horizontal: true, vertical: false)
+        }
+        
+        private var betterBallStatusSection: some View {
+            VStack(alignment: .center, spacing: 2) {
                 Text(roundViewModel.betterBallMatchStatus ?? "Better Ball Status Not Available")
-                    .font(.headline)
-                    .padding(.vertical, 5)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.blue)
+                
+                if !roundViewModel.betterBallPressStatuses.isEmpty {
+                    Text("Presses:")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .padding(.top, 2)
+                    
+                    ForEach(roundViewModel.betterBallPressStatuses, id: \.self) { pressStatus in
+                        Text(pressStatus)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
         }
     }
     
-    private var pressStatusesView: some View {
-    Group {
-        if roundViewModel.isMatchPlay {
-            ForEach(roundViewModel.pressStatuses, id: \.self) { pressStatus in
-                Text(pressStatus)
-                    .font(.subheadline)
-                    .padding(.horizontal)
-            }
-        } else if roundViewModel.isBetterBall {
-            ForEach(roundViewModel.betterBallPressStatuses, id: \.self) { pressStatus in
-                Text(pressStatus)
-                    .font(.subheadline)
-                    .padding(.horizontal)
+    private struct NinePointScoresView: View {
+        @EnvironmentObject var roundViewModel: RoundViewModel
+        @Binding var showWinner: Bool
+        
+        var body: some View {
+            if roundViewModel.isNinePoint {
+                VStack(alignment: .center, spacing: 4) {
+                    Text("Nine Point Scores")
+                        .font(.headline)
+                        .padding(.bottom, 2)
+                    
+                    let sortedGolfers = roundViewModel.golfers.sorted {
+                        (roundViewModel.ninePointTotalScores[$0.id] ?? 0) > (roundViewModel.ninePointTotalScores[$1.id] ?? 0)
+                    }
+                    
+                    ForEach(sortedGolfers, id: \.id) { golfer in
+                        HStack {
+                            if showWinner && golfer == sortedGolfers.first {
+                                Image(systemName: "crown.fill")
+                                    .foregroundColor(.yellow)
+                            }
+                            Text(golfer.formattedName(golfers: roundViewModel.golfers))
+                                .fontWeight(.semibold)
+                            Text("\(roundViewModel.ninePointTotalScores[golfer.id] ?? 0) points")
+                        }
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(8)
             }
         }
     }
-}
     
     private var scoreHeaderView: some View {
         HStack {
@@ -524,35 +616,35 @@ struct HoleView: View {
     }
     
     private func betterBallPressButton(for golfer: Golfer) -> some View {
-    Group {
-        if let (leadingTeam, trailingTeam, score) = BetterBallPressModel.getCurrentBetterBallPressStatus(roundViewModel: roundViewModel) {
-            ZStack {
-                if score == 0 {
-                    Text("")
-                        .font(.system(size: 10))
-                        .foregroundColor(.gray)
-                } else if let trailingTeam = trailingTeam,
-                          roundViewModel.betterBallTeamAssignments[golfer.id] == trailingTeam,
-                          isFirstPlayerOfTeam(golfer, team: trailingTeam),
-                          (roundViewModel.betterBallMatchWinner == nil || !roundViewModel.betterBallPresses.isEmpty),
-                          !scoresChecked && currentHoleIndex < 17 {
-                    Button(action: {
-                        showingPressConfirmation = true
-                    }) {
-                        Text("Press")
-                            .font(.system(size: 12, weight: .semibold))
-                            .frame(width: 50, height: 24)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                            .shadow(color: .gray.opacity(0.3), radius: 2, x: 0, y: 1)
+        Group {
+            if let (leadingTeam, trailingTeam, score) = BetterBallPressModel.getCurrentBetterBallPressStatus(roundViewModel: roundViewModel) {
+                ZStack {
+                    if score == 0 {
+                        Text("")
+                            .font(.system(size: 10))
+                            .foregroundColor(.gray)
+                    } else if let trailingTeam = trailingTeam,
+                              roundViewModel.betterBallTeamAssignments[golfer.id] == trailingTeam,
+                              isFirstPlayerOfTeam(golfer, team: trailingTeam),
+                              (roundViewModel.betterBallMatchWinner == nil || !roundViewModel.betterBallPresses.isEmpty),
+                              !scoresChecked && currentHoleIndex < 17 {
+                        Button(action: {
+                            showingPressConfirmation = true
+                        }) {
+                            Text("Press")
+                                .font(.system(size: 12, weight: .semibold))
+                                .frame(width: 50, height: 24)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                                .shadow(color: .gray.opacity(0.3), radius: 2, x: 0, y: 1)
+                        }
                     }
                 }
             }
         }
+        .frame(width: 60, height: 30)
     }
-    .frame(width: 60, height: 30)
-}
     
     private func isFirstPlayerOfTeam(_ golfer: Golfer, team: String) -> Bool {
         let teamPlayers = roundViewModel.golfers.filter { roundViewModel.betterBallTeamAssignments[$0.id] == team }
@@ -627,8 +719,14 @@ struct HoleView: View {
             // Update game-specific scores
             if roundViewModel.isMatchPlay {
                 MatchPlayModel.updateMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
-            } else if roundViewModel.isBetterBall {
+            }
+            
+            if roundViewModel.isBetterBall {
                 BetterBallModel.updateBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
+            }
+            
+            if roundViewModel.isNinePoint {
+                NinePointModel.updateNinePointScore(roundViewModel: roundViewModel, holeNumber: currentHoleNumber)
             }
         } else {
             // Reset scores if the input is invalid
@@ -637,9 +735,13 @@ struct HoleView: View {
             
             if roundViewModel.isMatchPlay {
                 MatchPlayModel.resetMatchPlayScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber)
-            } else if roundViewModel.isBetterBall {
+            }
+            
+            if roundViewModel.isBetterBall {
                 BetterBallModel.resetBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber)
-            } else if roundViewModel.isNinePoint {
+            }
+            
+            if roundViewModel.isNinePoint {
                 NinePointModel.resetNinePointScore(roundViewModel: roundViewModel, holeNumber: currentHoleNumber)
             }
         }
@@ -648,9 +750,13 @@ struct HoleView: View {
         if roundViewModel.allScoresEntered(for: currentHoleNumber) {
             if roundViewModel.isMatchPlay {
                 MatchPlayModel.updateMatchPlayTallies(roundViewModel: roundViewModel, currentHoleNumber: currentHoleNumber)
-            } else if roundViewModel.isBetterBall {
+            }
+            
+            if roundViewModel.isBetterBall {
                 BetterBallModel.updateBetterBallTallies(roundViewModel: roundViewModel, for: currentHoleNumber)
-            } else if roundViewModel.isNinePoint {
+            }
+            
+            if roundViewModel.isNinePoint {
                 // No need for additional tally updates for Nine Point, as it's done in updateNinePointScore
             }
             
@@ -806,7 +912,7 @@ struct HoleView: View {
                     updateScore(golfer.id, newValue)
                 }
             ))
-            .keyboardType(.numberPad)
+            .keyboardType(.decimalPad)
             .focused($focusedField, equals: golfer.id)
             .frame(width: 50, height: 50)
             .background(colorScheme == .dark ? Color.white : Color.gray.opacity(0.2))
@@ -831,69 +937,5 @@ struct HoleView: View {
                     }
                 }
             )
-        }
-    }
-    
-    private struct BetterBallTeamsView: View {
-        @EnvironmentObject var roundViewModel: RoundViewModel
-        
-        var body: some View {
-            if roundViewModel.isBetterBall {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Better Ball Teams:")
-                        .font(.headline)
-                        .padding(.bottom, 2)
-                    ForEach(["Team A", "Team B"], id: \.self) { team in
-                        HStack {
-                            Text("\(team):")
-                                .fontWeight(.semibold)
-                            let teamMembers = roundViewModel.golfers
-                                .filter { roundViewModel.betterBallTeamAssignments[$0.id] == team }
-                                .map { $0.formattedName(golfers: roundViewModel.golfers) }
-                                .joined(separator: " / ")
-                            Text(teamMembers)
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(8)
-            }
-        }
-    }
-    
-    private struct NinePointScoresView: View {
-        @EnvironmentObject var roundViewModel: RoundViewModel
-        @Binding var showWinner: Bool
-        
-        var body: some View {
-            if roundViewModel.isNinePoint {
-                VStack(alignment: .center, spacing: 4) {
-                    Text("Nine Point Scores:")
-                        .font(.headline)
-                        .padding(.bottom, 2)
-                    
-                    let sortedGolfers = roundViewModel.golfers.sorted {
-                        (roundViewModel.ninePointTotalScores[$0.id] ?? 0) > (roundViewModel.ninePointTotalScores[$1.id] ?? 0)
-                    }
-                    
-                    ForEach(sortedGolfers, id: \.id) { golfer in
-                        HStack {
-                            if showWinner && golfer == sortedGolfers.first {
-                                Image(systemName: "crown.fill")
-                                    .foregroundColor(.yellow)
-                            }
-                            Text(golfer.formattedName(golfers: roundViewModel.golfers))
-                                .fontWeight(.semibold)
-                            Text("\(roundViewModel.ninePointTotalScores[golfer.id] ?? 0) points")
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(8)
-            }
         }
     }

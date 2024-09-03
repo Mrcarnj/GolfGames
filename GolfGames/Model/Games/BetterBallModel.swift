@@ -87,6 +87,7 @@ struct BetterBallModel {
         }
         
         roundViewModel.betterBallTalliedHoles.insert(currentHoleNumber)
+        print ("Team A score: \(teamAScore) || Team B score: \(teamBScore)")
     }
     
     static func resetBetterBallScore(roundViewModel: RoundViewModel, golferId: String, currentHoleNumber: Int) {
