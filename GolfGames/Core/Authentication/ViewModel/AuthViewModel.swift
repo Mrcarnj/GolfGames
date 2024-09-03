@@ -98,6 +98,13 @@ class AuthViewModel: ObservableObject {
         }
     }
     
+    func performAutoSignOutIfNeeded() {
+            if !UserDefaults.hasPerformedAutoSignOut {
+                signOut()
+                UserDefaults.hasPerformedAutoSignOut = true
+            }
+        }
+    
     // Add a migration function to update existing users
     func migrateExistingUsers() async {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -152,12 +159,18 @@ class AuthViewModel: ObservableObject {
             print("Error migrating friends: \(error.localizedDescription)")
         }
     }
+    
+    
 }
 
 extension UserDefaults {
     static var hasPerformedMigration: Bool {
         get { UserDefaults.standard.bool(forKey: "hasPerformedMigration") }
         set { UserDefaults.standard.set(newValue, forKey: "hasPerformedMigration") }
+    }
+    static var hasPerformedAutoSignOut: Bool {
+        get { UserDefaults.standard.bool(forKey: "hasPerformedAutoSignOut") }
+        set { UserDefaults.standard.set(newValue, forKey: "hasPerformedAutoSignOut") }
     }
 }
 

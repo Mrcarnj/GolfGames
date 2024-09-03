@@ -32,6 +32,9 @@ struct GolfGamesApp: App {
                 .environmentObject(sharedViewModel)
                 .environmentObject(locationManager)
                 .onAppear {
+                    Task {
+                        await authViewModel.performAutoSignOutIfNeeded()
+                    }
                     // Set initial orientation lock to portrait
                     AppDelegate.lockOrientation(.portrait)
                     // Request location permission
