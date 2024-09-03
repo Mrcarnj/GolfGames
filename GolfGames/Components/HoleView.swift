@@ -186,6 +186,14 @@ struct HoleView: View {
                 secondaryButton: .cancel()
             )
         }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    focusedField = nil
+                }
+            }
+        }
     }
     
     private var customNavigationBar: some View {
