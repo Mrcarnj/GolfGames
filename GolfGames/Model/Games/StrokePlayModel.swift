@@ -18,4 +18,25 @@ struct StrokePlayModel {
         
         print(logMessage)
     }
+
+    static func calculateCumulativeScoreToPar(roundViewModel: RoundViewModel, singleRoundViewModel: SingleRoundViewModel, golferId: String, upToHole: Int) -> Int {
+        var cumulativeScoreToPar = 0
+        for holeNumber in 1...max(1, upToHole) {
+            if let grossScore = roundViewModel.grossScores[holeNumber]?[golferId],
+               let hole = singleRoundViewModel.holes.first(where: { $0.holeNumber == holeNumber }) {
+                cumulativeScoreToPar += grossScore - hole.par
+            }
+        }
+        return cumulativeScoreToPar
+    }
+
+    static func formatScoreToPar(_ scoreToPar: Int) -> String {
+        if scoreToPar == 0 {
+            return "E"
+        } else if scoreToPar > 0 {
+            return "+\(scoreToPar)"
+        } else {
+            return "\(scoreToPar)"
+        }
+    }
 }

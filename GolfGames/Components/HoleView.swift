@@ -41,6 +41,8 @@ struct HoleView: View {
     @State private var showNinePointWinner = false
     @State private var currentCarouselPage = 0
     
+    @State private var currentScoreToPar: [String: Int] = [:]
+    
     private var startingHoleIndex: Int {
         switch roundType {
         case .full18, .front9:
@@ -525,8 +527,14 @@ struct HoleView: View {
     private var golferScoresView: some View {
         ForEach(roundViewModel.golfers, id: \.id) { golfer in
             HStack {
-                Text(golfer.formattedName(golfers: roundViewModel.golfers))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                    Text(golfer.formattedName(golfers: roundViewModel.golfers))
+                    if roundViewModel.selectedScorecardType == .strokePlay {
+                        Text("(\(StrokePlayModel.formatScoreToPar(currentScoreToPar[golfer.id] ?? 0)))")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
                 ScoreInputView(
                     scoreInputs: $scoreInputs,
@@ -710,9 +718,17 @@ struct HoleView: View {
             if scoreInputs[golfer.id] == nil {
                 scoreInputs[golfer.id] = ""
             }
+            // Update the cumulative score to par
+            currentScoreToPar[golfer.id] = StrokePlayModel.calculateCumulativeScoreToPar(
+                roundViewModel: roundViewModel,
+                singleRoundViewModel: singleRoundViewModel,
+                golferId: golfer.id,
+                upToHole: currentHoleIndex
+            )
         }
         
-        //print("HoleView updateScoresForCurrentHole() - Updated scores for Hole \(currentHoleNumber): \(scoreInputs)")
+        // Force view update to refresh the score to par display
+        roundViewModel.objectWillChange.send()
     }
     
     private func updateScore(for golferId: String, score: String) {
@@ -733,9 +749,6 @@ struct HoleView: View {
                 BetterBallModel.updateBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
             }
             
-            if roundViewModel.isNinePoint {
-                NinePointModel.updateNinePointScore(roundViewModel: roundViewModel, holeNumber: currentHoleNumber)
-            }
         } else {
             // Reset scores if the input is invalid
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil

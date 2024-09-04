@@ -145,11 +145,10 @@ struct NinePointSCView: View {
             Color.clear
             if points != 0 {
                 Text("\(points)")
-                    .foregroundColor(colorScheme == .light ? .white : .black)
+                    .foregroundColor(colorScheme == .light ? .black : .white)
                     .font(.subheadline)
             }
         }
-        .border(Color.black, width: 1)
     }
 }
 
