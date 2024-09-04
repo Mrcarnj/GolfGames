@@ -58,6 +58,9 @@ struct LandscapeScorecardView: View {
                             case .ninePoint:
                                 ninePointScorecard(geometry: geometry)
                                     .padding(.top, -10)
+                            case .stablefordGross:
+                                stablefordGrossScorecard(geometry: geometry)
+                                    .padding(.top, -10)
                             @unknown default:
                                 Text("Unsupported scorecard type")
                             }
@@ -101,6 +104,9 @@ struct LandscapeScorecardView: View {
         if roundViewModel.isNinePoint {
             Text("Nine Point").tag(ScorecardType.ninePoint)
         }
+        if roundViewModel.isStablefordGross {
+            Text("Stableford (Gross)").tag(ScorecardType.stablefordGross)
+        }
     }
     .pickerStyle(SegmentedPickerStyle())
 }
@@ -125,6 +131,12 @@ struct LandscapeScorecardView: View {
             .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
     }
     
+    private func stablefordGrossScorecard(geometry: GeometryProxy) -> some View {
+        StablefordGrossSCView()
+            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    }
+
+
     private var golferPicker: some View {
         Picker("Select Golfer", selection: $selectedGolferId) {
             ForEach(roundViewModel.golfers) { golfer in

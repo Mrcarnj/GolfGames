@@ -12,10 +12,10 @@ struct StablefordGrossSCView: View {
     @EnvironmentObject var roundViewModel: RoundViewModel
     @EnvironmentObject var singleRoundViewModel: SingleRoundViewModel
     
-    private let nameCellWidth: CGFloat = 80
+    private let nameCellWidth: CGFloat = 55
     private let scoreCellWidth: CGFloat = 30
     private let scoreCellHeight: CGFloat = 40
-    private let totalCellWidth: CGFloat = 50
+    private let totalCellWidth: CGFloat = 40
     
     var body: some View {
         VStack(spacing: 0) {
@@ -118,7 +118,8 @@ struct StablefordGrossSCView: View {
         HStack(spacing: 0) {
             if showFirstColumn {
                 Text(golfer.formattedName(golfers: roundViewModel.golfers))
-                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .leading)
+                    .fontWeight(.semibold)
+                    .frame(width: nameCellWidth, height: scoreCellHeight, alignment: .center)
                     .padding(.horizontal, 2)
                     .background(Color(UIColor.systemGray4))
             }
@@ -126,11 +127,12 @@ struct StablefordGrossSCView: View {
                 if let points = roundViewModel.stablefordGrossScores[hole]?[golfer.id] {
                     Text("\(points)")
                         .frame(width: scoreCellWidth, height: scoreCellHeight)
-                        .background(Color(UIColor.systemGray4))
+                        .background(Color(.clear))
+                        .foregroundColor(colorScheme == .light ? .black : .white)
                 } else {
                     Text("")
                         .frame(width: scoreCellWidth, height: scoreCellHeight)
-                        .background(Color(UIColor.systemGray4))
+                        .background(Color(.clear))
                 }
             }
             let totalPoints = holes.reduce(0) { total, hole in

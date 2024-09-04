@@ -530,7 +530,7 @@ struct HoleView: View {
                 }
                 
                 ForEach(sortedGolfers, id: \.id) { golfer in
-                    HStack (spacing: 25){
+                    HStack (spacing: 5){
                         if showWinner && golfer == sortedGolfers.first {
                             Image(systemName: "crown.fill")
                                 .foregroundColor(.yellow)
@@ -855,39 +855,53 @@ struct HoleView: View {
     }
         
         private func checkScores() {
-            showMissingScores = true
-            for golfer in roundViewModel.golfers {
-                missingScores[golfer.id] = getMissingScoresForRoundType(golferId: golfer.id)
-            }
-            
-            // If there are no missing scores, update the final match status
-            if missingScores.values.allSatisfy({ $0.isEmpty }) {
-                if roundViewModel.isMatchPlay {
-                    MatchPlayModel.updateFinalMatchStatus(roundViewModel: roundViewModel)
-                } else if roundViewModel.isBetterBall {
-                    BetterBallModel.updateFinalBetterBallMatchStatus(roundViewModel: roundViewModel)
-                } else if roundViewModel.isNinePoint {
-                    // Update Nine Point scoring for the last hole
-                    let lastHole = roundViewModel.roundType == .front9 ? 9 : 18
-                    NinePointModel.updateNinePointScore(roundViewModel: roundViewModel, holeNumber: lastHole)
-                    // Display final results
-                    _ = NinePointModel.displayFinalResults(roundViewModel: roundViewModel)
-                    // Set showNinePointWinner to true
-                    showNinePointWinner = true
-                } else if roundViewModel.isStablefordGross {
-                    // Update Stableford Gross scoring for the last hole
-                    let lastHole = roundViewModel.roundType == .front9 ? 9 : 18
-                    roundViewModel.recalculateStablefordGrossScores(upToHole: lastHole)
-                    // Display final results
-                    _ = StablefordGrossModel.displayFinalResults(roundViewModel: roundViewModel)
-                    // Set showStablefordGrossWinner to true
-                    showStablefordGrossWinner = true
-                }
-            }
-            
-            // Force view update
-            roundViewModel.forceUIUpdate()
+    showMissingScores = true
+    for golfer in roundViewModel.golfers {
+        missingScores[golfer.id] = getMissingScoresForRoundType(golferId: golfer.id)
+    }
+    
+    // If there are no missing scores, update the final match status and scores
+    if missingScores.values.allSatisfy({ $0.isEmpty }) {
+        let lastHole = roundViewModel.roundType == .front9 ? 9 : 18
+        
+        // Update score to par for all golfers
+        for golfer in roundViewModel.golfers {
+            currentScoreToPar[golfer.id] = StrokePlayModel.calculateCumulativeScoreToPar(
+                roundViewModel: roundViewModel,
+                singleRoundViewModel: singleRoundViewModel,
+                golferId: golfer.id,
+                upToHole: lastHole
+            )
         }
+        
+        if roundViewModel.isMatchPlay {
+            MatchPlayModel.updateFinalMatchStatus(roundViewModel: roundViewModel)
+        } else if roundViewModel.isBetterBall {
+            BetterBallModel.updateFinalBetterBallMatchStatus(roundViewModel: roundViewModel)
+        } else if roundViewModel.isNinePoint {
+            // Update Nine Point scoring for the last hole
+            NinePointModel.updateNinePointScore(roundViewModel: roundViewModel, holeNumber: lastHole)
+            // Display final results
+            _ = NinePointModel.displayFinalResults(roundViewModel: roundViewModel)
+            // Set showNinePointWinner to true
+            showNinePointWinner = true
+        }
+        
+        if roundViewModel.isStablefordGross {
+            // Update Stableford Gross scoring for the last hole
+            StablefordGrossModel.updateStablefordGrossScore(roundViewModel: roundViewModel, holeNumber: lastHole)
+            // Recalculate all scores to ensure consistency
+            StablefordGrossModel.recalculateStablefordGrossScores(roundViewModel: roundViewModel, upToHole: lastHole)
+            // Display final results
+            _ = StablefordGrossModel.displayFinalResults(roundViewModel: roundViewModel)
+            // Set showStablefordGrossWinner to true
+            showStablefordGrossWinner = true
+        }
+    }
+    
+    // Force view update
+    roundViewModel.forceUIUpdate()
+}
         
         private func getMissingScoresForRoundType(golferId: String) -> [Int] {
             switch roundViewModel.roundType {

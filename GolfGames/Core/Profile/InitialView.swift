@@ -67,6 +67,10 @@ struct InititalView: View {
                     }
                 }
             }
+            .onAppear {
+                // Force portrait orientation when this view appears
+                AppDelegate.lockOrientation(.portrait, andRotateTo: .portrait)
+            }
         }
     }
     

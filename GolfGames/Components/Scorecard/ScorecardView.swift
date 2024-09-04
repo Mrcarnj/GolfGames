@@ -29,6 +29,8 @@ struct ScorecardView: View {
     @State private var selectedScorecardType: ScorecardType = .strokePlay
     @State private var isLandscape = false
     @State private var imageSaver = ImageSaver()
+    @State private var currentScale: CGFloat = 1.0
+    @State private var previousScale: CGFloat = 1.0
     
     var body: some View {
         GeometryReader { geometry in
@@ -67,10 +69,11 @@ struct ScorecardView: View {
             NavigationLink(destination: InititalView().environmentObject(authViewModel).environmentObject(roundViewModel), isActive: $navigateToInitialView) {
                 EmptyView()
             }
+            .isDetailLink(false)
         )
         .onChange(of: selectedScorecardType) { newValue in
             switch newValue {
-            case .matchPlay, .betterBall, .ninePoint:
+            case .matchPlay, .betterBall, .ninePoint, .stablefordGross:
                 AppDelegate.setOrientation(to: .landscapeRight)
             case .strokePlay:
                 AppDelegate.lockOrientation(.allButUpsideDown)
@@ -88,7 +91,7 @@ struct ScorecardView: View {
     
     private var portraitLayout: some View {
         VStack(spacing: 10) {
-            if roundViewModel.isMatchPlay || roundViewModel.isBetterBall || roundViewModel.isNinePoint {
+            if roundViewModel.isMatchPlay || roundViewModel.isBetterBall || roundViewModel.isNinePoint || roundViewModel.isStablefordGross{
                 scorecardTypePicker
             }
             
@@ -97,27 +100,58 @@ struct ScorecardView: View {
             }
             
             if let golfer = selectedGolfer {
-                Spacer()
-                switch selectedScorecardType {
-                case .strokePlay:
-                    scoreCardView(for: golfer)
-                case .matchPlay:
-                    MatchPlaySCView()
-                        .environmentObject(roundViewModel)
-                case .betterBall:
-                    BetterBallSCView()
-                        .environmentObject(roundViewModel)
-                case .ninePoint:
-                    NinePointSCView()
-                        .environmentObject(roundViewModel)
+                ScrollView([.horizontal, .vertical]) {
+                    scorecardContent(for: golfer)
+                        .scaleEffect(currentScale)
+                        .gesture(
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    let delta = value / self.previousScale
+                                    self.previousScale = value
+                                    let newScale = self.currentScale * delta
+                                    self.currentScale = min(max(newScale, 1.0), 3.0) // Limit zoom between 1x and 3x
+                                }
+                                .onEnded { _ in
+                                    self.previousScale = 1.0
+                                }
+                        )
                 }
-                scoreLegend
-                Spacer()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
             finalizeRoundButton
                 .padding(.vertical, 10)
         }
+    }
+    
+    private func scorecardContent(for golfer: Golfer) -> some View {
+        VStack(spacing: 10) {
+            switch selectedScorecardType {
+            case .strokePlay:
+                scoreCardView(for: golfer)
+            case .matchPlay:
+                MatchPlaySCView()
+                    .environmentObject(roundViewModel)
+            case .betterBall:
+                BetterBallSCView()
+                    .environmentObject(roundViewModel)
+            case .ninePoint:
+                NinePointSCView()
+                    .environmentObject(roundViewModel)
+            case .stablefordGross:
+                StablefordGrossSCView()
+                    .environmentObject(roundViewModel)
+            }
+            scoreLegend
+        }
+        .gesture(
+            TapGesture(count: 2)
+                .onEnded {
+                    withAnimation {
+                        self.currentScale = 1.0
+                    }
+                }
+        )
     }
     
     private var scorecardTypePicker: some View {
@@ -132,6 +166,9 @@ struct ScorecardView: View {
             if roundViewModel.isNinePoint {
                 Text("Nine Point").tag(ScorecardType.ninePoint)
             }
+            if roundViewModel.isStablefordGross {
+                Text("Stableford (Gross)").tag(ScorecardType.stablefordGross)
+            }
         }
         .pickerStyle(SegmentedPickerStyle())
         .padding(.horizontal)
@@ -139,7 +176,16 @@ struct ScorecardView: View {
     
     private var finalizeRoundButton: some View {
         GeometryReader { geometry in
-            Button(action: finalizeRound) {
+            Button(action: {
+                // Reset zoom scale
+                withAnimation {
+                    self.currentScale = 1.0
+                }
+                // Wait for the animation to complete before finalizing
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    finalizeRound()
+                }
+            }) {
                 Text("Finalize Round")
                     .frame(width: min(geometry.size.width * 0.9, 400), height: 48)
                     .foregroundColor(.white)
@@ -264,22 +310,37 @@ struct ScorecardView: View {
             } else {
                 print("Round successfully saved!")
                 resetLocalData()
-                navigateToInitialView = true
+                
+                // Force orientation change to portrait
+                AppDelegate.lockOrientation(.portrait, andRotateTo: .portrait)
+                
+                // Wait a short moment to ensure the orientation change has taken effect
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.navigateToInitialView = true
+                }
             }
         }
     }
     
     private func resetLocalData() {
-        roundViewModel.grossScores = [:]
-        roundViewModel.netStrokePlayScores = [:]
-        roundViewModel.strokeHoles = [:]
+        // Reset general round data
+        roundViewModel.grossScores.removeAll()
+        roundViewModel.netStrokePlayScores.removeAll()
+        roundViewModel.strokeHoles.removeAll()
         roundViewModel.selectedCourse = nil
         roundViewModel.selectedTee = nil
-        
-        // Reset match play data
-        roundViewModel.matchPlayNetScores = [:]
-        roundViewModel.matchPlayStrokeHoles = [:]
-        roundViewModel.holeWinners = [:]
+        roundViewModel.golfers.removeAll()
+        roundViewModel.roundId = nil
+        roundViewModel.holesPlayed = 0
+        roundViewModel.courseHandicaps.removeAll()
+        roundViewModel.holes.removeAll()
+        roundViewModel.pars.removeAll()
+
+        // Reset Match Play data
+        roundViewModel.isMatchPlay = false
+        roundViewModel.matchPlayNetScores.removeAll()
+        roundViewModel.matchPlayStrokeHoles.removeAll()
+        roundViewModel.holeWinners.removeAll()
         roundViewModel.matchStatusArray = Array(repeating: 0, count: 18)
         roundViewModel.matchScore = 0
         roundViewModel.matchWinner = nil
@@ -287,20 +348,37 @@ struct ScorecardView: View {
         roundViewModel.matchWinningHole = nil
         roundViewModel.finalMatchStatusArray = nil
         roundViewModel.matchPlayStatus = nil
-        roundViewModel.presses = []
-        roundViewModel.pressStatuses = []
+        roundViewModel.presses.removeAll()
+        roundViewModel.pressStatuses.removeAll()
         roundViewModel.currentPressStartHole = nil
-        
-        // Reset golfers and other round-specific data
-        roundViewModel.golfers = []
-        roundViewModel.roundId = nil
-        roundViewModel.holesPlayed = 0
-        
-        // Reset any other properties that should be cleared between rounds
-        // For example:
-        roundViewModel.isMatchPlay = false
-        // roundViewModel.selectedScorecardType = .strokePlay
-        
+
+        // Reset Better Ball data
+        roundViewModel.isBetterBall = false
+        roundViewModel.betterBallTeamAssignments.removeAll()
+        roundViewModel.betterBallMatchStatus = nil
+        roundViewModel.betterBallMatchWinner = nil
+        roundViewModel.betterBallStrokeHoles.removeAll()
+        roundViewModel.betterBallPresses.removeAll()
+        roundViewModel.betterBallPressStatuses.removeAll()
+
+        // Reset Nine Point data
+        roundViewModel.isNinePoint = false
+        roundViewModel.ninePointScores.removeAll()
+        roundViewModel.ninePointTotalScores.removeAll()
+        roundViewModel.ninePointStrokeHoles.removeAll()
+
+        // Reset Stableford Gross data
+        roundViewModel.isStablefordGross = false
+        roundViewModel.stablefordGrossScores.removeAll()
+        roundViewModel.stablefordGrossQuotas.removeAll()
+        roundViewModel.stablefordGrossTotalScores.removeAll()
+
+        // Reset round type and scorecard type
+        roundViewModel.roundType = .full18
+        roundViewModel.selectedScorecardType = .strokePlay
+
+        // Force a UI update
+        roundViewModel.objectWillChange.send()
     }
     
     var selectedGolfer: Golfer? {

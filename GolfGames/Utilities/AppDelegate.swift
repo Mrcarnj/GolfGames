@@ -16,16 +16,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return AppDelegate.orientationLock
     }
 
-    static func lockOrientation(_ orientation: UIInterfaceOrientationMask) {
+    static func lockOrientation(_ orientation: UIInterfaceOrientationMask, andRotateTo rotateOrientation: UIInterfaceOrientation? = nil) {
         AppDelegate.orientationLock = orientation
-        UIViewController.attemptRotationToDeviceOrientation()
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: orientation))
+        }
+        
+        if let rotateOrientation = rotateOrientation {
+            UIDevice.current.setValue(rotateOrientation.rawValue, forKey: "orientation")
+        }
+        
+        DispatchQueue.main.async {
+            UIViewController.attemptRotationToDeviceOrientation()
+        }
     }
 
+    // You can keep this method for backward compatibility if it's used elsewhere in your app
     static func setOrientation(to orientation: UIInterfaceOrientation) {
+        lockOrientation(orientation == .portrait ? .portrait : .landscape, andRotateTo: orientation)
+    }
+
+    // Add this new method
+    static func lockOrientation(_ orientation: UIInterfaceOrientationMask, andRotateTo rotateOrientation: UIInterfaceOrientation) {
+        self.lockOrientation(orientation)
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: orientation == .portrait ? .portrait : .landscape))
+            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: orientation))
         }
-        AppDelegate.lockOrientation(orientation == .portrait ? .portrait : .landscape)
+        UIDevice.current.setValue(rotateOrientation.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
     }
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
