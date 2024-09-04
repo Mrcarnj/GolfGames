@@ -8,22 +8,15 @@
 import Foundation
 
 struct StablefordGrossModel {
-    static func initializeStablefordGross(roundViewModel: RoundViewModel) {
+    static func initializeStablefordGross(roundViewModel: RoundViewModel, quotas: [String: Int]) {
         print("Debug: StablefordGrossModel - Initializing Stableford Gross")
         
         roundViewModel.isStablefordGross = true
         roundViewModel.stablefordGrossScores = [:]
         roundViewModel.stablefordGrossTotalScores = [:]
+        roundViewModel.stablefordGrossQuotas = quotas
         
-        // Calculate quotas for each golfer using the correct course handicaps
-        let gameHandicaps = calculateGameHandicaps(for: roundViewModel.golfers)
-        for golfer in roundViewModel.golfers {
-            let courseHandicap = gameHandicaps[golfer.id] ?? 0
-            let quota = 36 - courseHandicap
-            roundViewModel.stablefordGrossQuotas[golfer.id] = quota
-        }
-        
-        print("Stableford Gross initialized for golfers: \(roundViewModel.golfers.map { "\($0.firstName) \($0.lastName) (Quota: \(roundViewModel.stablefordGrossQuotas[$0.id] ?? 0))" }) CH: \(gameHandicaps)")
+        print("Stableford Gross initialized for golfers: \(roundViewModel.golfers.map { "\($0.firstName) \($0.lastName) (Quota: \(quotas[$0.id] ?? 0))" })")
     }
     
     static func updateStablefordGrossScore(roundViewModel: RoundViewModel, holeNumber: Int) {
@@ -91,30 +84,28 @@ struct StablefordGrossModel {
             return "Error: Stableford Gross is not enabled"
         }
         
-        let sortedResults = roundViewModel.stablefordGrossTotalScores.sorted { $0.value > $1.value }
+        let sortedResults = roundViewModel.golfers.sorted { golfer1, golfer2 in
+            let overQuota1 = (roundViewModel.stablefordGrossTotalScores[golfer1.id] ?? 0) - (roundViewModel.stablefordGrossQuotas[golfer1.id] ?? 0)
+            let overQuota2 = (roundViewModel.stablefordGrossTotalScores[golfer2.id] ?? 0) - (roundViewModel.stablefordGrossQuotas[golfer2.id] ?? 0)
+            return overQuota1 > overQuota2
+        }
         
         var resultString = "Stableford Gross Final Results:\n\n"
         
-        for (index, result) in sortedResults.enumerated() {
-            if let golfer = roundViewModel.golfers.first(where: { $0.id == result.key }) {
-                let position = index + 1
-                let positionSuffix = getPositionSuffix(position)
-                let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
-                let pointsOverQuota = result.value - quota
-                resultString += "\(position)\(positionSuffix): \(golfer.firstName) \(golfer.lastName) - \(result.value) points (\(formatPointsOverQuota(pointsOverQuota)) quota)\n"
-            }
+        for (index, golfer) in sortedResults.enumerated() {
+            let position = index + 1
+            let positionSuffix = getPositionSuffix(position)
+            let totalScore = roundViewModel.stablefordGrossTotalScores[golfer.id] ?? 0
+            let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
+            let pointsOverQuota = totalScore - quota
+            resultString += "\(position)\(positionSuffix): \(golfer.firstName) \(golfer.lastName) - \(totalScore) points (\(formatPointsOverQuota(pointsOverQuota)) quota)\n"
         }
         
-        if let winner = sortedResults.max(by: { (a, b) in
-            let aOverQuota = a.value - (roundViewModel.stablefordGrossQuotas[a.key] ?? 0)
-            let bOverQuota = b.value - (roundViewModel.stablefordGrossQuotas[b.key] ?? 0)
-            return aOverQuota < bOverQuota
-        }) {
-            if let winningGolfer = roundViewModel.golfers.first(where: { $0.id == winner.key }) {
-                let quota = roundViewModel.stablefordGrossQuotas[winner.key] ?? 0
-                let pointsOverQuota = winner.value - quota
-                resultString += "\nWinner: \(winningGolfer.firstName) \(winningGolfer.lastName) with \(winner.value) points (\(formatPointsOverQuota(pointsOverQuota)) quota)!"
-            }
+        if let winner = sortedResults.first {
+            let winningScore = roundViewModel.stablefordGrossTotalScores[winner.id] ?? 0
+            let winningQuota = roundViewModel.stablefordGrossQuotas[winner.id] ?? 0
+            let pointsOverQuota = winningScore - winningQuota
+            resultString += "\nWinner: \(winner.firstName) \(winner.lastName) with \(winningScore) points (\(formatPointsOverQuota(pointsOverQuota)) quota)!"
         }
         
         print("Debug: Stableford Gross final results:\n\(resultString)")
@@ -138,25 +129,5 @@ struct StablefordGrossModel {
         } else {
             return "met"
         }
-    }
-    
-    private static func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
-        let golfersWithHandicaps = golfers.map { golfer -> (String, Float) in
-            let handicap: Float
-            if let courseHandicap = golfer.courseHandicap {
-                handicap = Float(courseHandicap)
-            } else {
-                handicap = golfer.handicap
-            }
-            return (golfer.id, handicap)
-        }
-        
-        var gameHandicaps: [String: Int] = [:]
-        
-        for (golferId, handicap) in golfersWithHandicaps {
-            gameHandicaps[golferId] = Int(round(handicap))
-        }
-        
-        return gameHandicaps
     }
 }

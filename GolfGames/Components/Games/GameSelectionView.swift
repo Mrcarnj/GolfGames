@@ -25,6 +25,7 @@ struct GameSelectionView: View {
     @State private var showingNinePointInfo = false
     @State private var showingStablefordGrossInfo = false
     @State private var isStablefordGross = false
+    @State private var stablefordGrossQuotas: [String: Int] = [:]
     
     var body: some View {
         ScrollView {
@@ -139,7 +140,9 @@ struct GameSelectionView: View {
                            text: "Stableford Gross",
                            action: showStablefordGrossInfo)
                     .onChange(of: isStablefordGross) { newValue in
-                        
+                        if newValue {
+                            stablefordGrossQuotas = calculateStablefordGrossQuotas()
+                        }
                     }
             }
         }
@@ -259,10 +262,12 @@ struct GameSelectionView: View {
                                 Text("0 strokes")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
                             } else if let handicap = betterBallHandicaps[golfer.id], handicap > 0 {
                                 Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
                             }
                             
                             Spacer()
@@ -298,18 +303,21 @@ struct GameSelectionView: View {
                         .font(.headline)
                     
                     ForEach(sharedViewModel.golfers, id: \.id) { golfer in
-                        HStack {
+                        HStack (spacing: 25){
                             Text(roundViewModel.formattedGolferName(for: golfer))
                                 .font(.subheadline)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                             
                             if golfer.id == lowestHandicapGolfer?.id {
                                 Text("0 strokes")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             } else if let handicap = ninePointHandicaps[golfer.id], handicap > 0 {
                                 Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             
                             Spacer()
@@ -327,22 +335,23 @@ struct GameSelectionView: View {
     private var stablefordGrossInfoSection: some View {
         Group {
             if isStablefordGross {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .center, spacing: 10) {
                     Text("Stableford Gross Players")
                         .font(.headline)
                     
                     ForEach(sharedViewModel.golfers, id: \.id) { golfer in
-                        HStack {
+                        HStack (spacing: 25){
                             Text(roundViewModel.formattedGolferName(for: golfer))
                                 .font(.subheadline)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                             
-                            Spacer()
                             
                             if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
-                                let quota = 36 - courseHandicap
+                                let quota = calculateQuota(courseHandicap: courseHandicap)
                                 Text("Quota: \(quota)")
                                     .font(.system(size: 12))
                                     .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             } else {
                                 Text("Quota: N/A")
                                     .font(.caption)
@@ -357,6 +366,10 @@ struct GameSelectionView: View {
                 .cornerRadius(10)
             }
         }
+    }
+
+    private func calculateQuota(courseHandicap: Int) -> Int {
+        return 36 - courseHandicap
     }
 
     private var beginRoundButton: some View {
@@ -383,8 +396,8 @@ struct GameSelectionView: View {
             roundViewModel.initializeNinePoint()
         }
         // Set up Stableford Gross if selected
-        if roundViewModel.isStablefordGross {
-            roundViewModel.initializeStablefordGross()
+        if isStablefordGross {
+            roundViewModel.initializeStablefordGross(quotas: stablefordGrossQuotas)
         }
         
         // Ensure all selected golfers are included in the round
@@ -407,7 +420,7 @@ struct GameSelectionView: View {
         (sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) ||
         (isBetterBall && !isValidBetterBallSetup()) ||
         (isNinePoint && sharedViewModel.golfers.count != 3) ||
-        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint && !roundViewModel.isStablefordGross) // Disable if no game type is selected
+        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint && !isStablefordGross) // Disable if no game type is selected
     )
 }
     
@@ -492,6 +505,16 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
                (teamACounts == 2 && teamBCounts == 1) || 
                (teamACounts == 1 && teamBCounts == 3) ||
                (teamACounts == 2 && teamBCounts == 2)
+    }
+
+    private func calculateStablefordGrossQuotas() -> [String: Int] {
+        var quotas: [String: Int] = [:]
+        for golfer in sharedViewModel.golfers {
+            if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
+                quotas[golfer.id] = calculateQuota(courseHandicap: courseHandicap)
+            }
+        }
+        return quotas
     }
 
 }

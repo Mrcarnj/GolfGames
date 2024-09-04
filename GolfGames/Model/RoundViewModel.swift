@@ -414,8 +414,8 @@ func resetNinePointScore(for holeNumber: Int) {
 }
 
     //////////////////STABLEFORD - GROSS  //////////////////
-    func initializeStablefordGross() {
-        StablefordGrossModel.initializeStablefordGross(roundViewModel: self)
+    func initializeStablefordGross(quotas: [String: Int]) {
+        StablefordGrossModel.initializeStablefordGross(roundViewModel: self, quotas: quotas)
     }
 
     func updateStablefordGrossScore(for holeNumber: Int) {

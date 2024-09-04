@@ -25,7 +25,7 @@ struct HoleView: View {
     
     @State private var currentHoleIndex: Int
     @State private var scoreInputs: [String: String] = [:]
-    @FocusState private var focusedField: String?
+    @FocusState private var focusedField: Golfer.ID?
     @State private var showMissingScores = false
     @State private var missingScores: [String: [Int]] = [:]
     @State private var holesLoaded = false
@@ -40,6 +40,7 @@ struct HoleView: View {
     @State private var scoresChecked = false
     @State private var showNinePointWinner = false
     @State private var currentCarouselPage = 0
+    @State private var showStablefordGrossWinner = false
     
     @State private var currentScoreToPar: [String: Int] = [:]
     
@@ -106,6 +107,14 @@ struct HoleView: View {
                                     .frame(width: viewSize.width, height: viewSize.height)
                             } else {
                                 ProgressView("Loading hole data...")
+                            }
+                        }
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") {
+                                    focusedField = nil
+                                }
                             }
                         }
                     }
@@ -187,14 +196,6 @@ struct HoleView: View {
                 },
                 secondaryButton: .cancel()
             )
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    focusedField = nil
-                }
-            }
         }
     }
     
@@ -377,7 +378,7 @@ struct HoleView: View {
         }
 
         if roundViewModel.isStablefordGross {
-            pages.append(AnyView(StablefordGrossScoresView()))
+            pages.append(AnyView(StablefordGrossScoresView(showWinner: $showStablefordGrossWinner)))
         }
 
         return pages
@@ -514,6 +515,7 @@ struct HoleView: View {
     
     private struct StablefordGrossScoresView: View {
         @EnvironmentObject var roundViewModel: RoundViewModel
+        @Binding var showWinner: Bool
         
         var body: some View {
             VStack(alignment: .center, spacing: 4) {
@@ -522,14 +524,19 @@ struct HoleView: View {
                     .padding(.bottom, 2)
                 
                 let sortedGolfers = roundViewModel.golfers.sorted {
-                    (roundViewModel.stablefordGrossTotalScores[$0.id] ?? 0) > (roundViewModel.stablefordGrossTotalScores[$1.id] ?? 0)
+                    let overQuota1 = (roundViewModel.stablefordGrossTotalScores[$0.id] ?? 0) - (roundViewModel.stablefordGrossQuotas[$0.id] ?? 0)
+                    let overQuota2 = (roundViewModel.stablefordGrossTotalScores[$1.id] ?? 0) - (roundViewModel.stablefordGrossQuotas[$1.id] ?? 0)
+                    return overQuota1 > overQuota2
                 }
                 
                 ForEach(sortedGolfers, id: \.id) { golfer in
-                    HStack {
+                    HStack (spacing: 25){
+                        if showWinner && golfer == sortedGolfers.first {
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(.yellow)
+                        }
                         Text(golfer.formattedName(golfers: roundViewModel.golfers))
                             .fontWeight(.semibold)
-                        Spacer()
                         let totalScore = roundViewModel.stablefordGrossTotalScores[golfer.id] ?? 0
                         let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
                         let overQuota = totalScore - quota
@@ -802,9 +809,6 @@ struct HoleView: View {
                 BetterBallModel.updateBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
             }
             
-            if roundViewModel.isStablefordGross {
-                roundViewModel.updateStablefordGrossScore(for: currentHoleNumber)
-            }
         } else {
             // Reset scores if the input is invalid
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
@@ -870,6 +874,14 @@ struct HoleView: View {
                     _ = NinePointModel.displayFinalResults(roundViewModel: roundViewModel)
                     // Set showNinePointWinner to true
                     showNinePointWinner = true
+                } else if roundViewModel.isStablefordGross {
+                    // Update Stableford Gross scoring for the last hole
+                    let lastHole = roundViewModel.roundType == .front9 ? 9 : 18
+                    roundViewModel.recalculateStablefordGrossScores(upToHole: lastHole)
+                    // Display final results
+                    _ = StablefordGrossModel.displayFinalResults(roundViewModel: roundViewModel)
+                    // Set showStablefordGrossWinner to true
+                    showStablefordGrossWinner = true
                 }
             }
             
@@ -946,6 +958,7 @@ struct HoleView: View {
                 .environmentObject(SharedViewModel())
         }
     }
+
     
     private struct HoleDetailsView: View {
         let hole: Hole?
@@ -981,46 +994,49 @@ struct HoleView: View {
         }
     }
     
-    private struct ScoreInputView: View {
-        @Binding var scoreInputs: [String: String]
-        @FocusState.Binding var focusedField: String?
-        @Environment(\.colorScheme) var colorScheme
-        let golfer: Golfer
-        let strokeHoleInfo: (isStrokeHole: Bool, isNegativeHandicap: Bool)
-        let updateScore: (String, String) -> Void
-        
-        var body: some View {
-            TextField("", text: Binding(
-                get: { scoreInputs[golfer.id] ?? "" },
-                set: { newValue in
-                    scoreInputs[golfer.id] = newValue
-                    updateScore(golfer.id, newValue)
+private struct ScoreInputView: View {
+    @Binding var scoreInputs: [String: String]
+    @FocusState.Binding var focusedField: Golfer.ID?
+    @Environment(\.colorScheme) var colorScheme
+    let golfer: Golfer
+    let strokeHoleInfo: (isStrokeHole: Bool, isNegativeHandicap: Bool)
+    let updateScore: (String, String) -> Void
+    
+    var body: some View {
+        TextField("", text: Binding(
+            get: { scoreInputs[golfer.id] ?? "" },
+            set: { newValue in
+                scoreInputs[golfer.id] = newValue
+                updateScore(golfer.id, newValue)
+            }
+        ))
+        .keyboardType(.decimalPad)
+        .focused($focusedField, equals: golfer.id)
+        .frame(width: 50, height: 50)
+        .background(colorScheme == .dark ? Color.white : Color.gray.opacity(0.2))
+        .foregroundColor(colorScheme == .dark ? .black : .primary)
+        .cornerRadius(5)
+        .multilineTextAlignment(.center)
+        .overlay(strokeHoleOverlay)
+    }
+    
+    private var strokeHoleOverlay: some View {
+        Group {
+            if strokeHoleInfo.isStrokeHole {
+                if strokeHoleInfo.isNegativeHandicap {
+                    Text("+")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.black)
+                        .frame(width: 10, height: 10)
+                        .offset(x: 15, y: -17)
+                } else {
+                    Circle()
+                        .fill(Color.black)
+                        .frame(width: 6, height: 6)
+                        .offset(x: 20, y: -17)
                 }
-            ))
-            .keyboardType(.decimalPad)
-            .focused($focusedField, equals: golfer.id)
-            .frame(width: 50, height: 50)
-            .background(colorScheme == .dark ? Color.white : Color.gray.opacity(0.2))
-            .foregroundColor(colorScheme == .dark ? .black : .primary)
-            .cornerRadius(5)
-            .multilineTextAlignment(.center)
-            .overlay(
-                Group {
-                    if strokeHoleInfo.isStrokeHole {
-                        if strokeHoleInfo.isNegativeHandicap {
-                            Text("+")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.black)
-                                .frame(width: 10, height: 10)
-                                .offset(x: 15, y: -17)
-                        } else {
-                            Circle()
-                                .fill(Color.black)
-                                .frame(width: 6, height: 6)
-                                .offset(x: 20, y: -17)
-                        }
-                    }
-                }
-            )
+            }
         }
     }
+}
+

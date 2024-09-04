@@ -7,8 +7,19 @@
 
 // Add these functions to the RoundViewModel class
 
-func initializeStablefordGross(sharedViewModel: SharedViewModel) {
-    StablefordGrossModel.initializeStablefordGross(roundViewModel: self, sharedViewModel: sharedViewModel)
+func initializeStablefordGross(quotas: [String: Int]) {
+    StablefordGrossModel.initializeStablefordGross(roundViewModel: self, quotas: quotas)
+}
+
+private func calculateStablefordGrossQuotas() -> [String: Int] {
+    var quotas: [String: Int] = [:]
+    for golfer in golfers {
+        if let courseHandicap = courseHandicaps[golfer.id] {
+            let quota = 36 - courseHandicap
+            quotas[golfer.id] = quota
+        }
+    }
+    return quotas
 }
 
 func updateStablefordGrossScore(for holeNumber: Int) {
