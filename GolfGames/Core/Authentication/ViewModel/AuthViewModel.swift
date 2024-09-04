@@ -7,6 +7,8 @@
 
 import Foundation
 import Firebase
+import FirebaseAuth
+import FirebaseFirestore
 import FirebaseFirestoreSwift
 
 protocol AuthenticationFormProtocol{
@@ -17,7 +19,8 @@ protocol AuthenticationFormProtocol{
 class AuthViewModel: ObservableObject {
     @Published var userSession: FirebaseAuth.User?
     @Published var currentUser: User?
-    
+    @Published var loginError: String?
+
     init() {
         self.userSession = Auth.auth().currentUser
         
@@ -43,8 +46,27 @@ class AuthViewModel: ObservableObject {
                 await migrateExistingFriends()
                 UserDefaults.hasPerformedMigration = true
             }
-        } catch {
+            
+            self.loginError = nil // Clear any previous error
+        } catch let error as NSError {
             print("DEBUG: Failed to log in with error \(error.localizedDescription)")
+            print("DEBUG: Error code: \(error.code)")
+            
+            let errorCode = AuthErrorCode(_nsError: error)
+            switch errorCode.code {
+            case .invalidCredential, .wrongPassword, .userNotFound:
+                print("DEBUG: Invalid credentials")
+                self.loginError = "Invalid email or password. Please try again."
+            case .invalidEmail:
+                print("DEBUG: Invalid email format")
+                self.loginError = "Invalid email format"
+            case .networkError:
+                print("DEBUG: Network error")
+                self.loginError = "Network error. Please check your connection."
+            default:
+                print("DEBUG: Other error: \(errorCode.code)")
+                self.loginError = "An error occurred. Please try again."
+            }
             throw error
         }
     }

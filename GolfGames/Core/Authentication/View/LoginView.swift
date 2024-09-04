@@ -11,7 +11,11 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @EnvironmentObject var viewModel: AuthViewModel
-    @FocusState private var isFocused: Bool
+    @FocusState private var focusedField: FocusField?
+    
+    enum FocusField {
+        case email, password
+    }
     
     var body: some View {
         NavigationStack {
@@ -31,40 +35,33 @@ struct LoginView: View {
                               title: "Email Address",
                               placeholder: "name@example.com")
                         .autocapitalization(.none)
-                        .focused($isFocused)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .keyboard) {
-                                Spacer()
-                                Button("Done") {
-                                    isFocused = false
-                                }
-                                .foregroundColor(.blue)
-                            }
-                        }
+                        .focused($focusedField, equals: .email)
                     
                     InputView(text: $password,
                               title: "Password",
                               placeholder: "Enter Password",
                               isSecureField: true)
                         .autocapitalization(.none)
-                        .focused($isFocused)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .keyboard) {
-                                Spacer()
-                                Button("Done") {
-                                    isFocused = false
-                                }
-                                .foregroundColor(.blue)
-                            }
-                        }
+                        .focused($focusedField, equals: .password)
+                    
+                    if let error = viewModel.loginError {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                            .padding(.top, 5)
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.top, 12)
                 
-                // sign in buttons
+                // sign in button
                 Button {
                     Task {
-                        try await viewModel.signIn(withEmail: email, password: password)
+                        do {
+                            try await viewModel.signIn(withEmail: email, password: password)
+                        } catch {
+                            // Error is handled in the viewModel, we just need to update the UI
+                        }
                     }
                 } label: {
                     HStack {
@@ -83,7 +80,7 @@ struct LoginView: View {
                 
                 Spacer()
                 
-                // sign up buttons
+                // sign up button
                 NavigationLink {
                     RegistrationView()
                         .navigationBarBackButtonHidden(true)
@@ -94,6 +91,14 @@ struct LoginView: View {
                             .fontWeight(.bold)
                     }
                     .font(.system(size: 14))
+                }
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        focusedField = nil
+                    }
                 }
             }
         }

@@ -307,27 +307,31 @@ struct HoleView: View {
     private var gameStatusCarousel: some View {
         let pages = carouselPages
         
-        return VStack {
-            TabView(selection: $currentCarouselPage) {
-                ForEach(0..<pages.count, id: \.self) { index in
-                    pages[index]
-                        .tag(index)
-                        .frame(height: getPageHeight(for: index))
-                }
-            }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .frame(height: getMaxPageHeight())
-            
-            // Custom page indicators
-            if pages.count > 1 {
-                HStack(spacing: 8) {
-                    ForEach(0..<pages.count, id: \.self) { index in
-                        Circle()
-                            .fill(index == currentCarouselPage ? Color.blue : Color.gray)
-                            .frame(width: 8, height: 8)
+        return Group {
+            if !pages.isEmpty {
+                VStack {
+                    TabView(selection: $currentCarouselPage) {
+                        ForEach(0..<pages.count, id: \.self) { index in
+                            pages[index]
+                                .tag(index)
+                                .frame(height: getPageHeight(for: index))
+                        }
+                    }
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    .frame(height: getMaxPageHeight())
+                    
+                    // Custom page indicators
+                    if pages.count > 1 {
+                        HStack(spacing: 8) {
+                            ForEach(0..<pages.count, id: \.self) { index in
+                                Circle()
+                                    .fill(index == currentCarouselPage ? Color.blue : Color.gray)
+                                    .frame(width: 8, height: 8)
+                            }
+                        }
+                        .padding(.top, 8)
                     }
                 }
-                .padding(.top, 8)
             }
         }
     }
@@ -341,13 +345,13 @@ struct HoleView: View {
         case 0 where roundViewModel.isNinePoint:
             return CGFloat(80 + (roundViewModel.golfers.count * 25))
         default:
-            return 150
+            return 0
         }
     }
     
     private func getMaxPageHeight() -> CGFloat {
         let heights = (0..<carouselPages.count).map { getPageHeight(for: $0) }
-        return heights.max() ?? 150
+        return heights.max() ?? 0 // Return 0 if there are no pages
     }
     
     private var carouselPages: [AnyView] {
@@ -363,15 +367,6 @@ struct HoleView: View {
 
         if roundViewModel.isNinePoint {
             pages.append(AnyView(NinePointScoresView(showWinner: $showNinePointWinner)))
-        }
-
-        // If no game types are selected, show a default view
-        if pages.isEmpty {
-            pages.append(AnyView(
-                Text("No game types selected")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-            ))
         }
 
         return pages
@@ -538,11 +533,11 @@ struct HoleView: View {
                 
                 ScoreInputView(
                     scoreInputs: $scoreInputs,
+                    focusedField: $focusedField,
                     golfer: golfer,
                     strokeHoleInfo: strokeHoleInfo(for: golfer.id),
                     updateScore: updateScore
                 )
-                .focused($focusedField, equals: golfer.id)
                 
                 if roundViewModel.isMatchPlay || roundViewModel.isBetterBall {
                     pressButton(for: golfer)
@@ -919,7 +914,7 @@ struct HoleView: View {
     
     private struct ScoreInputView: View {
         @Binding var scoreInputs: [String: String]
-        @FocusState var focusedField: String?
+        @FocusState.Binding var focusedField: String?
         @Environment(\.colorScheme) var colorScheme
         let golfer: Golfer
         let strokeHoleInfo: (isStrokeHole: Bool, isNegativeHandicap: Bool)
