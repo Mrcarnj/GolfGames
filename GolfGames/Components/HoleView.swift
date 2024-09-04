@@ -294,13 +294,10 @@ struct HoleView: View {
     private var portraitHoleContent: some View {
         VStack {
             HoleDetailsView(hole: hole)
-            
-            gameStatusCarousel
-            
-            scoreHeaderView
-            
             ScrollView {
                 VStack {
+            gameStatusCarousel
+            scoreHeaderView
                     golferScoresView
                     checkScoresButton
                     reviewRoundButton
@@ -494,14 +491,16 @@ struct HoleView: View {
                     }
                     
                     ForEach(sortedGolfers, id: \.id) { golfer in
-                        HStack {
+                        HStack (spacing: 10){
                             if showWinner && golfer == sortedGolfers.first {
                                 Image(systemName: "crown.fill")
                                     .foregroundColor(.yellow)
                             }
                             Text(golfer.formattedName(golfers: roundViewModel.golfers))
                                 .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                             Text("\(roundViewModel.ninePointTotalScores[golfer.id] ?? 0) points")
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                 }
@@ -530,20 +529,23 @@ struct HoleView: View {
                 }
                 
                 ForEach(sortedGolfers, id: \.id) { golfer in
-                    HStack (spacing: 5){
+                    HStack (spacing: 10){
                         if showWinner && golfer == sortedGolfers.first {
                             Image(systemName: "crown.fill")
                                 .foregroundColor(.yellow)
                         }
                         Text(golfer.formattedName(golfers: roundViewModel.golfers))
                             .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         let totalScore = roundViewModel.stablefordGrossTotalScores[golfer.id] ?? 0
                         let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
                         let overQuota = totalScore - quota
                         Text("\(totalScore) pts (\(formatOverQuota(overQuota)))")
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Color.secondary.opacity(0.1))
