@@ -73,6 +73,10 @@ class RoundViewModel: ObservableObject {
     @Published var ninePointScores: [Int: [String: Int]] = [:]
     @Published var ninePointTotalScores: [String: Int] = [:]
     @Published var ninePointStrokeHoles: [String: [Int]] = [:]
+    @Published var isStablefordGross: Bool = false
+    @Published var stablefordGrossScores: [Int: [String: Int]] = [:]
+    @Published var stablefordGrossQuotas: [String: Int] = [:]
+    @Published var stablefordGrossTotalScores: [String: Int] = [:]
 
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
@@ -409,7 +413,26 @@ func resetNinePointScore(for holeNumber: Int) {
     NinePointModel.resetNinePointScore(roundViewModel: self, holeNumber: holeNumber)
 }
 
+    //////////////////STABLEFORD - GROSS  //////////////////
+    func initializeStablefordGross() {
+        StablefordGrossModel.initializeStablefordGross(roundViewModel: self)
+    }
 
+    func updateStablefordGrossScore(for holeNumber: Int) {
+        StablefordGrossModel.updateStablefordGrossScore(roundViewModel: self, holeNumber: holeNumber)
+    }
+
+    func recalculateStablefordGrossScores(upToHole: Int) {
+        StablefordGrossModel.recalculateStablefordGrossScores(roundViewModel: self, upToHole: upToHole)
+    }
+
+    func resetStablefordGrossScore(for holeNumber: Int) {
+        StablefordGrossModel.resetStablefordGrossScore(roundViewModel: self, holeNumber: holeNumber)
+    }
+
+    func displayStablefordGrossFinalResults() -> String {
+        return StablefordGrossModel.displayFinalResults(roundViewModel: self)
+    }
 
 ////////////////// CLEAR ROUND DATA //////////////////
 

@@ -23,6 +23,8 @@ struct GameSelectionView: View {
     @State private var betterBallTeamAssignments: [String: String] = [:]
     @State private var isNinePoint = false
     @State private var showingNinePointInfo = false
+    @State private var showingStablefordGrossInfo = false
+    @State private var isStablefordGross = false
     
     var body: some View {
         ScrollView {
@@ -42,6 +44,9 @@ struct GameSelectionView: View {
             }
                 if isNinePoint {
                     ninePointInfoSection
+                }
+                if isStablefordGross {
+                    stablefordGrossInfoSection
                 }
                 Spacer()
                 
@@ -74,6 +79,13 @@ struct GameSelectionView: View {
                 Alert(
                     title: Text("What is 9 Point?"),
                     message: Text("9 Point is a 3-player game where each hole is worth 9 points. Points are distributed based on net scores: 5 for lowest, 3 for middle, and 1 for highest. Ties split points evenly. The player with the most points at the end of the round wins."),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+            .alert(isPresented: $showingStablefordGrossInfo) {
+                Alert(
+                    title: Text("What is Stableford Gross?"),
+                    message: Text("Stableford Gross is a scoring system where points are awarded based score to par. Albatross = 8, Eagle = 6, Birdie = 4, Par = 2, Bogey = 1, Double Bogey or worse = 0. Players aim to accumulate the highest number of points. Each player has a 'quota' based on their handicap, and the winner is the player who exceeds their quota by the most (or comes closest to meeting it)."),
                     dismissButton: .default(Text("OK"))
                 )
             }
@@ -119,8 +131,20 @@ struct GameSelectionView: View {
                     .onChange(of: isNinePoint) { newValue in
                     }
             }
+            
+            // Stableford Gross toggle
+            if sharedViewModel.golfers.count >= 2 {
+                gameToggle(isOn: $isStablefordGross,
+                           imageName: "s.circle.fill",
+                           text: "Stableford Gross",
+                           action: showStablefordGrossInfo)
+                    .onChange(of: isStablefordGross) { newValue in
+                        
+                    }
+            }
         }
     }
+    
 
     private func gameToggle(isOn: Binding<Bool>, imageName: String, text: String, action: @escaping () -> Void) -> some View {
         HStack {
@@ -300,12 +324,48 @@ struct GameSelectionView: View {
         }
     }
 
+    private var stablefordGrossInfoSection: some View {
+        Group {
+            if isStablefordGross {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Stableford Gross Players")
+                        .font(.headline)
+                    
+                    ForEach(sharedViewModel.golfers, id: \.id) { golfer in
+                        HStack {
+                            Text(roundViewModel.formattedGolferName(for: golfer))
+                                .font(.subheadline)
+                            
+                            Spacer()
+                            
+                            if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
+                                let quota = 36 - courseHandicap
+                                Text("Quota: \(quota)")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            } else {
+                                Text("Quota: N/A")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
+            }
+        }
+    }
+
     private var beginRoundButton: some View {
     Button(action: {
         // Update roundViewModel with the selected game types
         roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
         roundViewModel.isBetterBall = isBetterBall
         roundViewModel.isNinePoint = isNinePoint
+        roundViewModel.isStablefordGross = isStablefordGross
         
         // Set up Match Play if selected
         if sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count == 2 {
@@ -322,9 +382,15 @@ struct GameSelectionView: View {
         if isNinePoint {
             roundViewModel.initializeNinePoint()
         }
+        // Set up Stableford Gross if selected
+        if roundViewModel.isStablefordGross {
+            roundViewModel.initializeStablefordGross()
+        }
         
         // Ensure all selected golfers are included in the round
         roundViewModel.golfers = sharedViewModel.golfers
+        
+        
         
         onBeginRound()
         presentationMode.wrappedValue.dismiss()
@@ -341,7 +407,7 @@ struct GameSelectionView: View {
         (sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) ||
         (isBetterBall && !isValidBetterBallSetup()) ||
         (isNinePoint && sharedViewModel.golfers.count != 3) ||
-        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint) // Disable if no game type is selected
+        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint && !roundViewModel.isStablefordGross) // Disable if no game type is selected
     )
 }
     
@@ -399,6 +465,9 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
     }
     private func showNinePointInfo() {
         showingNinePointInfo = true
+    }
+    private func showStablefordGrossInfo() {
+        showingStablefordGrossInfo = true
     }
 
     private func initializeTeamAssignments() {

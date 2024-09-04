@@ -270,6 +270,11 @@ struct HoleView: View {
                         NinePointModel.recalculateNinePointScores(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
                     }
                     
+                    if roundViewModel.isStablefordGross {
+                        // Recalculate Stableford Gross scores up to the current hole
+                        roundViewModel.recalculateStablefordGrossScores(upToHole: currentHoleIndex + 1)
+                    }
+                    
                     currentHoleIndex += 1
                     updateScoresForCurrentHole()
                 }) {
@@ -344,6 +349,8 @@ struct HoleView: View {
             return CGFloat(120 + (roundViewModel.betterBallPressStatuses.count * 15))
         case 0 where roundViewModel.isNinePoint:
             return CGFloat(80 + (roundViewModel.golfers.count * 25))
+        case 0 where roundViewModel.isStablefordGross:
+            return CGFloat(80 + (roundViewModel.golfers.count * 25))
         default:
             return 0
         }
@@ -367,6 +374,10 @@ struct HoleView: View {
 
         if roundViewModel.isNinePoint {
             pages.append(AnyView(NinePointScoresView(showWinner: $showNinePointWinner)))
+        }
+
+        if roundViewModel.isStablefordGross {
+            pages.append(AnyView(StablefordGrossScoresView()))
         }
 
         return pages
@@ -497,6 +508,48 @@ struct HoleView: View {
                 .padding(.vertical, 8)
                 .background(Color.secondary.opacity(0.1))
                 .cornerRadius(8)
+            }
+        }
+    }
+    
+    private struct StablefordGrossScoresView: View {
+        @EnvironmentObject var roundViewModel: RoundViewModel
+        
+        var body: some View {
+            VStack(alignment: .center, spacing: 4) {
+                Text("Stableford Gross Scores")
+                    .font(.headline)
+                    .padding(.bottom, 2)
+                
+                let sortedGolfers = roundViewModel.golfers.sorted {
+                    (roundViewModel.stablefordGrossTotalScores[$0.id] ?? 0) > (roundViewModel.stablefordGrossTotalScores[$1.id] ?? 0)
+                }
+                
+                ForEach(sortedGolfers, id: \.id) { golfer in
+                    HStack {
+                        Text(golfer.formattedName(golfers: roundViewModel.golfers))
+                            .fontWeight(.semibold)
+                        Spacer()
+                        let totalScore = roundViewModel.stablefordGrossTotalScores[golfer.id] ?? 0
+                        let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
+                        let overQuota = totalScore - quota
+                        Text("\(totalScore) pts (\(formatOverQuota(overQuota)))")
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(8)
+        }
+        
+        private func formatOverQuota(_ points: Int) -> String {
+            if points > 0 {
+                return "+\(points)"
+            } else if points < 0 {
+                return "\(points)"
+            } else {
+                return "E"
             }
         }
     }
@@ -684,6 +737,11 @@ struct HoleView: View {
                         NinePointModel.recalculateNinePointScores(roundViewModel: roundViewModel, upToHole: currentHoleIndex + 1)
                     }
                     
+                    if roundViewModel.isStablefordGross {
+                        // Recalculate Stableford Gross scores up to the current hole
+                        roundViewModel.recalculateStablefordGrossScores(upToHole: currentHoleIndex + 1)
+                    }
+                    
                     currentHoleIndex += 1
                     updateScoresForCurrentHole()
                 }
@@ -744,6 +802,9 @@ struct HoleView: View {
                 BetterBallModel.updateBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: scoreInt)
             }
             
+            if roundViewModel.isStablefordGross {
+                roundViewModel.updateStablefordGrossScore(for: currentHoleNumber)
+            }
         } else {
             // Reset scores if the input is invalid
             roundViewModel.grossScores[currentHoleNumber, default: [:]][golferId] = nil
@@ -760,6 +821,10 @@ struct HoleView: View {
             if roundViewModel.isNinePoint {
                 NinePointModel.resetNinePointScore(roundViewModel: roundViewModel, holeNumber: currentHoleNumber)
             }
+            
+            if roundViewModel.isStablefordGross {
+                roundViewModel.resetStablefordGrossScore(for: currentHoleNumber)
+            }
         }
         
         // Update tallies if all scores are entered
@@ -774,6 +839,10 @@ struct HoleView: View {
             
             if roundViewModel.isNinePoint {
                 // No need for additional tally updates for Nine Point, as it's done in updateNinePointScore
+            }
+            
+            if roundViewModel.isStablefordGross {
+                // No need for additional tally updates for Stableford Gross, as it's done in updateStablefordGrossScore
             }
             
             // Force view update
