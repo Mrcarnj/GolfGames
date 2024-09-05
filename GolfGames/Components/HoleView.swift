@@ -111,12 +111,32 @@ struct HoleView: View {
                         }
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
+                                Button(action: {
+                                    print("Debug: Up arrow tapped")
+                                    moveToPreviousField()
+                                }) {
+                                    Image(systemName: "arrow.up")
+                                }
+                                .onAppear { print("Debug: Up arrow button created") }
+
+                                Button(action: {
+                                    print("Debug: Down arrow tapped")
+                                    moveToNextField()
+                                }) {
+                                    Image(systemName: "arrow.down")
+                                }
+                                .onAppear { print("Debug: Down arrow button created") }
+
                                 Spacer()
+
                                 Button("Done") {
+                                    print("Debug: Done button tapped")
                                     focusedField = nil
                                 }
+                                .onAppear { print("Debug: Done button created") }
                             }
                         }
+                        .onAppear { print("Debug: Toolbar created") }
                     }
                 }
                 
@@ -146,6 +166,9 @@ struct HoleView: View {
                 }
             }
         }
+        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        //.navigationBarItems(leading: EmptyView())
         .onAppear {
             loadHoleData()
             initializeScores()
@@ -196,6 +219,12 @@ struct HoleView: View {
                 },
                 secondaryButton: .cancel()
             )
+        }
+        .onChange(of: focusedField) { newValue in
+            print("Debug: HoleView focusedField changed to \(String(describing: newValue))")
+        }
+        .onAppear {
+            print("Debug: HoleView appeared")
         }
     }
     
@@ -757,6 +786,20 @@ struct HoleView: View {
             }
     }
     
+    private func moveToNextField() {
+        print("Debug: moveToNextField called")
+        guard let currentIndex = roundViewModel.golfers.firstIndex(where: { $0.id == focusedField }) else { return }
+        let nextIndex = (currentIndex + 1) % roundViewModel.golfers.count
+        focusedField = roundViewModel.golfers[nextIndex].id
+    }
+    
+    private func moveToPreviousField() {
+        print("Debug: moveToPreviousField called")
+        guard let currentIndex = roundViewModel.golfers.firstIndex(where: { $0.id == focusedField }) else { return }
+        let previousIndex = (currentIndex - 1 + roundViewModel.golfers.count) % roundViewModel.golfers.count
+        focusedField = roundViewModel.golfers[previousIndex].id
+    }
+    
     private func loadHoleData() {
         guard let courseId = roundViewModel.selectedCourse?.id,
               let teeId = roundViewModel.selectedTee?.id else {
@@ -1024,16 +1067,25 @@ private struct ScoreInputView: View {
             set: { newValue in
                 scoreInputs[golfer.id] = newValue
                 updateScore(golfer.id, newValue)
+                print("Debug: Score input changed for golfer \(golfer.id), new value: \(newValue)")
             }
         ))
-        .keyboardType(.decimalPad)
+        .keyboardType(.numberPad)
         .focused($focusedField, equals: golfer.id)
+        .onChange(of: focusedField) { newValue in
+            print("Debug: Focus changed in ScoreInputView for golfer \(golfer.id), focused: \(newValue == golfer.id)")
+        }
         .frame(width: 50, height: 50)
         .background(colorScheme == .dark ? Color.white : Color.gray.opacity(0.2))
         .foregroundColor(colorScheme == .dark ? .black : .primary)
         .cornerRadius(5)
         .multilineTextAlignment(.center)
         .overlay(strokeHoleOverlay)
+        .onTapGesture {
+            print("Debug: ScoreInputView tapped for golfer \(golfer.id)")
+            focusedField = golfer.id
+            UIApplication.shared.sendAction(#selector(UIResponder.becomeFirstResponder), to: nil, from: nil, for: nil)
+        }
     }
     
     private var strokeHoleOverlay: some View {

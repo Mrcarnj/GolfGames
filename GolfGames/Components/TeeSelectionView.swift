@@ -135,7 +135,10 @@ struct TeeSelectionView: View {
                 .environmentObject(authViewModel)
                 .environmentObject(roundViewModel)
                 .environmentObject(sharedViewModel)
-                .environmentObject(singleRoundViewModel),
+                .environmentObject(singleRoundViewModel)
+                .navigationBarHidden(true)
+                .navigationBarBackButtonHidden(true)  // Add this line
+                ,
                 isActive: $navigateToRoundView
             ) {
                 EmptyView()

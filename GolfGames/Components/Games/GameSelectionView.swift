@@ -414,8 +414,10 @@ struct GameSelectionView: View {
         
         
         
-        onBeginRound()
         presentationMode.wrappedValue.dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            onBeginRound()
+        }
     }) {
         Text("Begin Round")
             .frame(minWidth: 0, maxWidth: .infinity)
