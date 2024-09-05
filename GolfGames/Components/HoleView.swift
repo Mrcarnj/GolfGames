@@ -35,7 +35,8 @@ struct HoleView: View {
     
     @State private var isLandscape = false
     @State private var showSideMenu = false
-    @State private var viewSize: CGSize = .zero
+    @State private var viewWidth: CGFloat = UIScreen.main.bounds.width
+    @State private var viewHeight: CGFloat = UIScreen.main.bounds.height
     @State private var showingPressConfirmation = false
     @State private var scoresChecked = false
     @State private var showNinePointWinner = false
@@ -104,7 +105,7 @@ struct HoleView: View {
                             
                             if holesLoaded {
                                 portraitHoleContent
-                                    .frame(width: viewSize.width, height: viewSize.height)
+                                    .frame(width: viewWidth, height: viewHeight)
                             } else {
                                 ProgressView("Loading hole data...")
                             }
@@ -155,9 +156,7 @@ struct HoleView: View {
                 }
             }
             .onChange(of: geometry.size) { newSize in
-                if !isLandscape {
-                    viewSize = newSize
-                }
+                updateViewSize(newSize)
             }
         }
         .navigationBarHidden(true)
@@ -168,6 +167,7 @@ struct HoleView: View {
             loadScores()
             selectedScorecardType = roundViewModel.selectedScorecardType
             unlockOrientation()
+            updateViewSize(UIScreen.main.bounds.size)
         }
         .onDisappear {
             lockOrientation()
@@ -179,11 +179,9 @@ struct HoleView: View {
                 showSideMenu = false
             } else {
                 OrientationHelper.setOrientation(to: .portrait)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                        viewSize = windowScene.screen.bounds.size
-                    }
-                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                updateViewSize(UIScreen.main.bounds.size)
             }
         }
         .navigationBarHidden(true)
@@ -220,6 +218,11 @@ struct HoleView: View {
             print("Debug: HoleView appeared")
         }
     }
+    
+    private func updateViewSize(_ size: CGSize) {
+            viewWidth = size.width
+            viewHeight = size.height
+        }
     
     private var customNavigationBar: some View {
         VStack(spacing: 0) {
@@ -316,6 +319,7 @@ struct HoleView: View {
     private var portraitHoleContent: some View {
         VStack {
             HoleDetailsView(hole: hole)
+                .frame(width: viewWidth - 32)
             ScrollView {
                 VStack {
             gameStatusCarousel

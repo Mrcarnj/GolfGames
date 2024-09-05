@@ -41,6 +41,7 @@ struct LandscapeScorecardView: View {
                 } else {
                     strokePlayScorecard
                         .frame(width: geometry.size.width * 0.95, height: geometry.size.height * 0.85)
+                        .scaleEffect(0.9) // Slightly reduce the scale to fit better
                 }
                 
                 // Page indicators (only show for Games)
