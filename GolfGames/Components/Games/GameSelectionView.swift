@@ -86,7 +86,16 @@ struct GameSelectionView: View {
             .alert(isPresented: $showingStablefordGrossInfo) {
                 Alert(
                     title: Text("What is Stableford Gross?"),
-                    message: Text("Stableford Gross is a scoring system where points are awarded based score to par. Albatross = 8, Eagle = 6, Birdie = 4, Par = 2, Bogey = 1, Double Bogey or worse = 0. Players aim to accumulate the highest number of points. Each player has a 'quota' based on their handicap, and the winner is the player who exceeds their quota by the most (or comes closest to meeting it)."),
+                    message: Text("""
+                    Stableford Gross is a scoring system where points are awarded based on gross score to par. Players aim to accumulate the highest number of points. Each player has a 'quota' based on their handicap, and the winner is the player who exceeds their quota by the most (or comes closest to meeting it).
+                    
+                    Albatross = 8
+                    Eagle = 6
+                    Birdie = 4
+                    Par = 2
+                    Bogey = 1
+                    Double Bogey or worse = 0
+                    """),
                     dismissButton: .default(Text("OK"))
                 )
             }

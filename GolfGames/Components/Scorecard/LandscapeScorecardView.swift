@@ -18,6 +18,7 @@ struct LandscapeScorecardView: View {
     @Binding var selectedScorecardType: ScorecardType
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
+    @State private var currentPage = 0
     
     private var isLandscape: Bool {
         return UIDevice.current.orientation.isLandscape
@@ -25,65 +26,27 @@ struct LandscapeScorecardView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                VStack(spacing: 0) {
-                    HStack {
-                        if roundViewModel.golfers.count > 1 {
-                            scorecardTypePicker
-                        }
-                        if selectedScorecardType == .strokePlay && roundViewModel.golfers.count > 1 {
-                            golferPicker
-                        }
+            VStack(spacing: 0) {
+                HStack {
+                    scorecardTypePicker
+                    if selectedScorecardType == .strokePlay && roundViewModel.golfers.count > 1 {
+                        golferPicker
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    
-                    ScrollView([.horizontal, .vertical]) {
-                        VStack {
-                            switch selectedScorecardType {
-                            case .strokePlay:
-                                if let golfer = selectedGolfer {
-                                    strokePlayScorecard(for: golfer, geometry: geometry)
-                                    scoreLegend
-                                        .padding(.top, 10)
-                                }
-                            case .matchPlay:
-                                matchPlayScorecard(geometry: geometry)
-                                scoreLegend
-                                    .padding(.top, -10)
-                            case .betterBall:
-                                betterBallScorecard(geometry: geometry)
-                                scoreLegend
-                                    .padding(.top, -10)
-                            case .ninePoint:
-                                ninePointScorecard(geometry: geometry)
-                                    .padding(.top, -10)
-                            case .stablefordGross:
-                                stablefordGrossScorecard(geometry: geometry)
-                                    .padding(.top, -10)
-                            @unknown default:
-                                Text("Unsupported scorecard type")
-                            }
-                        }
-                        .frame(width: geometry.size.width * 0.95 * scale)
-                        .padding(.top, 10)
-                    }
-                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxHeight: .infinity, alignment: .top)
-                .scaleEffect(scale)
-                .gesture(
-                    MagnificationGesture()
-                        .onChanged { value in
-                            let delta = value / self.lastScale
-                            self.lastScale = value
-                            let newScale = self.scale * delta
-                            self.scale = min(max(newScale, 1.0), 3.0)
-                        }
-                        .onEnded { _ in
-                            self.lastScale = 1.0
-                        }
-                )
+                .padding(.horizontal)
+                .padding(.top, 8)
+                
+                if selectedScorecardType == .games {
+                    gamesTabView(geometry: geometry)
+                } else {
+                    strokePlayScorecard
+                        .frame(width: geometry.size.width * 0.95, height: geometry.size.height * 0.85)
+                }
+                
+                // Page indicators (only show for Games)
+                if selectedScorecardType == .games {
+                    pageIndicators
+                }
             }
         }
         .navigationBarItems(trailing: finishButton)
@@ -93,50 +56,118 @@ struct LandscapeScorecardView: View {
     }
     
     private var scorecardTypePicker: some View {
-    Picker("Scorecard Type", selection: $selectedScorecardType) {
-        Text("Stroke Play").tag(ScorecardType.strokePlay)
+        Picker("Scorecard Type", selection: $selectedScorecardType) {
+            Text("Stroke Play").tag(ScorecardType.strokePlay)
+            Text("Games").tag(ScorecardType.games)
+        }
+        .pickerStyle(SegmentedPickerStyle())
+    }
+    
+    private func gamesTabView(geometry: GeometryProxy) -> some View {
+        TabView(selection: $currentPage) {
+            ForEach(0..<gamePages.count, id: \.self) { index in
+                VStack(spacing: 0) { // Reduced spacing to 0
+                    Text(gamePages[index].title)
+                        .font(.headline)
+                        .padding(.top, 40)
+                    
+                    gamePages[index].view
+                        .frame(width: geometry.size.width * 0.95, height: geometry.size.height * 0.75) // Adjusted size
+                        .scaleEffect(0.9) // Slightly reduce the scale to fit better
+                }
+                .tag(index)
+            }
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        .frame(height: geometry.size.height * 0.85)
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width < 0 {
+                        // Swipe left
+                        withAnimation {
+                            currentPage = min(currentPage + 1, gamePages.count - 1)
+                        }
+                    } else if value.translation.width > 0 {
+                        // Swipe right
+                        withAnimation {
+                            currentPage = max(currentPage - 1, 0)
+                        }
+                    }
+                }
+        )
+    }
+    
+    private var pageIndicators: some View {
+        HStack(spacing: 8) {
+            ForEach(0..<gamePages.count, id: \.self) { index in
+                Circle()
+                    .fill(index == currentPage ? Color.blue : Color.gray)
+                    .frame(width: 8, height: 8)
+            }
+        }
+        .padding(.bottom, 8)
+    }
+    
+    private var gamePages: [(title: String, view: AnyView)] {
+        var pages: [(String, AnyView)] = []
+        
         if roundViewModel.isMatchPlay {
-            Text("Match Play").tag(ScorecardType.matchPlay)
+            pages.append(("Match Play", AnyView(matchPlayScorecard)))
         }
         if roundViewModel.isBetterBall {
-            Text("Better Ball").tag(ScorecardType.betterBall)
+            pages.append(("Better Ball", AnyView(betterBallScorecard)))
         }
         if roundViewModel.isNinePoint {
-            Text("Nine Point").tag(ScorecardType.ninePoint)
+            pages.append(("Nine Point", AnyView(ninePointScorecard)))
         }
         if roundViewModel.isStablefordGross {
-            Text("Stableford (Gross)").tag(ScorecardType.stablefordGross)
+            pages.append(("Stableford (Gross)", AnyView(stablefordGrossScorecard)))
+        }
+        
+        return pages
+    }
+    
+    private var strokePlayScorecard: some View {
+        Group {
+            if let golfer = selectedGolfer {
+                VStack(spacing: 0) { // Reduced spacing
+                    LandscapeStrokePlayScorecardView(golfer: golfer)
+                    scoreLegend
+                        .padding(.top, 10)
+                }
+            }
         }
     }
-    .pickerStyle(SegmentedPickerStyle())
-}
     
-    private func strokePlayScorecard(for golfer: Golfer, geometry: GeometryProxy) -> some View {
-        LandscapeStrokePlayScorecardView(golfer: golfer)
-            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    private var matchPlayScorecard: some View {
+        VStack(spacing: 0) { // Reduced spacing
+            MatchPlaySCView()
+            scoreLegend
+                .padding(.top, 5) // Reduced top padding
+        }
     }
     
-    private func matchPlayScorecard(geometry: GeometryProxy) -> some View {
-        MatchPlaySCView()
-            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    private var betterBallScorecard: some View {
+        VStack(spacing: 0) { // Reduced spacing
+            BetterBallSCView()
+            scoreLegend
+                .padding(.top, 5) // Reduced top padding
+        }
     }
     
-    private func betterBallScorecard(geometry: GeometryProxy) -> some View {
-        BetterBallSCView()
-            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    private var ninePointScorecard: some View {
+        VStack(spacing: 0) { // Reduced spacing
+            NinePointSCView()
+        }
     }
     
-    private func ninePointScorecard(geometry: GeometryProxy) -> some View {
-        NinePointSCView()
-            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
+    private var stablefordGrossScorecard: some View {
+        VStack(spacing: 0) { // Reduced spacing
+            StablefordGrossSCView()
+        }
     }
     
-    private func stablefordGrossScorecard(geometry: GeometryProxy) -> some View {
-        StablefordGrossSCView()
-            .scaleEffect(min(geometry.size.width / 600, geometry.size.height / 400))
-    }
-
-
     private var golferPicker: some View {
         Picker("Select Golfer", selection: $selectedGolferId) {
             ForEach(roundViewModel.golfers) { golfer in

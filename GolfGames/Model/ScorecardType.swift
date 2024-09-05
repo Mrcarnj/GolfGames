@@ -7,10 +7,11 @@
 
 import Foundation
 
-enum ScorecardType {
-    case strokePlay
-    case matchPlay
-    case betterBall
-    case ninePoint
-    case stablefordGross
+enum ScorecardType: String, CaseIterable {
+    case strokePlay = "Stroke Play"
+    case games = "Games"
+    case matchPlay = "Match Play"
+    case betterBall = "Better Ball"
+    case ninePoint = "Nine Point"
+    case stablefordGross = "Stableford (Gross)"
 }

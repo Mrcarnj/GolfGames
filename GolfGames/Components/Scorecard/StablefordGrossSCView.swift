@@ -99,7 +99,8 @@ struct StablefordGrossSCView: View {
                 .frame(width: scoreCellWidth, height: scoreCellHeight)
                 .background(Color(UIColor.systemTeal))
             if showTotal {
-                Text("")
+                let grandTotalPar = singleRoundViewModel.holes.reduce(0) { $0 + $1.par }
+                Text("\(grandTotalPar)")
                     .frame(width: totalCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemTeal))
                 Text("")
@@ -141,20 +142,24 @@ struct StablefordGrossSCView: View {
             Text("\(totalPoints)")
                 .frame(width: scoreCellWidth, height: scoreCellHeight)
                 .background(Color(UIColor.systemGray4))
+                .fontWeight(.bold)
             if showTotal {
                 let grandTotalPoints = roundViewModel.stablefordGrossTotalScores[golfer.id] ?? 0
                 Text("\(grandTotalPoints)")
                     .frame(width: totalCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemGray4))
+                    .fontWeight(.bold)
                 let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
                 Text("\(quota)")
                     .frame(width: totalCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemGray4))
+                    .fontWeight(.bold)
                 let diff = grandTotalPoints - quota
                 Text("\(diff > 0 ? "+" : "")\(diff)")
                     .frame(width: totalCellWidth, height: scoreCellHeight)
                     .background(Color(UIColor.systemGray4))
                     .foregroundColor(diff >= 0 ? .green : .red)
+                    .fontWeight(.bold)
             }
         }
         .foregroundColor(colorScheme == .light ? Color.primary : Color.secondary)

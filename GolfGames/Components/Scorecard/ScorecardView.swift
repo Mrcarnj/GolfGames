@@ -141,6 +141,13 @@ struct ScorecardView: View {
             case .stablefordGross:
                 StablefordGrossSCView()
                     .environmentObject(roundViewModel)
+            case .games:
+                // Handle the .games case here
+                // You might want to show a different view or a placeholder
+                Text("Games scorecard not implemented")
+            @unknown default:
+                // This catches any future cases that might be added to the enum
+                Text("Unknown scorecard type")
             }
             scoreLegend
         }
@@ -846,5 +853,3 @@ extension UIView {
         }
     }
 }
-
-
