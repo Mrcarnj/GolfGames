@@ -109,34 +109,28 @@ struct HoleView: View {
                                 ProgressView("Loading hole data...")
                             }
                         }
+                        .navigationBarBackButtonHidden(true)
                         .toolbar {
                             ToolbarItemGroup(placement: .keyboard) {
                                 Button(action: {
-                                    print("Debug: Up arrow tapped")
                                     moveToPreviousField()
                                 }) {
-                                    Image(systemName: "arrow.up")
+                                    Image(systemName: "chevron.up")
                                 }
-                                .onAppear { print("Debug: Up arrow button created") }
 
                                 Button(action: {
-                                    print("Debug: Down arrow tapped")
                                     moveToNextField()
                                 }) {
-                                    Image(systemName: "arrow.down")
+                                    Image(systemName: "chevron.down")
                                 }
-                                .onAppear { print("Debug: Down arrow button created") }
 
                                 Spacer()
 
                                 Button("Done") {
-                                    print("Debug: Done button tapped")
                                     focusedField = nil
                                 }
-                                .onAppear { print("Debug: Done button created") }
                             }
                         }
-                        .onAppear { print("Debug: Toolbar created") }
                     }
                 }
                 
@@ -168,7 +162,6 @@ struct HoleView: View {
         }
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
-        //.navigationBarItems(leading: EmptyView())
         .onAppear {
             loadHoleData()
             initializeScores()

@@ -137,12 +137,12 @@ struct TeeSelectionView: View {
                 .environmentObject(sharedViewModel)
                 .environmentObject(singleRoundViewModel)
                 .navigationBarHidden(true)
-                .navigationBarBackButtonHidden(true)  // Add this line
-                ,
+                .navigationBarBackButtonHidden(true),
                 isActive: $navigateToRoundView
             ) {
                 EmptyView()
             }
+            .isDetailLink(false)
         }
         .sheet(isPresented: $showGameSelection) {
             GameSelectionView(onBeginRound: beginRound)
