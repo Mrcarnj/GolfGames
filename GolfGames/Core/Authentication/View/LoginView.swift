@@ -111,7 +111,7 @@ extension LoginView: AuthenticationFormProtocol {
         return !email.isEmpty
         && email.contains("@")
         && !password.isEmpty
-        && password.count > 5
+        // Remove the password length check to allow existing users to sign in
     }
 }
 

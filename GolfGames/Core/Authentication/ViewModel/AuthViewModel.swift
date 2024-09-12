@@ -99,17 +99,26 @@ class AuthViewModel: ObservableObject {
         }
     }
 
-    // Update the signIn method to include input validation
+    // Update the signIn method to use less strict password validation
     func signIn(withEmail email: String, password: String) async throws {
-        guard validateInput(email, type: .email),
-              validateInput(password, type: .password) else {
-            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid input"])
+        guard validateInput(email, type: .email) else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid email format"])
         }
+        
+        // Remove password validation for sign-in
+        // This allows existing users with shorter passwords to still sign in
 
-        // Sanitize input
         let sanitizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // ... rest of the signIn method ...
+        do {
+            let result = try await Auth.auth().signIn(withEmail: sanitizedEmail, password: password)
+            self.userSession = result.user
+            await fetchUser()
+            
+            // ... rest of the signIn method ...
+        } catch {
+            // ... error handling ...
+        }
     }
 
     func signOut() {
