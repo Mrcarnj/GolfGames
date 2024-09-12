@@ -460,6 +460,13 @@ func clearRoundData() {
     pars = [:]
     courseHandicaps = [:]
     strokeHoles = [:]
+
+    // Clear stats
+    eagleCount = [:]
+    birdieCount = [:]
+    parCount = [:]
+    bogeyCount = [:]
+    doubleBogeyPlusCount = [:]
     
     // Clear Match Play data
     isMatchPlay = false
