@@ -34,48 +34,62 @@ class AuthViewModel: ObservableObject {
         self.userSession = nil // Set this to nil or a mock FirebaseAuth.User if needed
     }
     
-    func signIn(withEmail email: String, password: String) async throws {
-        do {
-            let result = try await Auth.auth().signIn(withEmail: email, password: password)
-            self.userSession = result.user
-            await fetchUser()
-            
-            // Check if migration has been performed
-            if !UserDefaults.hasPerformedMigration {
-                await migrateExistingUsers()
-                await migrateExistingFriends()
-                UserDefaults.hasPerformedMigration = true
+    // Add a new method for input validation
+    private func validateInput(_ input: String, type: InputType) -> Bool {
+        switch type {
+        case .email:
+            // Use a more robust email validation regex
+            let emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"
+            return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: input)
+        case .password:
+            // Enforce password complexity rules
+            let passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$"
+            return NSPredicate(format: "SELF MATCHES %@", passwordRegex).evaluate(with: input)
+        case .name:
+            // Allow only letters and spaces, with a reasonable length limit
+            let nameRegex = "^[a-zA-Z ]{1,50}$"
+            return NSPredicate(format: "SELF MATCHES %@", nameRegex).evaluate(with: input)
+        case .handicap:
+            // Allow only numbers and one decimal point, with a reasonable range
+            let handicapRegex = "^\\d{1,2}(\\.\\d)?$"
+            if NSPredicate(format: "SELF MATCHES %@", handicapRegex).evaluate(with: input) {
+                if let value = Float(input) {
+                    return value >= 0 && value <= 54 // Assuming max handicap is 54
+                }
             }
-            
-            self.loginError = nil // Clear any previous error
-        } catch let error as NSError {
-            print("DEBUG: Failed to log in with error \(error.localizedDescription)")
-            print("DEBUG: Error code: \(error.code)")
-            
-            let errorCode = AuthErrorCode(_nsError: error)
-            switch errorCode.code {
-            case .invalidCredential, .wrongPassword, .userNotFound:
-                print("DEBUG: Invalid credentials")
-                self.loginError = "Invalid email or password. Please try again."
-            case .invalidEmail:
-                print("DEBUG: Invalid email format")
-                self.loginError = "Invalid email format"
-            case .networkError:
-                print("DEBUG: Network error")
-                self.loginError = "Network error. Please check your connection."
-            default:
-                print("DEBUG: Other error: \(errorCode.code)")
-                self.loginError = "An error occurred. Please try again."
-            }
-            throw error
+            return false
+        case .ghinNumber:
+            // Allow only numbers with a specific length
+            let ghinRegex = "^\\d{7}$"
+            return NSPredicate(format: "SELF MATCHES %@", ghinRegex).evaluate(with: input)
         }
     }
-    
-    func createUser(withEmail email: String, password: String, firstName: String, lastName: String, handicap: Float?, ghinNumber: Int?) async throws {
+
+    // Update the createUser method to include input validation
+    func createUser(withEmail email: String, password: String, firstName: String, lastName: String, handicap: String?, ghinNumber: String?) async throws {
+        guard validateInput(email, type: .email),
+              validateInput(password, type: .password),
+              validateInput(firstName, type: .name),
+              validateInput(lastName, type: .name),
+              handicap == nil || validateInput(handicap!, type: .handicap),
+              ghinNumber == nil || validateInput(ghinNumber!, type: .ghinNumber) else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid input"])
+        }
+
+        // Sanitize inputs
+        let sanitizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sanitizedFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sanitizedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
+
         do {
-            let result = try await Auth.auth().createUser(withEmail: email, password: password)
+            let result = try await Auth.auth().createUser(withEmail: sanitizedEmail, password: password)
             self.userSession = result.user
-            let user = User(id: result.user.uid, firstName: firstName, lastName: lastName, email: email, handicap: handicap, ghinNumber: ghinNumber)
+            let user = User(id: result.user.uid, 
+                            firstName: sanitizedFirstName, 
+                            lastName: sanitizedLastName, 
+                            email: sanitizedEmail, 
+                            handicap: Float(handicap ?? ""), 
+                            ghinNumber: Int(ghinNumber ?? ""))
             let encodedUser = try Firestore.Encoder().encode(user)
             try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
             await fetchUser()
@@ -84,7 +98,20 @@ class AuthViewModel: ObservableObject {
             throw error
         }
     }
-    
+
+    // Update the signIn method to include input validation
+    func signIn(withEmail email: String, password: String) async throws {
+        guard validateInput(email, type: .email),
+              validateInput(password, type: .password) else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid input"])
+        }
+
+        // Sanitize input
+        let sanitizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // ... rest of the signIn method ...
+    }
+
     func signOut() {
         do {
             try Auth.auth().signOut()
@@ -201,4 +228,13 @@ class MockAuthViewModel: AuthViewModel {
         super.init()
         self.currentUser = User(id: NSUUID().uuidString, firstName: "Tiger", lastName: "Woods", email: "tiger@tgl.com", handicap: 1.2, ghinNumber: 1709023)
     }
+}
+
+// Add an enum for input types
+enum InputType {
+    case email
+    case password
+    case name
+    case handicap
+    case ghinNumber
 }

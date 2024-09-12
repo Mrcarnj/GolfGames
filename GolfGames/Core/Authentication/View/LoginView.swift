@@ -60,7 +60,7 @@ struct LoginView: View {
                         do {
                             try await viewModel.signIn(withEmail: email, password: password)
                         } catch {
-                            // Error is handled in the viewModel, we just need to update the UI
+                            // Handle the error, perhaps by showing an alert to the user
                         }
                     }
                 } label: {
