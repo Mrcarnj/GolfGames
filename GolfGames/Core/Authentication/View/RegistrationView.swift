@@ -82,19 +82,6 @@ struct RegistrationView: View {
                                 }
                             }
                             
-//                            if !password.isEmpty {
-//                                if password.count > 5 {
-//                                    Image(systemName: "checkmark.circle.fill")
-//                                        .imageScale(.large)
-//                                        .fontWeight(.bold)
-//                                        .foregroundColor(Color(.systemGreen))
-//                                } else {
-//                                    Image(systemName: "xmark.circle.fill")
-//                                        .imageScale(.large)
-//                                        .fontWeight(.bold)
-//                                        .foregroundColor(Color(.systemRed))
-//                                }
-//                            }
                         }
                         
                         ZStack (alignment: .trailing){

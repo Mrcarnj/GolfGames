@@ -115,6 +115,10 @@ struct ScorecardView: View {
                                     self.previousScale = 1.0
                                 }
                         )
+                    
+                    StatsView(golfer: golfer)
+                        .environmentObject(roundViewModel)
+                        .padding(.top)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -279,26 +283,45 @@ struct ScorecardView: View {
         
         let roundResultID = roundRef.collection("results").document().documentID
         
-        var roundData: [String: Any] = [
+        // Break down the roundData dictionary into smaller parts
+        let basicRoundData: [String: Any] = [
             "date": Timestamp(date: Date()),
             "courseId": course.id,
             "courseName": course.name,
             "tees": tee.tee_name,
             "courseRating": tee.course_rating,
             "slopeRating": tee.slope_rating,
-            "roundResultID": roundResultID,
-            "golfers": roundViewModel.golfers.map { golfer in
-                [
-                    "id": golfer.id,
-                    "firstName": golfer.firstName,
-                    "lastName": golfer.lastName,
-                    "handicap": golfer.handicap,
-                    "grossTotal": roundViewModel.grossScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) },
-                    "netTotal": roundViewModel.netStrokePlayScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
-                ]
-            }
+            "roundResultID": roundResultID
         ]
         
+        let golfersData = roundViewModel.golfers.map { golfer in
+            let grossTotal = roundViewModel.grossScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
+            let netTotal = roundViewModel.netStrokePlayScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
+            let birdies = roundViewModel.birdieCount[golfer.id] ?? 0
+            let eagles = roundViewModel.eagleCount[golfer.id] ?? 0
+            let pars = roundViewModel.parCount[golfer.id] ?? 0
+            let bogeys = roundViewModel.bogeyCount[golfer.id] ?? 0
+            let doubleBogeyPlus = roundViewModel.doubleBogeyPlusCount[golfer.id] ?? 0
+
+            return [
+                "id": golfer.id,
+                "firstName": golfer.firstName,
+                "lastName": golfer.lastName,
+                "handicap": golfer.handicap,
+                "grossTotal": grossTotal,
+                "netTotal": netTotal,
+                "birdies": birdies,
+                "eagles": eagles,
+                "pars": pars,
+                "bogeys": bogeys,
+                "doubleBogeyPlus": doubleBogeyPlus
+            ]
+        }
+        
+        var roundData = basicRoundData
+        roundData["golfers"] = golfersData
+        
+        // Add hole-by-hole scores
         for (hole, scores) in roundViewModel.grossScores {
             for (golferId, score) in scores {
                 roundData["gross_hole_\(hole)_\(golferId)"] = score
@@ -383,6 +406,13 @@ struct ScorecardView: View {
         // Reset round type and scorecard type
         roundViewModel.roundType = .full18
         roundViewModel.selectedScorecardType = .strokePlay
+
+        // Reset stats
+        roundViewModel.birdieCount.removeAll()
+        roundViewModel.eagleCount.removeAll()
+        roundViewModel.parCount.removeAll()
+        roundViewModel.bogeyCount.removeAll()
+        roundViewModel.doubleBogeyPlusCount.removeAll()
 
         // Force a UI update
         roundViewModel.objectWillChange.send()
@@ -687,6 +717,49 @@ extension View {
             }
         )
         .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
+    }
+}
+
+struct StatsView: View {
+    let golfer: Golfer
+    @EnvironmentObject var roundViewModel: RoundViewModel
+
+    var body: some View {
+        VStack(alignment: .center, spacing: 5) {
+            Text("Stats")
+                .font(.headline)
+                .padding(.bottom, 5)
+            
+            HStack {
+                statItem(label: "Eagles", value: roundViewModel.eagleCount[golfer.id] ?? 0)
+                statItem(label: "Birdies", value: roundViewModel.birdieCount[golfer.id] ?? 0)
+            }
+            
+            HStack {
+                statItem(label: "Pars", value: roundViewModel.parCount[golfer.id] ?? 0)
+            }
+            
+            HStack {
+                statItem(label: "Bogeys", value: roundViewModel.bogeyCount[golfer.id] ?? 0)
+                statItem(label: "Double+", value: roundViewModel.doubleBogeyPlusCount[golfer.id] ?? 0)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(10)
+        .shadow(radius: 5)
+    }
+    
+    private func statItem(label: String, value: Int) -> some View {
+        VStack {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Text("\(value)")
+                .font(.title3)
+                .fontWeight(.bold)
+        }
+        .frame(minWidth: 0, maxWidth: .infinity)
     }
 }
 

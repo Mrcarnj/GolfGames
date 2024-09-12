@@ -17,6 +17,13 @@ struct Round: Identifiable, Codable {
     var date: Date
     var roundType: RoundType
     
+    // Add new fields for stats
+    var birdies: [String: Int]?
+    var eagles: [String: Int]?
+    var pars: [String: Int]?
+    var bogeys: [String: Int]?
+    var doubleBogeyPlus: [String: Int]?
+    
     struct Golfer: Identifiable, Codable {
         var id: String
         var firstName: String

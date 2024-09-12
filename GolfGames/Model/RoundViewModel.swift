@@ -77,6 +77,11 @@ class RoundViewModel: ObservableObject {
     @Published var stablefordGrossScores: [Int: [String: Int]] = [:]
     @Published var stablefordGrossQuotas: [String: Int] = [:]
     @Published var stablefordGrossTotalScores: [String: Int] = [:]
+    @Published var birdieCount: [String: Int] = [:]
+    @Published var eagleCount: [String: Int] = [:]
+    @Published var parCount: [String: Int] = [:]
+    @Published var bogeyCount: [String: Int] = [:]
+    @Published var doubleBogeyPlusCount: [String: Int] = [:]
 
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
@@ -526,6 +531,30 @@ func clearRoundData() {
         return 1
     case .back9:
         return 10
+    }
+}
+
+    func updateStats(for golferId: String, score: Int, par: Int) {
+    let scoreDiff = score - par
+    print("Debug: Updating stats for golfer \(golferId) - Score: \(score), Par: \(par), Diff: \(scoreDiff)")
+    switch scoreDiff {
+    case ..<(-1):
+        eagleCount[golferId, default: 0] += 1
+        print("Debug: Eagle recorded")
+    case -1:
+        birdieCount[golferId, default: 0] += 1
+        print("Debug: Birdie recorded")
+    case 0:
+        parCount[golferId, default: 0] += 1
+        print("Debug: Par recorded")
+    case 1:
+        bogeyCount[golferId, default: 0] += 1
+        print("Debug: Bogey recorded")
+    case 2...:
+        doubleBogeyPlusCount[golferId, default: 0] += 1
+        print("Debug: Double bogey or worse recorded")
+    default:
+        print("Debug: Invalid score difference")
     }
 }
 }
