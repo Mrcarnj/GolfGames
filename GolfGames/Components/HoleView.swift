@@ -202,7 +202,8 @@ struct HoleView: View {
                         if let losingPlayer = MatchPlayPressModel.getLosingPlayer(roundViewModel: roundViewModel) {
                             MatchPlayPressModel.initiatePress(roundViewModel: roundViewModel, atHole: currentHoleIndex + 1)
                         }
-                    } else if roundViewModel.isBetterBall {
+                    } 
+                    if roundViewModel.isBetterBall {
                         if let losingTeam = BetterBallPressModel.getLosingTeam(roundViewModel: roundViewModel) {
                             BetterBallPressModel.initiateBetterBallPress(roundViewModel: roundViewModel, atHole: currentHoleIndex + 1)
                         }
@@ -590,17 +591,22 @@ struct HoleView: View {
     }
     
     private var scoreHeaderView: some View {
-        HStack {
+        HStack(spacing: 0) {
             Text("Golfer")
-            Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
             Text("Score")
-                .frame(width: 90, alignment: .trailing)
-            if roundViewModel.isMatchPlay || roundViewModel.isBetterBall {
-                Text("Press")
-                    .frame(width: 90, alignment: .trailing)
+                .frame(width: 60, alignment: .center)
+            if roundViewModel.isMatchPlay {
+                Text("MP Press")
+                    .font(.system(size: 11))
+                    .frame(width: 70, alignment: .center)
+            }
+            if roundViewModel.isBetterBall {
+                Text("BB Press")
+                    .font(.system(size: 11))
+                    .frame(width: 70, alignment: .center)
             }
         }
-        .frame(maxWidth: .infinity)
         .padding(.horizontal)
         .fontWeight(.bold)
         .foregroundColor(Color.primary)
@@ -609,7 +615,7 @@ struct HoleView: View {
     
     private var golferScoresView: some View {
         ForEach(roundViewModel.golfers, id: \.id) { golfer in
-            HStack {
+            HStack(spacing: 0) {
                 HStack {
                     Text(golfer.formattedName(golfers: roundViewModel.golfers))
                     if roundViewModel.selectedScorecardType == .strokePlay {
@@ -626,9 +632,16 @@ struct HoleView: View {
                     strokeHoleInfo: strokeHoleInfo(for: golfer.id),
                     updateScore: updateScore
                 )
+                .frame(width: 60)
                 
-                if roundViewModel.isMatchPlay || roundViewModel.isBetterBall {
-                    pressButton(for: golfer)
+                if roundViewModel.isMatchPlay {
+                    matchPlayPressButton(for: golfer)
+                        .frame(width: 70)
+                }
+                
+                if roundViewModel.isBetterBall {
+                    betterBallPressButton(for: golfer)
+                        .frame(width: 70)
                 }
             }
             .padding(.horizontal)
@@ -671,16 +684,6 @@ struct HoleView: View {
                             .cornerRadius(10)
                     }
                     .padding(.horizontal)
-            }
-        }
-    }
-    
-    private func pressButton(for golfer: Golfer) -> some View {
-        Group {
-            if roundViewModel.isMatchPlay {
-                matchPlayPressButton(for: golfer)
-            } else if roundViewModel.isBetterBall {
-                betterBallPressButton(for: golfer)
             }
         }
     }

@@ -35,18 +35,19 @@ struct LandscapeScorecardView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
-                
+
+                // Move page indicators here
+                if selectedScorecardType == .games {
+                    pageIndicators
+                        .padding(.vertical, 8)
+                }
+
                 if selectedScorecardType == .games {
                     gamesTabView(geometry: geometry)
                 } else {
                     strokePlayScorecard
                         .frame(width: geometry.size.width * 0.95, height: geometry.size.height * 0.85)
                         .scaleEffect(0.9) // Slightly reduce the scale to fit better
-                }
-                
-                // Page indicators (only show for Games)
-                if selectedScorecardType == .games {
-                    pageIndicators
                 }
             }
         }
@@ -67,14 +68,16 @@ struct LandscapeScorecardView: View {
     private func gamesTabView(geometry: GeometryProxy) -> some View {
         TabView(selection: $currentPage) {
             ForEach(0..<gamePages.count, id: \.self) { index in
-                VStack(spacing: 0) { // Reduced spacing to 0
-                    Text(gamePages[index].title)
-                        .font(.headline)
-                        .padding(.top, 40)
-                    
-                    gamePages[index].view
-                        .frame(width: geometry.size.width * 0.95, height: geometry.size.height * 0.75) // Adjusted size
-                        .scaleEffect(0.9) // Slightly reduce the scale to fit better
+                ScrollView {
+                    VStack(alignment: .center, spacing: 0) {
+                        Text(gamePages[index].title)
+                            .font(.headline)
+                            .padding(.top, 16)
+                        
+                        gamePages[index].view
+                            .frame(width: geometry.size.width * 0.95)
+                            .scaleEffect(scaleForGame(gamePages[index].title))
+                    }
                 }
                 .tag(index)
             }
@@ -99,6 +102,17 @@ struct LandscapeScorecardView: View {
         )
     }
     
+    private func scaleForGame(_ gameTitle: String) -> CGFloat {
+        switch gameTitle {
+        case "Nine Point":
+            return 0.85
+        case "Stableford (Gross)":
+            return 0.85
+        default:
+            return 0.95
+        }
+    }
+    
     private var pageIndicators: some View {
         HStack(spacing: 8) {
             ForEach(0..<gamePages.count, id: \.self) { index in
@@ -107,7 +121,6 @@ struct LandscapeScorecardView: View {
                     .frame(width: 8, height: 8)
             }
         }
-        .padding(.bottom, 8)
     }
     
     private var gamePages: [(title: String, view: AnyView)] {
@@ -120,7 +133,7 @@ struct LandscapeScorecardView: View {
             pages.append(("Better Ball", AnyView(betterBallScorecard)))
         }
         if roundViewModel.isNinePoint {
-            pages.append(("Nine Point", AnyView(ninePointScorecard)))
+            pages.append(("Nine Point", AnyView(ninePointScorecard.padding(.horizontal, 5))))
         }
         if roundViewModel.isStablefordGross {
             pages.append(("Stableford (Gross)", AnyView(stablefordGrossScorecard)))
@@ -143,17 +156,15 @@ struct LandscapeScorecardView: View {
     
     private var matchPlayScorecard: some View {
         VStack(spacing: 0) { // Reduced spacing
+        scoreLegend
             MatchPlaySCView()
-            scoreLegend
-                .padding(.top, 5) // Reduced top padding
         }
     }
     
     private var betterBallScorecard: some View {
         VStack(spacing: 0) { // Reduced spacing
+        scoreLegend
             BetterBallSCView()
-            scoreLegend
-                .padding(.top, 5) // Reduced top padding
         }
     }
     

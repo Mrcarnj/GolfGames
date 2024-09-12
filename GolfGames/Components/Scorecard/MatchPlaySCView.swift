@@ -35,6 +35,9 @@ struct MatchPlaySCView: View {
                 matchStatusUpdateTrigger.toggle()
             }
             .id(matchStatusUpdateTrigger)
+            .padding(10)  // Add padding around the entire content
+            .background(Color(UIColor.systemBackground))
+            .cornerRadius(10)  // Add corner radius to match the rounded edges
     }
     
     private var mainContent: some View {
