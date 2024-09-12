@@ -78,7 +78,7 @@ class RoundViewModel: ObservableObject {
     @Published var stablefordGrossQuotas: [String: Int] = [:]
     @Published var stablefordGrossTotalScores: [String: Int] = [:]
     @Published var birdieCount: [String: Int] = [:]
-    @Published var eagleCount: [String: Int] = [:]
+    @Published var eagleOrBetterCount: [String: Int] = [:]
     @Published var parCount: [String: Int] = [:]
     @Published var bogeyCount: [String: Int] = [:]
     @Published var doubleBogeyPlusCount: [String: Int] = [:]
@@ -462,7 +462,7 @@ func clearRoundData() {
     strokeHoles = [:]
 
     // Clear stats
-    eagleCount = [:]
+    eagleOrBetterCount = [:]
     birdieCount = [:]
     parCount = [:]
     bogeyCount = [:]
@@ -545,9 +545,9 @@ func clearRoundData() {
     let scoreDiff = score - par
     print("Debug: Updating stats for golfer \(golferId) - Score: \(score), Par: \(par), Diff: \(scoreDiff)")
     switch scoreDiff {
-    case ..<(-1):
-        eagleCount[golferId, default: 0] += 1
-        print("Debug: Eagle recorded")
+    case ...(-2):
+        eagleOrBetterCount[golferId, default: 0] += 1
+        print("Debug: Eagle or better recorded")
     case -1:
         birdieCount[golferId, default: 0] += 1
         print("Debug: Birdie recorded")

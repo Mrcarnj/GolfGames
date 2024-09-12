@@ -298,7 +298,7 @@ struct ScorecardView: View {
             let grossTotal = roundViewModel.grossScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
             let netTotal = roundViewModel.netStrokePlayScores.values.reduce(0) { $0 + ($1[golfer.id] ?? 0) }
             let birdies = roundViewModel.birdieCount[golfer.id] ?? 0
-            let eagles = roundViewModel.eagleCount[golfer.id] ?? 0
+            let eagles = roundViewModel.eagleOrBetterCount[golfer.id] ?? 0
             let pars = roundViewModel.parCount[golfer.id] ?? 0
             let bogeys = roundViewModel.bogeyCount[golfer.id] ?? 0
             let doubleBogeyPlus = roundViewModel.doubleBogeyPlusCount[golfer.id] ?? 0
@@ -409,7 +409,7 @@ struct ScorecardView: View {
 
         // Reset stats
         roundViewModel.birdieCount.removeAll()
-        roundViewModel.eagleCount.removeAll()
+        roundViewModel.eagleOrBetterCount.removeAll()
         roundViewModel.parCount.removeAll()
         roundViewModel.bogeyCount.removeAll()
         roundViewModel.doubleBogeyPlusCount.removeAll()
@@ -731,7 +731,7 @@ struct StatsView: View {
                 .padding(.bottom, 5)
             
             HStack {
-                statItem(label: "Eagles", value: roundViewModel.eagleCount[golfer.id] ?? 0)
+                statItem(label: "Eagles+", value: roundViewModel.eagleOrBetterCount[golfer.id] ?? 0)
                 statItem(label: "Birdies", value: roundViewModel.birdieCount[golfer.id] ?? 0)
             }
             

@@ -798,13 +798,13 @@ struct HoleView: View {
     private func printCumulativeStats() {
     print("Debug: Cumulative stats after navigating to hole \(currentHoleIndex + 1):")
     for golfer in roundViewModel.golfers {
-        let eagles = roundViewModel.eagleCount[golfer.id] ?? 0
+        let eaglesless = roundViewModel.eagleOrBetterCount[golfer.id] ?? 0
         let birdies = roundViewModel.birdieCount[golfer.id] ?? 0
         let pars = roundViewModel.parCount[golfer.id] ?? 0
         let bogeys = roundViewModel.bogeyCount[golfer.id] ?? 0
         let doublePlus = roundViewModel.doubleBogeyPlusCount[golfer.id] ?? 0
         
-        print("\(golfer.firstName): Eagles: \(eagles), Birdies: \(birdies), Pars: \(pars), Bogeys: \(bogeys), Double+: \(doublePlus)")
+        print("\(golfer.firstName): Eagles or Less: \(eaglesless), Birdies: \(birdies), Pars: \(pars), Bogeys: \(bogeys), Double+: \(doublePlus)")
     }
 }
     
@@ -986,7 +986,7 @@ struct HoleView: View {
 
 private func resetAllStats() {
     for golfer in roundViewModel.golfers {
-        roundViewModel.eagleCount[golfer.id] = 0
+        roundViewModel.eagleOrBetterCount[golfer.id] = 0
         roundViewModel.birdieCount[golfer.id] = 0
         roundViewModel.parCount[golfer.id] = 0
         roundViewModel.bogeyCount[golfer.id] = 0
