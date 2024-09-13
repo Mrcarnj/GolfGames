@@ -22,6 +22,16 @@ class AuthViewModel: ObservableObject {
     @Published var loginError: String?
 
     init() {
+        print("DEBUG: Initializing AuthViewModel")
+        if let app = FirebaseApp.app() {
+            print("DEBUG: Firebase app is configured")
+            let options = app.options
+            print("DEBUG: Firebase project ID: \(options.projectID)")
+            print("DEBUG: Firebase API Key: \(options.apiKey)")
+            print("DEBUG: Firebase Bundle ID: \(options.bundleID)")
+        } else {
+            print("DEBUG: Firebase app is not configured")
+        }
         self.userSession = Auth.auth().currentUser
         
         Task {
@@ -67,13 +77,31 @@ class AuthViewModel: ObservableObject {
 
     // Update the createUser method to include input validation
     func createUser(withEmail email: String, password: String, firstName: String, lastName: String, handicap: String?, ghinNumber: String?) async throws {
-        guard validateInput(email, type: .email),
-              validateInput(password, type: .password),
-              validateInput(firstName, type: .name),
-              validateInput(lastName, type: .name),
-              handicap == nil || validateInput(handicap!, type: .handicap),
-              ghinNumber == nil || validateInput(ghinNumber!, type: .ghinNumber) else {
-            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid input"])
+        print("DEBUG: Starting user creation process")
+        
+        if !validateInput(email, type: .email) {
+            print("DEBUG: Invalid email format")
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid email format"])
+        }
+        if !validateInput(password, type: .password) {
+            print("DEBUG: Invalid password format")
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid password format"])
+        }
+        if !validateInput(firstName, type: .name) {
+            print("DEBUG: Invalid first name format")
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid first name format"])
+        }
+        if !validateInput(lastName, type: .name) {
+            print("DEBUG: Invalid last name format")
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid last name format"])
+        }
+        if let handicap = handicap, !validateInput(handicap, type: .handicap) {
+            print("DEBUG: Invalid handicap format")
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid handicap format"])
+        }
+        if let ghinNumber = ghinNumber, !validateInput(ghinNumber, type: .ghinNumber) {
+            print("DEBUG: Invalid GHIN number format")
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid GHIN number format"])
         }
 
         // Sanitize inputs
@@ -82,19 +110,71 @@ class AuthViewModel: ObservableObject {
         let sanitizedLastName = lastName.trimmingCharacters(in: .whitespacesAndNewlines)
 
         do {
-            let result = try await Auth.auth().createUser(withEmail: sanitizedEmail, password: password)
-            self.userSession = result.user
-            let user = User(id: result.user.uid, 
-                            firstName: sanitizedFirstName, 
-                            lastName: sanitizedLastName, 
-                            email: sanitizedEmail, 
-                            handicap: Float(handicap ?? ""), 
-                            ghinNumber: Int(ghinNumber ?? ""))
-            let encodedUser = try Firestore.Encoder().encode(user)
-            try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
-            await fetchUser()
+            try await withTimeout(seconds: 30) { [weak self] in
+                guard let self = self else { throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Self is nil"]) }
+                
+                print("DEBUG: Checking for existing user")
+                let querySnapshot = try await Firestore.firestore().collection("users")
+                    .whereField("email", isEqualTo: sanitizedEmail)
+                    .getDocuments()
+
+                print("DEBUG: Creating new Auth user")
+                let result = try await Auth.auth().createUser(withEmail: sanitizedEmail, password: password)
+                self.userSession = result.user
+                print("DEBUG: New Auth user created with ID: \(result.user.uid)")
+
+                let user: User
+                if let existingUserDoc = querySnapshot.documents.first {
+                    print("DEBUG: Existing user found, updating document")
+                    let oldUserId = existingUserDoc.documentID
+                    let newUserId = result.user.uid
+
+                    user = User(
+                        id: newUserId,
+                        firstName: sanitizedFirstName,
+                        lastName: sanitizedLastName,
+                        email: sanitizedEmail,
+                        handicap: Float(handicap ?? ""),
+                        ghinNumber: Int(ghinNumber ?? "")
+                    )
+                    
+                    print("DEBUG: Updating user document")
+                    try await Firestore.firestore().collection("users").document(newUserId).setData(from: user)
+
+                    print("DEBUG: Migrating friends")
+                    try await self.migrateFriends(from: oldUserId, to: newUserId)
+
+                    print("DEBUG: Migrating rounds")
+                    try await self.migrateRounds(from: oldUserId, to: newUserId)
+
+                    print("DEBUG: Deleting old user document")
+                    try await existingUserDoc.reference.delete()
+
+                    print("DEBUG: Updated user document and migrated data for \(sanitizedEmail)")
+                } else {
+                    print("DEBUG: Creating new user document")
+                    user = User(
+                        id: result.user.uid, 
+                        firstName: sanitizedFirstName, 
+                        lastName: sanitizedLastName, 
+                        email: sanitizedEmail, 
+                        handicap: Float(handicap ?? ""), 
+                        ghinNumber: Int(ghinNumber ?? "")
+                    )
+                    try await Firestore.firestore().collection("users").document(user.id).setData(from: user)
+                    print("DEBUG: Created new user document for \(sanitizedEmail)")
+                }
+
+                print("DEBUG: Updating currentUser")
+                self.currentUser = user
+
+                print("DEBUG: User creation process completed successfully")
+            }
+        } catch is TimeoutError {
+            print("DEBUG: User creation process timed out")
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "The operation timed out. Please try again."])
         } catch {
-            print("DEBUG: Failed to create user with error \(error.localizedDescription)")
+            print("DEBUG: Failed to create user with error: \(error.localizedDescription)")
             throw error
         }
     }
@@ -131,8 +211,34 @@ class AuthViewModel: ObservableObject {
         }
     }
     
-    func deleteAccount() {
-        // Implementation needed
+    func deleteAccount() async throws {
+        guard let user = Auth.auth().currentUser else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No authenticated user found"])
+        }
+
+        do {
+            // Store the user's email before deleting the account
+            let userEmail = user.email ?? ""
+
+            // Delete user from Firebase Authentication
+            try await user.delete()
+
+            // Update Firestore document to mark the account as deleted
+            let userRef = Firestore.firestore().collection("users").document(user.uid)
+            try await userRef.updateData([
+                "isDeleted": true,
+                "deletedAt": FieldValue.serverTimestamp(),
+                "lastKnownEmail": userEmail
+            ])
+
+            // Sign out and clear local user data
+            self.signOut()
+
+            print("DEBUG: User account deleted from Authentication and marked as deleted in Firestore")
+        } catch {
+            print("DEBUG: Failed to delete account with error \(error.localizedDescription)")
+            throw error
+        }
     }
     
     func fetchUser() async {
@@ -218,7 +324,114 @@ class AuthViewModel: ObservableObject {
         }
     }
     
+    func sendPasswordReset(to email: String) async throws {
+        guard validateInput(email, type: .email) else {
+            throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid email format"])
+        }
+
+        let sanitizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        do {
+            // Instead of checking if the account exists, just attempt to send the reset email
+            try await Auth.auth().sendPasswordReset(withEmail: sanitizedEmail)
+            print("DEBUG: Password reset email sent successfully to: \(sanitizedEmail)")
+        } catch {
+            print("DEBUG: Failed to send password reset email with error: \(error.localizedDescription)")
+            print("DEBUG: Error details: \(error)")
+            throw error
+        }
+    }
     
+    func checkUserExistence(email: String) async {
+        do {
+            // Check Authentication
+            let methods = try await Auth.auth().fetchSignInMethods(forEmail: email)
+            print("DEBUG: Authentication methods for \(email): \(methods)")
+            
+            // Check Firestore
+            let querySnapshot = try await Firestore.firestore().collection("users").whereField("email", isEqualTo: email).getDocuments()
+            print("DEBUG: Firestore documents for \(email): \(querySnapshot.documents.count)")
+        } catch {
+            print("DEBUG: Error checking user existence: \(error.localizedDescription)")
+        }
+    }
+    
+    func checkUserExistenceInAuth(email: String) async {
+        do {
+            let methods = try await Auth.auth().fetchSignInMethods(forEmail: email)
+            print("DEBUG: Sign-in methods for \(email): \(methods)")
+            if methods.isEmpty {
+                print("DEBUG: No account found in Firebase Authentication for \(email)")
+            } else {
+                print("DEBUG: Account exists in Firebase Authentication for \(email)")
+            }
+        } catch {
+            print("DEBUG: Error checking user existence in Auth: \(error.localizedDescription)")
+        }
+    }
+    
+    func createAuthAccountIfNeeded(email: String, password: String) async throws {
+        do {
+            let methods = try await Auth.auth().fetchSignInMethods(forEmail: email)
+            if methods.isEmpty {
+                // No account exists, so create one
+                try await Auth.auth().createUser(withEmail: email, password: password)
+                print("DEBUG: Created new account in Firebase Authentication for \(email)")
+            } else {
+                print("DEBUG: Account already exists in Firebase Authentication for \(email)")
+            }
+        } catch {
+            print("DEBUG: Error creating/checking account: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    private func migrateFriends(from oldUserId: String, to newUserId: String) async throws {
+        print("DEBUG: Starting friends migration from \(oldUserId) to \(newUserId)")
+        let oldFriendsRef = Firestore.firestore().collection("users").document(oldUserId).collection("friends")
+        let newFriendsRef = Firestore.firestore().collection("users").document(newUserId).collection("friends")
+
+        let snapshot = try await oldFriendsRef.getDocuments()
+        print("DEBUG: Found \(snapshot.documents.count) friends to migrate")
+        for doc in snapshot.documents {
+            try await newFriendsRef.document(doc.documentID).setData(doc.data())
+            print("DEBUG: Migrated friend \(doc.documentID)")
+        }
+        print("DEBUG: Friends migration completed")
+    }
+
+    private func migrateRounds(from oldUserId: String, to newUserId: String) async throws {
+        print("DEBUG: Starting rounds migration from \(oldUserId) to \(newUserId)")
+        let oldRoundsRef = Firestore.firestore().collection("users").document(oldUserId).collection("rounds")
+        let newRoundsRef = Firestore.firestore().collection("users").document(newUserId).collection("rounds")
+
+        let snapshot = try await oldRoundsRef.getDocuments()
+        print("DEBUG: Found \(snapshot.documents.count) rounds to migrate")
+        for doc in snapshot.documents {
+            try await newRoundsRef.document(doc.documentID).setData(doc.data())
+            print("DEBUG: Migrated round \(doc.documentID)")
+        }
+        print("DEBUG: Rounds migration completed")
+    }
+
+    func withTimeout<T>(seconds: TimeInterval, operation: @escaping () async throws -> T) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                try await operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw TimeoutError()
+            }
+            
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
+        }
+    }
+
+    struct TimeoutError: Error {}
 }
 
 extension UserDefaults {

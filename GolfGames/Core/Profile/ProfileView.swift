@@ -18,7 +18,8 @@ struct ProfileView: View {
     @State private var editedGHIN = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
-    
+    @State private var showDeleteAccountAlert = false
+
     var body: some View {
         if let user = viewModel.currentUser {
             List {
@@ -108,7 +109,7 @@ struct ProfileView: View {
                     }
                     
                     Button {
-                        viewModel.deleteAccount()
+                        showDeleteAccountAlert = true
                     } label: {
                         SettingsRowView(imageName: "xmark.circle.fill",
                                         title: "Delete Account",
@@ -125,6 +126,16 @@ struct ProfileView: View {
             })
             .onAppear {
                 initializeEditFields(with: user)
+            }
+            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await deleteAccount()
+                    }
+                }
+            } message: {
+                Text("Are you sure you want to delete your account? This action cannot be undone.")
             }
             .alert(isPresented: $showAlert) {
                 Alert(title: Text("Profile Update"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
@@ -162,6 +173,16 @@ struct ProfileView: View {
                 alertMessage = "Failed to update profile: \(error.localizedDescription)"
                 showAlert = true
             }
+        }
+    }
+    
+    private func deleteAccount() async {
+        do {
+            try await viewModel.deleteAccount()
+            // Handle successful deletion (e.g., navigate to login screen)
+        } catch {
+            alertMessage = "Failed to delete account: \(error.localizedDescription)"
+            showAlert = true
         }
     }
 }

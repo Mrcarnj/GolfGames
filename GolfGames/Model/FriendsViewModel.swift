@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FirebaseAuth
 import FirebaseFirestore
 import FirebaseFirestoreSwift
 
@@ -26,22 +27,55 @@ class FriendsViewModel: ObservableObject {
 
     func fetchFriends(completion: (() -> Void)? = nil) {
         guard let userId = userId else { return }
-        db.collection("users").document(userId).collection("friends").getDocuments { snapshot, error in
+        let db = Firestore.firestore()
+        
+        // First, check if the friends collection exists for this user
+        db.collection("users").document(userId).collection("friends").getDocuments { [weak self] snapshot, error in
             if let error = error {
                 print("Error fetching friends: \(error.localizedDescription)")
                 completion?()
                 return
             }
 
-            guard let documents = snapshot?.documents else {
-                print("No friends found")
+            if let snapshot = snapshot, !snapshot.isEmpty {
+                // Friends collection exists, proceed as normal
+                self?.processFriendsSnapshot(snapshot)
                 completion?()
-                return
+            } else {
+                // Friends collection doesn't exist, try to find the user by email
+                self?.findUserByEmailAndFetchFriends(completion: completion)
             }
+        }
+    }
 
-            self.friends = documents.compactMap { try? $0.data(as: Golfer.self) }
-            self.sortFriends()
+    private func processFriendsSnapshot(_ snapshot: QuerySnapshot) {
+        self.friends = snapshot.documents.compactMap { try? $0.data(as: Golfer.self) }
+        self.sortFriends()
+    }
+
+    private func findUserByEmailAndFetchFriends(completion: (() -> Void)?) {
+        guard let email = Auth.auth().currentUser?.email else {
             completion?()
+            return
+        }
+
+        let db = Firestore.firestore()
+        db.collection("users").whereField("email", isEqualTo: email).getDocuments { [weak self] (snapshot, error) in
+            if let document = snapshot?.documents.first {
+                let userId = document.documentID
+                self?.userId = userId // Update the userId
+                
+                // Now fetch friends using this userId
+                db.collection("users").document(userId).collection("friends").getDocuments { [weak self] (friendsSnapshot, friendsError) in
+                    if let friendsSnapshot = friendsSnapshot {
+                        self?.processFriendsSnapshot(friendsSnapshot)
+                    }
+                    completion?()
+                }
+            } else {
+                print("No user found with this email")
+                completion?()
+            }
         }
     }
 

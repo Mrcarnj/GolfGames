@@ -12,6 +12,8 @@ struct LoginView: View {
     @State private var password = ""
     @EnvironmentObject var viewModel: AuthViewModel
     @FocusState private var focusedField: FocusField?
+    @State private var showingResetAlert = false
+    @State private var resetAlertMessage = ""
     
     enum FocusField {
         case email, password
@@ -44,6 +46,19 @@ struct LoginView: View {
                         .autocapitalization(.none)
                         .focused($focusedField, equals: .password)
                     
+                    // Add Forgot Password button
+                    HStack {
+                        Spacer()
+                        Button("Forgot Password?") {
+                            Task {
+                                await sendPasswordResetEmail()
+                            }
+                        }
+                        .font(.footnote)
+                        .foregroundColor(.blue)
+                    }
+                    .padding(.top, 8)
+
                     if let error = viewModel.loginError {
                         Text(error)
                             .foregroundColor(.red)
@@ -101,6 +116,25 @@ struct LoginView: View {
                     }
                 }
             }
+            .alert(isPresented: $showingResetAlert) {
+                Alert(
+                    title: Text("Password Reset"),
+                    message: Text(resetAlertMessage),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+        }
+    }
+
+    // Add this function to handle password reset
+    func sendPasswordResetEmail() async {
+        do {
+            try await viewModel.sendPasswordReset(to: email)
+            resetAlertMessage = "If an account exists for this email, a password reset link has been sent."
+            showingResetAlert = true
+        } catch {
+            resetAlertMessage = "An error occurred. Please try again later."
+            showingResetAlert = true
         }
     }
 }

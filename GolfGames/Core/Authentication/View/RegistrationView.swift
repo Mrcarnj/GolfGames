@@ -24,6 +24,9 @@ struct RegistrationView: View {
     
     @FocusState private var isFocused: Bool
     
+    @State private var alertMessage = ""
+    @State private var showAlert = false
+    
     var body: some View {
         NavigationStack{
             ScrollView{
@@ -140,11 +143,16 @@ struct RegistrationView: View {
                                                                password: password,
                                                                firstName: firstName,
                                                                lastName: lastName,
-                                                               handicap: handicap,
-                                                               ghinNumber: ghinNumber)
+                                                               handicap: handicap.isEmpty ? nil : handicap,
+                                                               ghinNumber: ghinNumber.isEmpty ? nil : ghinNumber)
+                                print("DEBUG: Account created successfully, navigating to InitialView")
+                                // Dismiss the RegistrationView to return to the previous view (likely LoginView)
+                                dismiss()
                             } catch {
                                 print("DEBUG: Failed to create user with error \(error.localizedDescription)")
-                                // Handle the error, perhaps by showing an alert to the user
+                                // Show an alert to the user with the error message
+                                alertMessage = error.localizedDescription
+                                showAlert = true
                             }
                         }
                     } label: {
@@ -174,6 +182,10 @@ struct RegistrationView: View {
                                 .fontWeight(.bold)
                         }
                         .font(.system(size: 14))
+                    }
+                    
+                    .alert(isPresented: $showAlert) {
+                        Alert(title: Text("Registration Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
                     }
                 }
             }
