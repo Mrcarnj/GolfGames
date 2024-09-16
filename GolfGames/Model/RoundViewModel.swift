@@ -82,6 +82,10 @@ class RoundViewModel: ObservableObject {
     @Published var parCount: [String: Int] = [:]
     @Published var bogeyCount: [String: Int] = [:]
     @Published var doubleBogeyPlusCount: [String: Int] = [:]
+    @Published var isStablefordNet: Bool = false
+    @Published var stablefordNetScores: [Int: [String: Int]] = [:]
+    @Published var stablefordNetQuotas: [String: Int] = [:]
+    @Published var stablefordNetTotalScores: [String: Int] = [:]
 
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
@@ -439,6 +443,27 @@ func resetNinePointScore(for holeNumber: Int) {
         return StablefordGrossModel.displayFinalResults(roundViewModel: self)
     }
 
+    //////////////////STABLEFORD - NET  //////////////////
+    func initializeStablefordNet(quotas: [String: Int]) {
+        StablefordNetModel.initializeStablefordNet(roundViewModel: self, quotas: quotas)
+    }
+
+    func updateStablefordNetScore(for holeNumber: Int) {
+        StablefordNetModel.updateStablefordNetScore(roundViewModel: self, holeNumber: holeNumber)
+    }
+
+    func recalculateStablefordNetScores(upToHole: Int) {
+        StablefordNetModel.recalculateStablefordNetScores(roundViewModel: self, upToHole: upToHole)
+    }
+
+    func resetStablefordNetScore(for holeNumber: Int) {
+        StablefordNetModel.resetStablefordNetScore(roundViewModel: self, holeNumber: holeNumber)
+    }
+
+    func displayStablefordNetFinalResults() -> String {
+        return StablefordNetModel.displayFinalResults(roundViewModel: self)
+    }
+
 ////////////////// CLEAR ROUND DATA //////////////////
 
 func clearRoundData() {
@@ -523,6 +548,18 @@ func clearRoundData() {
     ninePointScores = [:]
     ninePointTotalScores = [:]
     ninePointStrokeHoles = [:]
+    
+    // Clear Stableford Gross data
+    isStablefordGross = false
+    stablefordGrossScores = [:]
+    stablefordGrossQuotas = [:]
+    stablefordGrossTotalScores = [:]
+    
+    // Clear Stableford Net data
+    isStablefordNet = false
+    stablefordNetScores = [:]
+    stablefordNetQuotas = [:]
+    stablefordNetTotalScores = [:]
     
     print("Round data cleared successfully.")
     objectWillChange.send()

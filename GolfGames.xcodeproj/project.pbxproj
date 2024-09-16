@@ -62,6 +62,8 @@
 		054EB8632C3C6A2600E44F97 /* Round.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8622C3C6A2500E44F97 /* Round.swift */; };
 		054EB8652C3C6A3D00E44F97 /* Hole.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8642C3C6A3D00E44F97 /* Hole.swift */; };
 		054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8662C3C6A6700E44F97 /* RoundView.swift */; };
+		0566EE712C94D9250073660C /* StablefordNetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0566EE702C94D9250073660C /* StablefordNetModel.swift */; };
+		0566EE732C987BA90073660C /* StablefordNetSCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0566EE722C987BA90073660C /* StablefordNetSCView.swift */; };
 		0587FC5A2C696EE000120C99 /* SideMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0587FC592C696EDF00120C99 /* SideMenuView.swift */; };
 		05DF12CA2C76BBB500278505 /* StrokePlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12C92C76BBB500278505 /* StrokePlayModel.swift */; };
 		05DF12CC2C76BBCE00278505 /* MatchPlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */; };
@@ -130,6 +132,8 @@
 		054EB8662C3C6A6700E44F97 /* RoundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundView.swift; sourceTree = "<group>"; };
 		054EB8682C3C6C9300E44F97 /* RoundViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundViewModel.swift; sourceTree = "<group>"; };
 		054EB86B2C3CB53000E44F97 /* HoleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleView.swift; sourceTree = "<group>"; };
+		0566EE702C94D9250073660C /* StablefordNetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StablefordNetModel.swift; sourceTree = "<group>"; };
+		0566EE722C987BA90073660C /* StablefordNetSCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StablefordNetSCView.swift; sourceTree = "<group>"; };
 		0587FC592C696EDF00120C99 /* SideMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenuView.swift; sourceTree = "<group>"; };
 		05DF12C92C76BBB500278505 /* StrokePlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokePlayModel.swift; sourceTree = "<group>"; };
 		05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayModel.swift; sourceTree = "<group>"; };
@@ -179,6 +183,7 @@
 				05F314202C7FE82100B3C828 /* NinePointModel.swift */,
 				05DF12C92C76BBB500278505 /* StrokePlayModel.swift */,
 				054BD1AE2C87FA00003A5562 /* StablefordGrossModel.swift */,
+				0566EE702C94D9250073660C /* StablefordNetModel.swift */,
 			);
 			path = Games;
 			sourceTree = "<group>";
@@ -357,6 +362,7 @@
 				05480CCF2C51B68F0082E638 /* ScorecardView.swift */,
 				05F314242C8122D500B3C828 /* NinePointSCView.swift */,
 				054BD1B02C87FA13003A5562 /* StablefordGrossSCView.swift */,
+				0566EE722C987BA90073660C /* StablefordNetSCView.swift */,
 			);
 			path = Scorecard;
 			sourceTree = "<group>";
@@ -485,6 +491,7 @@
 				05DF12D02C7833D600278505 /* StrokesModel.swift in Sources */,
 				05198A7D2C35C2840016F576 /* User.swift in Sources */,
 				05480CFC2C5A9A850082E638 /* HoleView.swift in Sources */,
+				0566EE712C94D9250073660C /* StablefordNetModel.swift in Sources */,
 				054E96212C4054180036165A /* OrientationObserver.swift in Sources */,
 				054E96252C4063D30036165A /* CreateGolferView.swift in Sources */,
 				054E96192C3FA3320036165A /* RecentRoundsModel.swift in Sources */,
@@ -499,6 +506,7 @@
 				054E96292C498A4F0036165A /* FriendsListView.swift in Sources */,
 				05198A6C2C35BDEA0016F576 /* RegistrationView.swift in Sources */,
 				05480CF82C52C7360082E638 /* TeeSelectionView.swift in Sources */,
+				0566EE732C987BA90073660C /* StablefordNetSCView.swift in Sources */,
 				05DF12D22C7A268C00278505 /* BetterBallModel.swift in Sources */,
 				05480D062C5B360C0082E638 /* LandscapeScorecardView.swift in Sources */,
 				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,

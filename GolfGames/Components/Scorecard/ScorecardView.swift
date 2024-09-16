@@ -73,7 +73,7 @@ struct ScorecardView: View {
         )
         .onChange(of: selectedScorecardType) { newValue in
             switch newValue {
-            case .matchPlay, .betterBall, .ninePoint, .stablefordGross:
+            case .matchPlay, .betterBall, .ninePoint, .stablefordGross, .stablefordNet:
                 AppDelegate.setOrientation(to: .landscapeRight)
             case .strokePlay:
                 AppDelegate.lockOrientation(.allButUpsideDown)
@@ -91,7 +91,7 @@ struct ScorecardView: View {
     
     private var portraitLayout: some View {
         VStack(spacing: 10) {
-            if roundViewModel.isMatchPlay || roundViewModel.isBetterBall || roundViewModel.isNinePoint || roundViewModel.isStablefordGross{
+            if roundViewModel.isMatchPlay || roundViewModel.isBetterBall || roundViewModel.isNinePoint || roundViewModel.isStablefordGross || roundViewModel.isStablefordNet{
                 scorecardTypePicker
             }
             
@@ -145,6 +145,9 @@ struct ScorecardView: View {
             case .stablefordGross:
                 StablefordGrossSCView()
                     .environmentObject(roundViewModel)
+            case .stablefordNet:
+                StablefordNetSCView()
+                    .environmentObject(roundViewModel)
             case .games:
                 // Handle the .games case here
                 // You might want to show a different view or a placeholder
@@ -179,6 +182,9 @@ struct ScorecardView: View {
             }
             if roundViewModel.isStablefordGross {
                 Text("Stableford (Gross)").tag(ScorecardType.stablefordGross)
+            }
+            if roundViewModel.isStablefordNet {
+                Text("Stableford (Net)").tag(ScorecardType.stablefordNet)
             }
         }
         .pickerStyle(SegmentedPickerStyle())
@@ -402,6 +408,12 @@ struct ScorecardView: View {
         roundViewModel.stablefordGrossScores.removeAll()
         roundViewModel.stablefordGrossQuotas.removeAll()
         roundViewModel.stablefordGrossTotalScores.removeAll()
+        
+        // Reset Stableford Net data
+        roundViewModel.isStablefordNet = false
+        roundViewModel.stablefordNetScores.removeAll()
+        roundViewModel.stablefordNetQuotas.removeAll()
+        roundViewModel.stablefordNetTotalScores.removeAll()
 
         // Reset round type and scorecard type
         roundViewModel.roundType = .full18

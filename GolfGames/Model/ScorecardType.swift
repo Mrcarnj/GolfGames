@@ -14,4 +14,5 @@ enum ScorecardType: String, CaseIterable {
     case betterBall = "Better Ball"
     case ninePoint = "Nine Point"
     case stablefordGross = "Stableford (Gross)"
+    case stablefordNet = "Stableford (Net)"
 }

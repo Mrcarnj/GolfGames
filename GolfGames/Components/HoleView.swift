@@ -42,6 +42,7 @@ struct HoleView: View {
     @State private var showNinePointWinner = false
     @State private var currentCarouselPage = 0
     @State private var showStablefordGrossWinner = false
+    @State private var showStablefordNetWinner = false
     
     @State private var currentScoreToPar: [String: Int] = [:]
     
@@ -303,6 +304,11 @@ struct HoleView: View {
                         roundViewModel.recalculateStablefordGrossScores(upToHole: currentHoleIndex + 1)
                     }
                     
+                    if roundViewModel.isStablefordNet {
+                        // Recalculate Stableford Net scores up to the current hole
+                        roundViewModel.recalculateStablefordNetScores(upToHole: currentHoleIndex + 1)
+                    }
+                    
                     currentHoleIndex += 1
                     updateScoresForCurrentHole()
                     updateStatsForCurrentHole()
@@ -378,6 +384,8 @@ struct HoleView: View {
             return CGFloat(80 + (roundViewModel.golfers.count * 25))
         case 0 where roundViewModel.isStablefordGross:
             return CGFloat(80 + (roundViewModel.golfers.count * 25))
+        case 0 where roundViewModel.isStablefordNet:
+            return CGFloat(80 + (roundViewModel.golfers.count * 25))
         default:
             return 0
         }
@@ -405,6 +413,10 @@ struct HoleView: View {
 
         if roundViewModel.isStablefordGross {
             pages.append(AnyView(StablefordGrossScoresView(showWinner: $showStablefordGrossWinner)))
+        }
+
+        if roundViewModel.isStablefordNet {
+            pages.append(AnyView(StablefordNetScoresView(showWinner: $showStablefordNetWinner)))
         }
 
         return pages
@@ -568,6 +580,60 @@ struct HoleView: View {
                             .frame(maxWidth: .infinity, alignment: .trailing)
                         let totalScore = roundViewModel.stablefordGrossTotalScores[golfer.id] ?? 0
                         let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
+                        let overQuota = totalScore - quota
+                        Text("\(totalScore) pts (\(formatOverQuota(overQuota)))")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(8)
+        }
+        
+        private func formatOverQuota(_ points: Int) -> String {
+            if points > 0 {
+                return "+\(points)"
+            } else if points < 0 {
+                return "\(points)"
+            } else {
+                return "E"
+            }
+        }
+    }
+    
+    private struct StablefordNetScoresView: View {
+        @EnvironmentObject var roundViewModel: RoundViewModel
+        @Binding var showWinner: Bool
+        
+        var body: some View {
+            VStack(alignment: .center, spacing: 4) {
+                Text("Stableford Net Scores")
+                    .font(.headline)
+                    .padding(.bottom, 2)
+                
+                let sortedGolfers = roundViewModel.golfers.sorted {
+                    let overQuota1 = (roundViewModel.stablefordNetTotalScores[$0.id] ?? 0) - (roundViewModel.stablefordNetQuotas[$0.id] ?? 0)
+                    let overQuota2 = (roundViewModel.stablefordNetTotalScores[$1.id] ?? 0) - (roundViewModel.stablefordNetQuotas[$1.id] ?? 0)
+                    return overQuota1 > overQuota2
+                }
+                
+                ForEach(sortedGolfers, id: \.id) { golfer in
+                    HStack(spacing: 10) {
+                        HStack(spacing: 4) {
+                            if showWinner && golfer == sortedGolfers.first {
+                                Image(systemName: "crown.fill")
+                                    .foregroundColor(.yellow)
+                            }
+                            Text(golfer.formattedName(golfers: roundViewModel.golfers))
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        
+                        let totalScore = roundViewModel.stablefordNetTotalScores[golfer.id] ?? 0
+                        let quota = roundViewModel.stablefordNetQuotas[golfer.id] ?? 0
                         let overQuota = totalScore - quota
                         Text("\(totalScore) pts (\(formatOverQuota(overQuota)))")
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -786,6 +852,11 @@ struct HoleView: View {
                         roundViewModel.recalculateStablefordGrossScores(upToHole: currentHoleIndex + 1)
                     }
                     
+                    if roundViewModel.isStablefordNet {
+                        // Recalculate Stableford Net scores up to the current hole
+                        roundViewModel.recalculateStablefordNetScores(upToHole: currentHoleIndex + 1)
+                    }
+                    
                     currentHoleIndex += 1
                     updateScoresForCurrentHole()
 
@@ -920,6 +991,10 @@ struct HoleView: View {
             if roundViewModel.isStablefordGross {
                 roundViewModel.resetStablefordGrossScore(for: currentHoleNumber)
             }
+            
+            if roundViewModel.isStablefordNet {
+                roundViewModel.resetStablefordNetScore(for: currentHoleNumber)
+            }
         }
         
         // Update tallies if all scores are entered
@@ -1035,6 +1110,17 @@ private func updateFinalGameStatuses(lastHole: Int) {
         _ = StablefordGrossModel.displayFinalResults(roundViewModel: roundViewModel)
         // Set showStablefordGrossWinner to true
         showStablefordGrossWinner = true
+    }
+    
+    if roundViewModel.isStablefordNet {
+        // Update Stableford Net scoring for the last hole
+        StablefordNetModel.updateStablefordNetScore(roundViewModel: roundViewModel, holeNumber: lastHole)
+        // Recalculate all scores to ensure consistency
+        StablefordNetModel.recalculateStablefordNetScores(roundViewModel: roundViewModel, upToHole: lastHole)
+        // Display final results
+        _ = StablefordNetModel.displayFinalResults(roundViewModel: roundViewModel)
+        // Set showStablefordNetWinner to true
+        showStablefordNetWinner = true
     }
 }
         

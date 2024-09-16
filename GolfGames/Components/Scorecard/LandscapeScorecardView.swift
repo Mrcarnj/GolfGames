@@ -108,6 +108,8 @@ struct LandscapeScorecardView: View {
             return 0.85
         case "Stableford (Gross)":
             return 0.85
+        case "Stableford (Net)":
+            return 0.85
         default:
             return 0.95
         }
@@ -137,6 +139,9 @@ struct LandscapeScorecardView: View {
         }
         if roundViewModel.isStablefordGross {
             pages.append(("Stableford (Gross)", AnyView(stablefordGrossScorecard)))
+        }
+        if roundViewModel.isStablefordNet {
+            pages.append(("Stableford (Net)", AnyView(stablefordNetScorecard)))
         }
         
         return pages
@@ -177,6 +182,12 @@ struct LandscapeScorecardView: View {
     private var stablefordGrossScorecard: some View {
         VStack(spacing: 0) { // Reduced spacing
             StablefordGrossSCView()
+        }
+    }
+    
+    private var stablefordNetScorecard: some View {
+        VStack(spacing: 0) { // Reduced spacing
+            StablefordNetSCView()
         }
     }
     

@@ -26,6 +26,9 @@ struct GameSelectionView: View {
     @State private var showingStablefordGrossInfo = false
     @State private var isStablefordGross = false
     @State private var stablefordGrossQuotas: [String: Int] = [:]
+    @State private var showingStablefordNetInfo = false
+    @State private var isStablefordNet = false
+    @State private var stablefordNetQuotas: [String: Int] = [:]
     
     var body: some View {
         ScrollView {
@@ -48,6 +51,9 @@ struct GameSelectionView: View {
                 }
                 if isStablefordGross {
                     stablefordGrossInfoSection
+                }
+                if isStablefordNet {
+                    stablefordNetInfoSection
                 }
                 Spacer()
                 
@@ -95,6 +101,22 @@ struct GameSelectionView: View {
                     Par = 2
                     Bogey = 1
                     Double Bogey or worse = 0
+                    """),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
+            .alert(isPresented: $showingStablefordNetInfo) {
+                Alert(
+                    title: Text("What is Stableford Net?"),
+                    message: Text("""
+                    Stableford Net is a scoring system where points are awarded based on net score to par. Players aim to accumulate the highest number of points. Each player has a 'quota' based on their handicap, and the winner is the player who exceeds their quota by the most (or comes closest to meeting it).
+
+                    Net Albatross = 8
+                    Net Eagle = 6
+                    Net Birdie = 4
+                    Net Par = 2
+                    Net Bogey = 1
+                    Net Double Bogey or worse = 0
                     """),
                     dismissButton: .default(Text("OK"))
                 )
@@ -151,6 +173,19 @@ struct GameSelectionView: View {
                     .onChange(of: isStablefordGross) { newValue in
                         if newValue {
                             stablefordGrossQuotas = calculateStablefordGrossQuotas()
+                        }
+                    }
+            }
+            
+            // Stableford Net toggle
+            if sharedViewModel.golfers.count >= 2 {
+                gameToggle(isOn: $isStablefordNet,
+                           imageName: "s.circle",
+                           text: "Stableford Net",
+                           action: showStablefordNetInfo)
+                    .onChange(of: isStablefordNet) { newValue in
+                        if newValue {
+                            stablefordNetQuotas = calculateStablefordNetQuotas()
                         }
                     }
             }
@@ -377,6 +412,42 @@ struct GameSelectionView: View {
         }
     }
 
+    private var stablefordNetInfoSection: some View {
+        Group {
+            if isStablefordNet {
+                VStack(alignment: .center, spacing: 10) {
+                    Text("Stableford Net Players")
+                        .font(.headline)
+                    
+                    ForEach(sharedViewModel.golfers, id: \.id) { golfer in
+                        HStack (spacing: 25){
+                            Text(roundViewModel.formattedGolferName(for: golfer))
+                                .font(.subheadline)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                            
+                            
+                            if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
+                                let quota = calculateQuota(courseHandicap: courseHandicap)
+                                Text("Quota: \(quota)")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            } else {
+                                Text("Quota: N/A")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
+            }
+        }
+    }
+
     private func calculateQuota(courseHandicap: Int) -> Int {
         return 36 - courseHandicap
     }
@@ -388,6 +459,7 @@ struct GameSelectionView: View {
         roundViewModel.isBetterBall = isBetterBall
         roundViewModel.isNinePoint = isNinePoint
         roundViewModel.isStablefordGross = isStablefordGross
+        roundViewModel.isStablefordNet = isStablefordNet
         
         // Set up Match Play if selected
         if sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count == 2 {
@@ -407,6 +479,10 @@ struct GameSelectionView: View {
         // Set up Stableford Gross if selected
         if isStablefordGross {
             roundViewModel.initializeStablefordGross(quotas: stablefordGrossQuotas)
+        }
+        // Set up Stableford Net if selected
+        if isStablefordNet {
+            roundViewModel.initializeStablefordNet(quotas: stablefordNetQuotas)
         }
         
         // Ensure all selected golfers are included in the round
@@ -431,7 +507,7 @@ struct GameSelectionView: View {
         (sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) ||
         (isBetterBall && !isValidBetterBallSetup()) ||
         (isNinePoint && sharedViewModel.golfers.count != 3) ||
-        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint && !isStablefordGross) // Disable if no game type is selected
+        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint && !isStablefordGross && !isStablefordNet) // Disable if no game type is selected
     )
 }
     
@@ -493,6 +569,9 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
     private func showStablefordGrossInfo() {
         showingStablefordGrossInfo = true
     }
+    private func showStablefordNetInfo() {
+        showingStablefordNetInfo = true
+    }
 
     private func initializeTeamAssignments() {
         let golfers = sharedViewModel.golfers
@@ -519,6 +598,16 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
     }
 
     private func calculateStablefordGrossQuotas() -> [String: Int] {
+        var quotas: [String: Int] = [:]
+        for golfer in sharedViewModel.golfers {
+            if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
+                quotas[golfer.id] = calculateQuota(courseHandicap: courseHandicap)
+            }
+        }
+        return quotas
+    }
+
+    private func calculateStablefordNetQuotas() -> [String: Int] {
         var quotas: [String: Int] = [:]
         for golfer in sharedViewModel.golfers {
             if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
