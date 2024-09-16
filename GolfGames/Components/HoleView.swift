@@ -331,9 +331,10 @@ struct HoleView: View {
                 .frame(width: viewWidth - 32)
             ScrollView {
                 VStack {
-            gameStatusCarousel
             scoreHeaderView
                     golferScoresView
+                    gameStatusCarousel
+                        .padding(.top)
                     checkScoresButton
                     reviewRoundButton
                 }
@@ -348,16 +349,7 @@ struct HoleView: View {
         return Group {
             if !pages.isEmpty {
                 VStack {
-                    TabView(selection: $currentCarouselPage) {
-                        ForEach(0..<pages.count, id: \.self) { index in
-                            pages[index]
-                                .tag(index)
-                                .frame(height: getPageHeight(for: index))
-                        }
-                    }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .frame(height: getMaxPageHeight())
-                    
+                    gameHeaderView
                     // Custom page indicators
                     if pages.count > 1 {
                         HStack(spacing: 8) {
@@ -369,6 +361,16 @@ struct HoleView: View {
                         }
                         .padding(.top, 8)
                     }
+                    
+                    TabView(selection: $currentCarouselPage) {
+                        ForEach(0..<pages.count, id: \.self) { index in
+                            pages[index]
+                                .tag(index)
+                                .frame(height: getPageHeight(for: index))
+                        }
+                    }
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                    .frame(height: getMaxPageHeight())
                 }
             }
         }
@@ -674,6 +676,17 @@ struct HoleView: View {
                     .font(.system(size: 11))
                     .frame(width: 70, alignment: .center)
             }
+        }
+        .padding(.horizontal)
+        .fontWeight(.bold)
+        .foregroundColor(Color.primary)
+        .background(Color.secondary)
+    }
+    
+    private var gameHeaderView: some View {
+        HStack(spacing: 0) {
+            Text("Game Scores")
+                .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding(.horizontal)
         .fontWeight(.bold)
