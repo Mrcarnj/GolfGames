@@ -288,53 +288,58 @@ struct GameSelectionView: View {
     }
 }
     private var betterBallInfoSection: some View {
-        Group {
-            if isBetterBall {
-                let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
-                let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
+    Group {
+        if isBetterBall {
+            let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
+            let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
+            
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Better Ball Teams")
+                    .font(.headline)
                 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Better Ball Teams")
-                        .font(.headline)
-                    
-                    ForEach(sharedViewModel.golfers, id: \.id) { golfer in
-                        HStack {
-                            Text(roundViewModel.formattedGolferName(for: golfer))
-                                .font(.subheadline)
-                            
-                            if golfer.id == lowestHandicapGolfer?.id {
-                                Text("0 strokes")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                            } else if let handicap = betterBallHandicaps[golfer.id], handicap > 0 {
-                                Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                            }
-                            
-                            Spacer()
-
-                            Picker("Team", selection: Binding(
-                                get: { self.betterBallTeamAssignments[golfer.id] ?? "Not Playing" },
-                                set: { self.betterBallTeamAssignments[golfer.id] = $0 }
-                            )) {
-                                Text("Team A").tag("Team A")
-                                Text("Team B").tag("Team B")
-                                Text("Not Playing").tag("Not Playing")
-                            }
-                            .pickerStyle(MenuPickerStyle())
+                ForEach(sharedViewModel.golfers, id: \.id) { golfer in
+                    HStack {
+                        Text(roundViewModel.formattedGolferName(for: golfer))
+                            .font(.subheadline)
+                        
+                        if golfer.id == lowestHandicapGolfer?.id {
+                            Text("0 strokes")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        } else if let handicap = betterBallHandicaps[golfer.id] {
+                            Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        } else {
+                            Text("0 strokes")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
+                        
+                        Spacer()
+
+                        Picker("Team", selection: Binding(
+                            get: { self.betterBallTeamAssignments[golfer.id] ?? "Not Playing" },
+                            set: { self.betterBallTeamAssignments[golfer.id] = $0 }
+                        )) {
+                            Text("Team A").tag("Team A")
+                            Text("Team B").tag("Team B")
+                            Text("Not Playing").tag("Not Playing")
+                        }
+                        .pickerStyle(MenuPickerStyle())
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(10)
             }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(10)
         }
     }
+}
 
     private var ninePointInfoSection: some View {
         Group {

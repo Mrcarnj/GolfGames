@@ -355,53 +355,79 @@ struct HoleView: View {
         
         return Group {
             if !pages.isEmpty {
-                VStack {
-                    gameHeaderView
-                    // Custom page indicators
-                    if pages.count > 1 {
-                        HStack(spacing: 8) {
+                GeometryReader { geometry in
+                    VStack {
+                        gameHeaderView
+                        // Custom page indicators
+                        if pages.count > 1 {
+                            HStack(spacing: 8) {
+                                ForEach(0..<pages.count, id: \.self) { index in
+                                    Circle()
+                                        .fill(index == currentCarouselPage ? Color.blue : Color.gray)
+                                        .frame(width: 8, height: 8)
+                                }
+                            }
+                            .padding(.top, 8)
+                        }
+                        
+                        let maxHeight = getMaxPageHeight()
+                        
+                        TabView(selection: $currentCarouselPage) {
                             ForEach(0..<pages.count, id: \.self) { index in
-                                Circle()
-                                    .fill(index == currentCarouselPage ? Color.blue : Color.gray)
-                                    .frame(width: 8, height: 8)
+                                pages[index]
+                                    .tag(index)
+                                    .frame(height: maxHeight)
+                                    .border(Color.green, width: 2)
                             }
                         }
-                        .padding(.top, 8)
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                        .frame(height: min(maxHeight, geometry.size.height))
+                        .border(Color.red, width: 2)
                     }
-                    
-                    TabView(selection: $currentCarouselPage) {
-                        ForEach(0..<pages.count, id: \.self) { index in
-                            pages[index]
-                                .tag(index)
-                        }
-                    }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    .frame(height: getMaxPageHeight())
+                    .frame(height: geometry.size.height)
+                    .border(Color.blue, width: 2)
                 }
+                .frame(height: getMaxPageHeight() + 50) // Add extra height for safety
             }
         }
     }
     
     private func getPageHeight(for index: Int) -> CGFloat {
+        let baseHeight: CGFloat
+        let pressStatusHeight: CGFloat
+        let pressButtonHeight: CGFloat = canInitiatePress() ? 60 : 0
+
         switch index {
         case 0 where roundViewModel.isMatchPlay:
-            return CGFloat(100 + (roundViewModel.pressStatuses.count * 20) + (canInitiatePress() ? 60 : 0))
+            baseHeight = 100
+            pressStatusHeight = CGFloat(roundViewModel.pressStatuses.count * 20)
         case 0 where roundViewModel.isBetterBall:
-            return CGFloat(120 + (roundViewModel.betterBallPressStatuses.count * 15) + (canInitiatePress() ? 60 : 0))
+            baseHeight = 120
+            pressStatusHeight = CGFloat(roundViewModel.betterBallPressStatuses.count * 20)
         case 0 where roundViewModel.isNinePoint:
-            return CGFloat(80 + (roundViewModel.golfers.count * 25))
+            baseHeight = 80 + CGFloat(roundViewModel.golfers.count * 25)
+            pressStatusHeight = 0
         case 0 where roundViewModel.isStablefordGross:
-            return CGFloat(80 + (roundViewModel.golfers.count * 25))
+            baseHeight = 80 + CGFloat(roundViewModel.golfers.count * 25)
+            pressStatusHeight = 0
         case 0 where roundViewModel.isStablefordNet:
-            return CGFloat(80 + (roundViewModel.golfers.count * 25))
+            baseHeight = 80 + CGFloat(roundViewModel.golfers.count * 25)
+            pressStatusHeight = 0
         default:
-            return 0
+            baseHeight = 0
+            pressStatusHeight = 0
         }
+
+        let totalHeight = baseHeight + pressStatusHeight + pressButtonHeight + 32 // Add extra padding
+        print("Debug: getPageHeight for index \(index): baseHeight: \(baseHeight), pressStatusHeight: \(pressStatusHeight), pressButtonHeight: \(pressButtonHeight), totalHeight: \(totalHeight)")
+        return totalHeight
     }
     
     private func getMaxPageHeight() -> CGFloat {
         let heights = (0..<carouselPages.count).map { getPageHeight(for: $0) }
-        return heights.max() ?? 0 // Return 0 if there are no pages
+        let maxHeight = heights.max() ?? 0
+        print("Debug: getMaxPageHeight: \(maxHeight)")
+        return maxHeight
     }
     
     private var carouselPages: [AnyView] {
@@ -493,6 +519,7 @@ struct HoleView: View {
             )
         .cornerRadius(8)
         .shadow(radius: /*@START_MENU_TOKEN@*/10/*@END_MENU_TOKEN@*/)
+        .padding(8)
     }
     
     private struct BetterBallTeamsView: View {
@@ -534,23 +561,31 @@ struct HoleView: View {
             .background(Color.secondary.opacity(0.1))
             .cornerRadius(8)
             .fixedSize(horizontal: true, vertical: false)
+            .padding(8)
+            .onChange(of: roundViewModel.betterBallPressStatuses) { _ in
+                        DispatchQueue.main.async {
+                            // Force layout update
+                            withAnimation {
+                                roundViewModel.objectWillChange.send()
+                            }
+                        }
+                    }
         }
         
         private var betterBallStatusSection: some View {
             VStack(alignment: .center, spacing: 2) {
                 Text(roundViewModel.betterBallMatchStatus ?? "Better Ball Status Not Available")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.blue)
                 
                 if !roundViewModel.betterBallPressStatuses.isEmpty {
                     Text("Presses:")
                         .font(.subheadline)
-                        .fontWeight(.semibold)
                         .padding(.top, 2)
                     
                     ForEach(roundViewModel.betterBallPressStatuses, id: \.self) { pressStatus in
                         Text(pressStatus)
-                            .font(.system(size: 12))
+                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
                 }
