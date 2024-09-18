@@ -377,15 +377,12 @@ struct HoleView: View {
                                 pages[index]
                                     .tag(index)
                                     .frame(height: maxHeight)
-                                    .border(Color.green, width: 2)
                             }
                         }
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                         .frame(height: min(maxHeight, geometry.size.height))
-                        .border(Color.red, width: 2)
                     }
                     .frame(height: geometry.size.height)
-                    .border(Color.blue, width: 2)
                 }
                 .frame(height: getMaxPageHeight() + 50) // Add extra height for safety
             }
