@@ -102,7 +102,7 @@ struct BetterBallSCView: View {
         switch roundViewModel.roundType {
         case .full18:
             return AnyView(
-                VStack(spacing: 0) {
+                HStack(spacing: 0) {
                     nineHoleView(holes: 1...9, teamA: teamA, teamB: teamB, title: "Out", showFirstColumn: true, pressIndex: pressIndex)
                     nineHoleView(holes: 10...18, teamA: teamA, teamB: teamB, title: "In", showTotal: true, showFirstColumn: false, pressIndex: pressIndex)
                 }

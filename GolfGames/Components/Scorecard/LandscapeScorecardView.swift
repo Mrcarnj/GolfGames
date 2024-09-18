@@ -28,7 +28,9 @@ struct LandscapeScorecardView: View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 HStack {
+                    if hasGamesSelected {
                     scorecardTypePicker
+                    }
                     if selectedScorecardType == .strokePlay && roundViewModel.golfers.count > 1 {
                         golferPicker
                     }
@@ -55,6 +57,14 @@ struct LandscapeScorecardView: View {
         .onAppear {
             selectedGolferId = authViewModel.currentUser?.id
         }
+    }
+    
+    private var hasGamesSelected: Bool {
+        roundViewModel.isMatchPlay ||
+        roundViewModel.isBetterBall ||
+        roundViewModel.isNinePoint ||
+        roundViewModel.isStablefordGross ||
+        roundViewModel.isStablefordNet
     }
     
     private var scorecardTypePicker: some View {
@@ -151,6 +161,9 @@ struct LandscapeScorecardView: View {
         Group {
             if let golfer = selectedGolfer {
                 VStack(spacing: 0) { // Reduced spacing
+                    Text("Stroke Play")
+                    .font(.custom("AmericanTypewriter", size: 30))
+                    .padding(.bottom, 30)
                     LandscapeStrokePlayScorecardView(golfer: golfer)
                     scoreLegend
                         .padding(.top, 10)
@@ -162,6 +175,7 @@ struct LandscapeScorecardView: View {
     private var matchPlayScorecard: some View {
         VStack(spacing: 0) { // Reduced spacing
         scoreLegend
+        .padding(.bottom, 10)
             MatchPlaySCView()
         }
     }
@@ -169,6 +183,7 @@ struct LandscapeScorecardView: View {
     private var betterBallScorecard: some View {
         VStack(spacing: 0) { // Reduced spacing
         scoreLegend
+        .padding(.bottom, 10)
             BetterBallSCView()
         }
     }
