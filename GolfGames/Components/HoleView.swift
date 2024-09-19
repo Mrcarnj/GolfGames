@@ -262,15 +262,35 @@ struct HoleView: View {
     }
     
     private func nextHole(_ current: Int) -> Int {
+        let startingHole = roundViewModel.getStartingHoleNumber()
         let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
-        let next = current % totalHoles + 1
-        return roundViewModel.roundType == .back9 ? (next < 10 ? next + 9 : next) : next
+        
+        switch roundViewModel.roundType {
+        case .full18:
+            return current % 18 + 1
+        case .front9:
+            let next = (current % 9) + 1
+            return next > 9 ? 1 : next
+        case .back9:
+            let next = (current - 9) % 9 + 10
+            return next > 18 ? 10 : next
+        }
     }
     
     private func previousHole(_ current: Int) -> Int {
+        let startingHole = roundViewModel.getStartingHoleNumber()
         let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
-        let prev = (current - 2 + totalHoles) % totalHoles + 1
-        return roundViewModel.roundType == .back9 ? (prev < 10 ? prev + 9 : prev) : prev
+        
+        switch roundViewModel.roundType {
+        case .full18:
+            return (current - 2 + 18) % 18 + 1
+        case .front9:
+            let prev = (current - 2 + 9) % 9 + 1
+            return prev < 1 ? 9 : prev
+        case .back9:
+            let prev = (current - 11 + 9) % 9 + 10
+            return prev < 10 ? 18 : prev
+        }
     }
     
     private var holeNavigation: some View {
@@ -295,7 +315,7 @@ struct HoleView: View {
             
             Spacer()
             
-            if !roundViewModel.isLastHole(currentHole) {
+            if !isLastHoleOfRound(currentHole) {
                 Button(action: {
                     if roundViewModel.isMatchPlay {
                         MatchPlayModel.recalculateTallies(roundViewModel: roundViewModel, upToHole: currentHole)
@@ -829,23 +849,29 @@ struct HoleView: View {
     }
     
     private var checkScoresButton: some View {
-        Group {
-            if roundViewModel.isLastHole(currentHole) && roundViewModel.allScoresEntered(for: currentHole) {
-                Button("Check For Missing Scores") {
-                    checkScores()
-                    scoresChecked = true
+        VStack {
+            if isLastHoleOfRound(currentHole) {
+                if roundViewModel.allScoresEntered(for: currentHole) {
+                    Button(action: {
+                        checkScores()
+                        scoresChecked = true
+                    }) {
+                        Text("Check For Missing Scores")
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                } else {
+                    
                 }
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
             }
         }
     }
     
     private var reviewRoundButton: some View {
         Group {
-            if showMissingScores && ScoringModel.allScoresEntered(roundViewModel: roundViewModel) {
+            if scoresChecked && missingScores.isEmpty {
                 NavigationLink(destination: ScorecardView()
                     .environmentObject(roundViewModel)
                     .environmentObject(singleRoundViewModel)
@@ -1116,18 +1142,40 @@ struct HoleView: View {
         }
     }
     
+    private func isLastHoleOfRound(_ holeNumber: Int) -> Bool {
+        let startingHole = roundViewModel.getStartingHoleNumber()
+        let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
+        
+        switch roundViewModel.roundType {
+        case .full18:
+            return (holeNumber - startingHole + 18) % 18 == 17
+        case .front9:
+            return (holeNumber - startingHole + 9) % 9 == 8
+        case .back9:
+            return (holeNumber - startingHole + 9) % 9 == 8
+        }
+    }
+    
     private func checkScores() {
         showMissingScores = true
+        scoresChecked = true
         missingScores = [:]
         
-        let startingHole = roundViewModel.getStartingHoleNumber()
-        let endingHole = roundViewModel.getEndingHoleNumber()
+        let (startHole, endHole) = getHoleRange()
         let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
         
         for golfer in roundViewModel.golfers {
             var missingHoles: [Int] = []
             for offset in 0..<totalHoles {
-                let holeNumber = (startingHole + offset - 1) % 18 + 1
+                let holeNumber: Int
+                switch roundViewModel.roundType {
+                case .full18:
+                    holeNumber = (startHole + offset - 1) % 18 + 1
+                case .front9:
+                    holeNumber = ((startHole + offset - 1) % 9) + 1
+                case .back9:
+                    holeNumber = ((startHole + offset - 10) % 9) + 10
+                }
                 if roundViewModel.grossScores[holeNumber]?[golfer.id] == nil {
                     missingHoles.append(holeNumber)
                 }
@@ -1137,29 +1185,8 @@ struct HoleView: View {
             }
         }
         
-        // If there are no missing scores, update the final match status and scores
         if missingScores.isEmpty {
-            // Reset all stats before recalculating
-            resetAllStats()
-            
-            // Update stats for all holes, including the last hole
-            for offset in 0..<totalHoles {
-                let holeNumber = (startingHole + offset - 1) % 18 + 1
-                updateStatsForHole(holeNumber: holeNumber)
-            }
-            
-            // Update score to par for all golfers
-            for golfer in roundViewModel.golfers {
-                currentScoreToPar[golfer.id] = StrokePlayModel.calculateCumulativeScoreToPar(
-                    roundViewModel: roundViewModel,
-                    singleRoundViewModel: singleRoundViewModel,
-                    golferId: golfer.id,
-                    upToHole: endingHole
-                )
-            }
-            
-            // Update game-specific final statuses
-            updateFinalGameStatuses(lastHole: endingHole)
+            updateFinalScoresAndStats(endHole: endHole)
         }
         
         // Force view update
@@ -1167,6 +1194,53 @@ struct HoleView: View {
         
         // Print final cumulative stats
         printCumulativeStats()
+    }
+    
+    private func getHoleRange() -> (Int, Int) {
+        let startingHole = roundViewModel.getStartingHoleNumber()
+        switch roundViewModel.roundType {
+        case .full18:
+            return (1, 18)
+        case .front9:
+            return (1, 9)
+        case .back9:
+            return (10, 18)
+        }
+    }
+    
+    private func updateFinalScoresAndStats(endHole: Int) {
+        // Reset all stats before recalculating
+        resetAllStats()
+        
+        let (startHole, _) = getHoleRange()
+        let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
+        
+        // Update stats for all holes
+        for offset in 0..<totalHoles {
+            let holeNumber: Int
+            switch roundViewModel.roundType {
+            case .full18:
+                holeNumber = (startHole + offset - 1) % 18 + 1
+            case .front9:
+                holeNumber = ((startHole + offset - 1) % 9) + 1
+            case .back9:
+                holeNumber = ((startHole + offset - 10) % 9) + 10
+            }
+            updateStatsForHole(holeNumber: holeNumber)
+        }
+        
+        // Update score to par for all golfers
+        for golfer in roundViewModel.golfers {
+            currentScoreToPar[golfer.id] = StrokePlayModel.calculateCumulativeScoreToPar(
+                roundViewModel: roundViewModel,
+                singleRoundViewModel: singleRoundViewModel,
+                golferId: golfer.id,
+                upToHole: endHole
+            )
+        }
+        
+        // Update game-specific final statuses
+        updateFinalGameStatuses(lastHole: endHole)
     }
     
     private func resetAllStats() {
