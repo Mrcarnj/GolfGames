@@ -21,12 +21,43 @@ struct StrokePlayModel {
 
     static func calculateCumulativeScoreToPar(roundViewModel: RoundViewModel, singleRoundViewModel: SingleRoundViewModel, golferId: String, upToHole: Int) -> Int {
         var cumulativeScoreToPar = 0
-        for holeNumber in 1...max(1, upToHole) {
-            if let grossScore = roundViewModel.grossScores[holeNumber]?[golferId],
-               let hole = singleRoundViewModel.holes.first(where: { $0.holeNumber == holeNumber }) {
-                cumulativeScoreToPar += grossScore - hole.par
+        let startingHole = roundViewModel.getStartingHoleNumber()
+        let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
+        
+        print("Debug: Calculating cumulative score to par - Starting Hole: \(startingHole), Up To Hole: \(upToHole), Total Holes: \(totalHoles)")
+        
+        var currentHole = startingHole
+        var holesProcessed = 0
+        
+        while holesProcessed < totalHoles {
+            if let grossScore = roundViewModel.grossScores[currentHole]?[golferId],
+               let hole = singleRoundViewModel.holes.first(where: { $0.holeNumber == currentHole }) {
+                let holeScoretoPar = grossScore - hole.par
+                cumulativeScoreToPar += holeScoretoPar
+                print("Debug: Hole \(currentHole) - Gross Score: \(grossScore), Par: \(hole.par), Score to Par: \(holeScoretoPar), Cumulative: \(cumulativeScoreToPar)")
+            } else {
+                print("Debug: Hole \(currentHole) - No score or hole data available")
+            }
+            
+            if currentHole == upToHole {
+                break
+            }
+            
+            holesProcessed += 1
+            
+            switch roundViewModel.roundType {
+            case .full18:
+                currentHole = currentHole % 18 + 1
+            case .front9:
+                currentHole = (currentHole % 9) + 1
+                if currentHole > 9 { currentHole = 1 }
+            case .back9:
+                currentHole = (currentHole - 9) % 9 + 10
+                if currentHole > 18 { currentHole = 10 }
             }
         }
+        
+        print("Debug: Final Cumulative Score to Par: \(cumulativeScoreToPar)")
         return cumulativeScoreToPar
     }
 

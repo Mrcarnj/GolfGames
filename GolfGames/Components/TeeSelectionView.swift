@@ -16,6 +16,7 @@ struct TeeSelectionView: View {
     @State private var currentHoleIndex = 0
     @State private var showGameSelection = false
     @State private var selectedRoundType: RoundType = .full18
+    @State private var selectedStartingHole: Int = 1
 
     var allTeesSelected: Bool {
         sharedViewModel.golfers.allSatisfy { golfer in
@@ -32,6 +33,14 @@ struct TeeSelectionView: View {
             }
             .pickerStyle(SegmentedPickerStyle())
             .padding()
+            
+            Picker("Starting Hole", selection: $selectedStartingHole) {
+                ForEach(availableStartingHoles, id: \.self) { hole in
+                    Text("Hole \(hole)").tag(hole)
+                }
+            }
+            .pickerStyle(MenuPickerStyle())
+            .padding(.horizontal)
             
             List {
                 ForEach($sharedViewModel.golfers) { $golfer in
@@ -156,15 +165,37 @@ struct TeeSelectionView: View {
         }
         .onChange(of: selectedRoundType) { newValue in
             roundViewModel.roundType = newValue
+            updateDefaultStartingHole(for: newValue)
         }
     }
 
+    private var availableStartingHoles: [Int] {
+        switch selectedRoundType {
+        case .full18:
+            return Array(1...18)
+        case .front9:
+            return Array(1...9)
+        case .back9:
+            return Array(10...18)
+        }
+    }
+    
+    private func updateDefaultStartingHole(for roundType: RoundType) {
+        switch roundType {
+        case .full18, .front9:
+            selectedStartingHole = 1
+        case .back9:
+            selectedStartingHole = 10
+        }
+    }
+    
     private func beginRound() {
         // Update RoundViewModel with the latest golfer information
         roundViewModel.golfers = sharedViewModel.golfers
         roundViewModel.selectedCourse = sharedViewModel.selectedCourse
         roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
         roundViewModel.isNinePoint = roundViewModel.isNinePoint // Make sure this is set
+        roundViewModel.startingHole = selectedStartingHole
         
         // Ensure all golfers have course handicaps and tees set
         for (index, golfer) in roundViewModel.golfers.enumerated() {

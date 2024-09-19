@@ -169,16 +169,22 @@ struct ScoringModel {
     }
     
     static func allScoresEntered(roundViewModel: RoundViewModel, for holeNumber: Int? = nil) -> Bool {
+        let startingHole = roundViewModel.getStartingHoleNumber()
+        let endingHole = roundViewModel.getEndingHoleNumber()
+        let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
+
         if let hole = holeNumber {
             // Check for a specific hole
+            let adjustedHole = roundViewModel.roundType == .back9 ? (hole - 10 + 18) % 18 + 1 : hole
             return roundViewModel.golfers.allSatisfy { golfer in
-                roundViewModel.grossScores[hole]?[golfer.id] != nil
+                roundViewModel.grossScores[adjustedHole]?[golfer.id] != nil
             }
         } else {
-            // Check all holes
-            return (1...18).allSatisfy { hole in
-                roundViewModel.golfers.allSatisfy { golfer in
-                    roundViewModel.grossScores[hole]?[golfer.id] != nil
+            // Check all holes for the round
+            return (0..<totalHoles).allSatisfy { index in
+                let holeToCheck = (startingHole + index - 1) % 18 + 1
+                return roundViewModel.golfers.allSatisfy { golfer in
+                    roundViewModel.grossScores[holeToCheck]?[golfer.id] != nil
                 }
             }
         }

@@ -86,7 +86,8 @@ class RoundViewModel: ObservableObject {
     @Published var stablefordNetScores: [Int: [String: Int]] = [:]
     @Published var stablefordNetQuotas: [String: Int] = [:]
     @Published var stablefordNetTotalScores: [String: Int] = [:]
-
+    @Published var startingHole: Int = 1
+    
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
     }
@@ -570,14 +571,33 @@ func clearRoundData() {
     }
 
     func getStartingHoleNumber() -> Int {
-    switch roundType {
-    case .full18, .front9:
-        return 1
-    case .back9:
-        return 10
+        return startingHole
     }
-}
-
+    
+    func getEndingHoleNumber() -> Int {
+        let totalHoles: Int
+        switch roundType {
+        case .full18:
+            totalHoles = 18
+        case .front9, .back9:
+            totalHoles = 9
+        }
+        
+        return (startingHole + totalHoles - 1) % 18 == 0 ? 18 : (startingHole + totalHoles - 1) % 18
+    }
+    
+    func isLastHole(_ currentHole: Int) -> Bool {
+        let startingHole = getStartingHoleNumber()
+        let endingHole = getEndingHoleNumber()
+        let totalHoles = roundType == .full18 ? 18 : 9
+        
+        if roundType == .back9 {
+            return (currentHole - 10 + 9) % 9 == (endingHole - 10 + 9) % 9
+        } else {
+            return (currentHole - startingHole + totalHoles) % totalHoles == (endingHole - startingHole + totalHoles) % totalHoles
+        }
+    }
+    
     func updateStats(for golferId: String, score: Int, par: Int) {
     let scoreDiff = score - par
     print("Debug: Updating stats for golfer \(golferId) - Score: \(score), Par: \(par), Diff: \(scoreDiff)")
