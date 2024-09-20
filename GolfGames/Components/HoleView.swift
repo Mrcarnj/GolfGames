@@ -342,36 +342,33 @@ struct HoleView: View {
                     }
                     
                     if roundViewModel.isNinePoint {
-                        // Recalculate Nine Point scores up to the current hole
                         NinePointModel.recalculateNinePointScores(roundViewModel: roundViewModel, upToHole: currentHole)
                     }
                     
                     if roundViewModel.isStablefordGross {
-                        // Recalculate Stableford Gross scores up to the current hole
                         roundViewModel.recalculateStablefordGrossScores(upToHole: currentHole)
                     }
                     
                     if roundViewModel.isStablefordNet {
-                        // Recalculate Stableford Net scores up to the current hole
                         roundViewModel.recalculateStablefordNetScores(upToHole: currentHole)
                     }
                     
                     currentHole = nextHole(currentHole)
-                                    currentHoleIndex = calculateHoleIndex(for: currentHole)
-                                    updateScoresForCurrentHole()
-                                    updateStatsForCurrentHole()
-                                }) {
-                                    HStack {
-                                        Text("Hole \(nextHole(currentHole))")
-                                        Image(systemName: "arrow.right")
-                                    }
-                                    .fontWeight(.bold)
-                                }
-                                .padding()
-                            }
-                        }
-                        .background(Color(.systemBackground))
+                    currentHoleIndex = calculateHoleIndex(for: currentHole)
+                    updateScoresForCurrentHole()
+                    updateStatsForCurrentHole()
+                }) {
+                    HStack {
+                        Text("Hole \(nextHole(currentHole))")
+                        Image(systemName: "arrow.right")
                     }
+                    .fontWeight(.bold)
+                }
+                .padding()
+            }
+        }
+        .background(Color(.systemBackground))
+    }
     
     private var portraitHoleContent: some View {
         VStack {
@@ -446,7 +443,7 @@ struct HoleView: View {
             baseHeight = 120
             pressStatusHeight = CGFloat(roundViewModel.betterBallPressStatuses.count * 20)
         case 0 where roundViewModel.isNinePoint:
-            baseHeight = 80 + CGFloat(roundViewModel.golfers.count * 25)
+            baseHeight = 30 + CGFloat(roundViewModel.golfers.count * 25)
             pressStatusHeight = 0
         case 0 where roundViewModel.isStablefordGross:
             baseHeight = 80 + CGFloat(roundViewModel.golfers.count * 25)
@@ -669,33 +666,44 @@ struct HoleView: View {
         
         var body: some View {
             if roundViewModel.isNinePoint {
-                VStack(alignment: .center, spacing: 4) {
+                VStack(alignment: .trailing, spacing: 4) {
                     Text("Nine Point Scores")
                         .font(.headline)
                         .padding(.bottom, 2)
-                    
+                        .frame(maxWidth: .infinity, alignment: .center)
+                
                     let sortedGolfers = roundViewModel.golfers.sorted {
                         (roundViewModel.ninePointTotalScores[$0.id] ?? 0) > (roundViewModel.ninePointTotalScores[$1.id] ?? 0)
                     }
                     
                     ForEach(sortedGolfers, id: \.id) { golfer in
-                        HStack (spacing: 10){
+                        HStack(spacing: 10) {
                             if showWinner && golfer == sortedGolfers.first {
                                 Image(systemName: "crown.fill")
                                     .foregroundColor(.yellow)
                             }
                             Text(golfer.formattedName(golfers: roundViewModel.golfers))
                                 .fontWeight(.semibold)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
                             Text("\(roundViewModel.ninePointTotalScores[golfer.id] ?? 0) points")
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(width: 70, alignment: .leading)
                         }
+                        .font(.system(size: 14))
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(Color.secondary.opacity(0.1))
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.secondary.opacity(0.1))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                )
                 .cornerRadius(8)
+                .fixedSize(horizontal: true, vertical: false)
+                .shadow(radius: 10)
+                .padding(8)
             }
         }
     }
@@ -970,14 +978,14 @@ struct HoleView: View {
                     }
                     
                     currentHole = nextHole(currentHole)
-                                    currentHoleIndex = calculateHoleIndex(for: currentHole)
-                                    updateScoresForCurrentHole()
-                                    
-                                    // Debug: Print cumulative stats after navigating
-                                    printCumulativeStats()
-                                }
-                            }
-                    }
+                    currentHoleIndex = calculateHoleIndex(for: currentHole)
+                    updateScoresForCurrentHole()
+                    
+                    // Debug: Print cumulative stats after navigating
+                    printCumulativeStats()
+                }
+            }
+    }
     
     private func printCumulativeStats() {
         print("Debug: Cumulative stats after navigating to hole \(currentHole):")
@@ -1084,23 +1092,7 @@ struct HoleView: View {
             if roundViewModel.isBetterBall {
                 BetterBallModel.updateBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: adjustedHoleNumber, scoreInt: scoreInt)
             }
-            
-            if roundViewModel.isNinePoint {
-                NinePointModel.updateNinePointScore(roundViewModel: roundViewModel, holeNumber: adjustedHoleNumber)
-            }
-            
-            if roundViewModel.isStablefordGross {
-                roundViewModel.updateStablefordGrossScore(for: adjustedHoleNumber)
-            }
-            
-            if roundViewModel.isStablefordNet {
-                roundViewModel.updateStablefordNetScore(for: adjustedHoleNumber)
-            }
-            
-            // Update stats
-//            if let hole = singleRoundViewModel.holes.first(where: { $0.holeNumber == adjustedHoleNumber }) {
-//                roundViewModel.updateStats(for: golferId, score: scoreInt, par: hole.par)
-//            }
+
         } else {
             // Reset scores if the input is invalid
             roundViewModel.grossScores[adjustedHoleNumber, default: [:]][golferId] = nil

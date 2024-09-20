@@ -24,9 +24,9 @@ struct NinePointSCView: View {
                     nineHoleView(holes: 1...9, title: "Out", showFirstColumn: true)
                     nineHoleView(holes: 10...18, title: "In", showTotal: true, showFirstColumn: false)
                 case .front9:
-                    nineHoleView(holes: 1...9, title: "Out", showTotal: false, showFirstColumn: true)
+                    nineHoleView(holes: 1...9, title: "Out", showTotal: true, showFirstColumn: true)
                 case .back9:
-                    nineHoleView(holes: 10...18, title: "In", showTotal: false, showFirstColumn: true)
+                    nineHoleView(holes: 10...18, title: "In", showTotal: true, showFirstColumn: true)
                 }
             }
         }
