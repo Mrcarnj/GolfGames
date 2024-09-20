@@ -154,7 +154,7 @@ struct TeeSelectionView: View {
             .isDetailLink(false)
         }
         .sheet(isPresented: $showGameSelection) {
-            GameSelectionView(onBeginRound: beginRound)
+            GameSelectionView()
                 .environmentObject(sharedViewModel)
                 .environmentObject(roundViewModel)
                 .environmentObject(authViewModel)

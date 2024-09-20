@@ -13,7 +13,6 @@ struct GameSelectionView: View {
     @EnvironmentObject var roundViewModel: RoundViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.presentationMode) var presentationMode
-    var onBeginRound: () -> Void
     
     @State private var showingMatchPlayInfo = false
     @State private var showingBetterBallInfo = false
@@ -57,7 +56,7 @@ struct GameSelectionView: View {
                 }
                 Spacer()
                 
-                beginRoundButton
+                closeButton
             }
             .id(refreshID) // Force view refresh
             .padding()
@@ -121,6 +120,9 @@ struct GameSelectionView: View {
                     dismissButton: .default(Text("OK"))
                 )
             }
+        }
+        .onDisappear {
+            saveGameStates()
         }
     }
     
@@ -457,64 +459,20 @@ struct GameSelectionView: View {
         return 36 - courseHandicap
     }
 
-    private var beginRoundButton: some View {
-    Button(action: {
-        // Update roundViewModel with the selected game types
-        roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
-        roundViewModel.isBetterBall = isBetterBall
-        roundViewModel.isNinePoint = isNinePoint
-        roundViewModel.isStablefordGross = isStablefordGross
-        roundViewModel.isStablefordNet = isStablefordNet
-        
-        // Set up Match Play if selected
-        if sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count == 2 {
-            roundViewModel.setMatchPlayGolfers(golfer1: selectedMatchPlayGolfers[0], golfer2: selectedMatchPlayGolfers[1])
+    private var closeButton: some View {
+        Button(action: {
+            saveGameStates()
+            presentationMode.wrappedValue.dismiss()
+        }) {
+            Text("Close")
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .font(.headline)
         }
-        
-        // Set up Better Ball if selected
-        if isBetterBall {
-            let validAssignments = betterBallTeamAssignments.filter { $0.value != "Not Playing" }
-            roundViewModel.setBetterBallTeams(validAssignments)
-        }
-        
-        // Set up Nine Point if selected
-        if isNinePoint {
-            roundViewModel.initializeNinePoint()
-        }
-        // Set up Stableford Gross if selected
-        if isStablefordGross {
-            roundViewModel.initializeStablefordGross(quotas: stablefordGrossQuotas)
-        }
-        // Set up Stableford Net if selected
-        if isStablefordNet {
-            roundViewModel.initializeStablefordNet(quotas: stablefordNetQuotas)
-        }
-        
-        // Ensure all selected golfers are included in the round
-        roundViewModel.golfers = sharedViewModel.golfers
-        
-        
-        
-        presentationMode.wrappedValue.dismiss()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            onBeginRound()
-        }
-    }) {
-        Text("Begin Round")
-            .frame(minWidth: 0, maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            .font(.headline)
     }
-    .disabled(
-        (sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count != 2) ||
-        (isBetterBall && !isValidBetterBallSetup()) ||
-        (isNinePoint && sharedViewModel.golfers.count != 3) ||
-        (!sharedViewModel.isMatchPlay && !isBetterBall && !isNinePoint && !isStablefordGross && !isStablefordNet) // Disable if no game type is selected
-    )
-}
     
     private func initializeSelectedGolfers() {
         if sharedViewModel.golfers.count >= 2 {
@@ -620,6 +578,41 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
             }
         }
         return quotas
+    }
+
+    private func saveGameStates() {
+        // Update roundViewModel with the selected game types
+        roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
+        roundViewModel.isBetterBall = isBetterBall
+        roundViewModel.isNinePoint = isNinePoint
+        roundViewModel.isStablefordGross = isStablefordGross
+        roundViewModel.isStablefordNet = isStablefordNet
+        
+        // Set up Match Play if selected
+        if sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count == 2 {
+            roundViewModel.setMatchPlayGolfers(golfer1: selectedMatchPlayGolfers[0], golfer2: selectedMatchPlayGolfers[1])
+        }
+        
+        // Set up Better Ball if selected
+        if isBetterBall {
+            let validAssignments = betterBallTeamAssignments.filter { $0.value != "Not Playing" }
+            roundViewModel.setBetterBallTeams(validAssignments)
+        }
+        
+        // Set up Nine Point if selected
+        if isNinePoint {
+            roundViewModel.initializeNinePoint()
+        }
+        
+        // Set up Stableford Gross if selected
+        if isStablefordGross {
+            roundViewModel.initializeStablefordGross(quotas: stablefordGrossQuotas)
+        }
+        
+        // Set up Stableford Net if selected
+        if isStablefordNet {
+            roundViewModel.initializeStablefordNet(quotas: stablefordNetQuotas)
+        }
     }
 
 }
