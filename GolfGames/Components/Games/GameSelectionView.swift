@@ -362,7 +362,7 @@ struct GameSelectionView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                            } else if let handicap = ninePointHandicaps[golfer.id], handicap > 0 {
+                            } else if let handicap = ninePointHandicaps[golfer.id] {
                                 Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
