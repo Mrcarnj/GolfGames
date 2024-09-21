@@ -246,12 +246,19 @@ struct GameSelectionView: View {
                 .font(.headline)
             
             ForEach(sharedViewModel.golfers) { golfer in
-                HStack {
+                HStack (spacing: 25) {
+                     Spacer()
                     Text("\(golfer.firstName) \(golfer.lastName.prefix(1)).")
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     
+                                       
                     Image(systemName: selectedMatchPlayGolfers.contains(where: { $0.id == golfer.id }) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedMatchPlayGolfers.contains(where: { $0.id == golfer.id }) ? .green : .gray)
                         .animation(.easeInOut, value: selectedMatchPlayGolfers)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Spacer()
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -260,6 +267,7 @@ struct GameSelectionView: View {
                 .padding(.vertical, 8)
             }
         }
+        .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(10)
@@ -287,11 +295,11 @@ struct GameSelectionView: View {
                 if let handicap1 = matchPlayHandicaps[golfer1.id],
                    let handicap2 = matchPlayHandicaps[golfer2.id] {
                     if handicap1 > 0 {
-                        Text("\(golfer1.firstName) \(golfer1.lastName) gets \(handicap1) stroke\(handicap1 == 1 ? "" : "s")")
+                        Text("\(golfer1.firstName) \(golfer1.lastName.prefix(1)) gets \(handicap1) stroke\(handicap1 == 1 ? "" : "s")")
                             .font(.subheadline)
                             .foregroundColor(.primary)
                     } else if handicap2 > 0 {
-                        Text("\(golfer2.firstName) \(golfer2.lastName) gets \(handicap2) stroke\(handicap2 == 1 ? "" : "s")")
+                        Text("\(golfer2.firstName) \(golfer2.lastName.prefix(1)) gets \(handicap2) stroke\(handicap2 == 1 ? "" : "s")")
                             .font(.subheadline)
                             .foregroundColor(.primary)
                     } else {

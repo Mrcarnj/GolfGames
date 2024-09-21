@@ -46,12 +46,16 @@ struct TeeSelectionView: View {
             .pickerStyle(SegmentedPickerStyle())
             .padding()
             
-            Picker("Starting Hole", selection: $selectedStartingHole) {
-                ForEach(availableStartingHoles, id: \.self) { hole in
-                    Text("Hole \(hole)").tag(hole)
+            HStack {
+                Text("Starting Hole:")
+                    .font(.headline)
+                Picker("", selection: $selectedStartingHole) {
+                    ForEach(availableStartingHoles, id: \.self) { hole in
+                        Text("Hole \(hole)").tag(hole)
+                    }
                 }
+                .pickerStyle(MenuPickerStyle())
             }
-            .pickerStyle(MenuPickerStyle())
             .padding(.horizontal)
             
             List {
