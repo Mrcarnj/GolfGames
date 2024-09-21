@@ -7,6 +7,16 @@
 
 import SwiftUI
 
+struct SelectedGames {
+    var isMatchPlay: Bool = false
+    var isBetterBall: Bool = false
+    var isNinePoint: Bool = false
+    var isStablefordGross: Bool = false
+    var isStablefordNet: Bool = false
+    var matchPlayGolfers: [Golfer] = []
+    var betterBallTeams: [String: String] = [:]
+}
+
 struct TeeSelectionView: View {
     @EnvironmentObject var sharedViewModel: SharedViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -17,6 +27,8 @@ struct TeeSelectionView: View {
     @State private var showGameSelection = false
     @State private var selectedRoundType: RoundType = .full18
     @State private var selectedStartingHole: Int = 1
+    @State private var selectedGames = SelectedGames()
+    @State private var isGameSelectionPresented = false
 
     var allTeesSelected: Bool {
         sharedViewModel.golfers.allSatisfy { golfer in
@@ -58,7 +70,7 @@ struct TeeSelectionView: View {
                                 Text(" CH:")
                                     .font(.headline)
                                     .fontWeight(.regular)
-                                Text(formatHandicap(Float(courseHandicap)))
+                                Text("\(courseHandicap)")
                                     .font(.headline)
                             }
                         }
@@ -108,7 +120,7 @@ struct TeeSelectionView: View {
 
             if sharedViewModel.golfers.count > 1 {
                 Button(action: {
-                    showGameSelection = true
+                    isGameSelectionPresented = true
                 }) {
                     Text("Add Games")
                         .frame(minWidth: 0, maxWidth: .infinity)
@@ -153,8 +165,8 @@ struct TeeSelectionView: View {
             }
             .isDetailLink(false)
         }
-        .sheet(isPresented: $showGameSelection) {
-            GameSelectionView()
+        .sheet(isPresented: $isGameSelectionPresented) {
+            GameSelectionView(isPresented: $isGameSelectionPresented, selectedGames: $selectedGames)
                 .environmentObject(sharedViewModel)
                 .environmentObject(roundViewModel)
                 .environmentObject(authViewModel)
@@ -190,6 +202,39 @@ struct TeeSelectionView: View {
     }
     
     private func beginRound() {
+        // Update RoundViewModel with the selected game types
+        roundViewModel.isMatchPlay = selectedGames.isMatchPlay
+        roundViewModel.isBetterBall = selectedGames.isBetterBall
+        roundViewModel.isNinePoint = selectedGames.isNinePoint
+        roundViewModel.isStablefordGross = selectedGames.isStablefordGross
+        roundViewModel.isStablefordNet = selectedGames.isStablefordNet
+        
+        // Set up Match Play if selected
+        if selectedGames.isMatchPlay && selectedGames.matchPlayGolfers.count == 2 {
+            roundViewModel.setMatchPlayGolfers(golfer1: selectedGames.matchPlayGolfers[0], golfer2: selectedGames.matchPlayGolfers[1])
+        }
+        
+        // Set up Better Ball if selected
+        if selectedGames.isBetterBall {
+            let validAssignments = selectedGames.betterBallTeams.filter { $0.value != "Not Playing" }
+            roundViewModel.setBetterBallTeams(validAssignments)
+        }
+        
+        // Set up Nine Point if selected
+        if selectedGames.isNinePoint {
+            roundViewModel.initializeNinePoint()
+        }
+        
+        // Set up Stableford Gross if selected
+        if selectedGames.isStablefordGross {
+            roundViewModel.initializeStablefordGross(quotas: calculateStablefordGrossQuotas())
+        }
+        
+        // Set up Stableford Net if selected
+        if selectedGames.isStablefordNet {
+            roundViewModel.initializeStablefordNet(quotas: calculateStablefordNetQuotas())
+        }
+        
         // Update RoundViewModel with the latest golfer information
         roundViewModel.golfers = sharedViewModel.golfers
         roundViewModel.selectedCourse = sharedViewModel.selectedCourse
@@ -330,6 +375,26 @@ struct TeeSelectionView: View {
         } else {
             return String(format: "%.1f", handicap)
         }
+    }
+
+    private func calculateStablefordGrossQuotas() -> [String: Int] {
+        var quotas: [String: Int] = [:]
+        for golfer in sharedViewModel.golfers {
+            if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
+                quotas[golfer.id] = 36 - courseHandicap
+            }
+        }
+        return quotas
+    }
+
+    private func calculateStablefordNetQuotas() -> [String: Int] {
+        var quotas: [String: Int] = [:]
+        for golfer in sharedViewModel.golfers {
+            if let courseHandicap = sharedViewModel.courseHandicaps[golfer.id] {
+                quotas[golfer.id] = 36 - courseHandicap
+            }
+        }
+        return quotas
     }
 }
 

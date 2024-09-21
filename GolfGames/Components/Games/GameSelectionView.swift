@@ -29,6 +29,9 @@ struct GameSelectionView: View {
     @State private var isStablefordNet = false
     @State private var stablefordNetQuotas: [String: Int] = [:]
     
+    @Binding var isPresented: Bool
+    @Binding var selectedGames: SelectedGames
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -43,8 +46,8 @@ struct GameSelectionView: View {
                     
                 }
                 if isBetterBall {
-                betterBallInfoSection
-            }
+                    betterBallInfoSection
+                }
                 if isNinePoint {
                     ninePointInfoSection
                 }
@@ -65,7 +68,7 @@ struct GameSelectionView: View {
             .onAppear {
                 printDebugInfo()
                 initializeSelectedGolfers()
-                initializeTeamAssignments()
+                // Don't call initializeTeamAssignments() here
             }
             .alert(isPresented: $showingMatchPlayInfo) {
                 Alert(
@@ -121,8 +124,21 @@ struct GameSelectionView: View {
                 )
             }
         }
-        .onDisappear {
-            saveGameStates()
+        .onAppear {
+            // Initialize the view with the saved state
+            sharedViewModel.isMatchPlay = selectedGames.isMatchPlay
+            isBetterBall = selectedGames.isBetterBall
+            isNinePoint = selectedGames.isNinePoint
+            isStablefordGross = selectedGames.isStablefordGross
+            isStablefordNet = selectedGames.isStablefordNet
+            selectedMatchPlayGolfers = selectedGames.matchPlayGolfers
+            
+            // Use the initialized team assignments if they exist, otherwise initialize them
+            if betterBallTeamAssignments.isEmpty {
+                initializeTeamAssignments()
+            } else {
+                betterBallTeamAssignments = selectedGames.betterBallTeams
+            }
         }
     }
     
@@ -144,6 +160,11 @@ struct GameSelectionView: View {
                        text: "Match Play",
                        action: showMatchPlayInfo)
                 .onChange(of: sharedViewModel.isMatchPlay) { newValue in
+                    if newValue {
+                        initializeSelectedGolfers()
+                    } else {
+                        selectedMatchPlayGolfers = []
+                    }
                 }
             
             // Better Ball toggle
@@ -153,6 +174,9 @@ struct GameSelectionView: View {
                            text: "Better Ball",
                            action: showBetterBallInfo)
                     .onChange(of: isBetterBall) { newValue in
+                        if newValue {
+                            initializeTeamAssignments()
+                        }
                     }
             }
             
@@ -217,18 +241,17 @@ struct GameSelectionView: View {
     }
     
     private var matchPlayGolferSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .center, spacing: 10) {
             Text("Select 2 Golfers for Match Play")
                 .font(.headline)
             
             ForEach(sharedViewModel.golfers) { golfer in
                 HStack {
                     Text("\(golfer.firstName) \(golfer.lastName.prefix(1)).")
-                    Spacer()
-                    if selectedMatchPlayGolfers.contains(where: { $0.id == golfer.id }) {
-                        Image(systemName: "checkmark")
-                            .foregroundColor(.green)
-                    }
+                    
+                    Image(systemName: selectedMatchPlayGolfers.contains(where: { $0.id == golfer.id }) ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selectedMatchPlayGolfers.contains(where: { $0.id == golfer.id }) ? .green : .gray)
+                        .animation(.easeInOut, value: selectedMatchPlayGolfers)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -290,58 +313,58 @@ struct GameSelectionView: View {
     }
 }
     private var betterBallInfoSection: some View {
-    Group {
-        if isBetterBall {
-            let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
-            let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Better Ball Teams")
-                    .font(.headline)
+        Group {
+            if isBetterBall {
+                let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
+                let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
                 
-                ForEach(sharedViewModel.golfers, id: \.id) { golfer in
-                    HStack {
-                        Text(roundViewModel.formattedGolferName(for: golfer))
-                            .font(.subheadline)
-                        
-                        if golfer.id == lowestHandicapGolfer?.id {
-                            Text("0 strokes")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        } else if let handicap = betterBallHandicaps[golfer.id] {
-                            Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        } else {
-                            Text("0 strokes")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        }
-                        
-                        Spacer()
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Better Ball Teams")
+                        .font(.headline)
+                    
+                    ForEach(sharedViewModel.golfers, id: \.id) { golfer in
+                        HStack {
+                            Text(roundViewModel.formattedGolferName(for: golfer))
+                                .font(.subheadline)
+                            
+                            if golfer.id == lowestHandicapGolfer?.id {
+                                Text("0 strokes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            } else if let handicap = betterBallHandicaps[golfer.id] {
+                                Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            } else {
+                                Text("0 strokes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+                            
+                            Spacer()
 
-                        Picker("Team", selection: Binding(
-                            get: { self.betterBallTeamAssignments[golfer.id] ?? "Not Playing" },
-                            set: { self.betterBallTeamAssignments[golfer.id] = $0 }
-                        )) {
-                            Text("Team A").tag("Team A")
-                            Text("Team B").tag("Team B")
-                            Text("Not Playing").tag("Not Playing")
+                            Picker("Team", selection: Binding(
+                                get: { self.betterBallTeamAssignments[golfer.id] ?? "Not Playing" },
+                                set: { self.betterBallTeamAssignments[golfer.id] = $0 }
+                            )) {
+                                Text("Team A").tag("Team A")
+                                Text("Team B").tag("Team B")
+                                Text("Not Playing").tag("Not Playing")
+                            }
+                            .pickerStyle(MenuPickerStyle())
                         }
-                        .pickerStyle(MenuPickerStyle())
                     }
                 }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(10)
         }
     }
-}
 
     private var ninePointInfoSection: some View {
         Group {
@@ -461,8 +484,17 @@ struct GameSelectionView: View {
 
     private var closeButton: some View {
         Button(action: {
-            saveGameStates()
-            presentationMode.wrappedValue.dismiss()
+            // Update the selectedGames binding
+            selectedGames.isMatchPlay = sharedViewModel.isMatchPlay
+            selectedGames.isBetterBall = isBetterBall
+            selectedGames.isNinePoint = isNinePoint
+            selectedGames.isStablefordGross = isStablefordGross
+            selectedGames.isStablefordNet = isStablefordNet
+            selectedGames.matchPlayGolfers = selectedMatchPlayGolfers
+            selectedGames.betterBallTeams = betterBallTeamAssignments
+            
+            // Close the sheet
+            isPresented = false
         }) {
             Text("Close")
                 .frame(minWidth: 0, maxWidth: .infinity)
@@ -473,7 +505,7 @@ struct GameSelectionView: View {
                 .font(.headline)
         }
     }
-    
+
     private func initializeSelectedGolfers() {
         if sharedViewModel.golfers.count >= 2 {
             selectedMatchPlayGolfers = Array(sharedViewModel.golfers.prefix(2))
@@ -541,14 +573,13 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
         for (index, golfer) in golfers.enumerated() {
             if index == 0 {
                 betterBallTeamAssignments[golfer.id] = "Team A"
-            } else if index < 3 {
-                betterBallTeamAssignments[golfer.id] = "Team B"
-            } else if index == 3 {
+            } else if index < 4 {
                 betterBallTeamAssignments[golfer.id] = "Team B"
             } else {
                 betterBallTeamAssignments[golfer.id] = "Not Playing"
             }
         }
+        print("Debug: Initialized Better Ball Teams: \(betterBallTeamAssignments)")
     }
 
     private func isValidBetterBallSetup() -> Bool {
@@ -557,6 +588,7 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
         return (teamACounts == 1 && teamBCounts == 2) || 
                (teamACounts == 2 && teamBCounts == 1) || 
                (teamACounts == 1 && teamBCounts == 3) ||
+               (teamACounts == 3 && teamBCounts == 1) ||
                (teamACounts == 2 && teamBCounts == 2)
     }
 
@@ -578,41 +610,6 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
             }
         }
         return quotas
-    }
-
-    private func saveGameStates() {
-        // Update roundViewModel with the selected game types
-        roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
-        roundViewModel.isBetterBall = isBetterBall
-        roundViewModel.isNinePoint = isNinePoint
-        roundViewModel.isStablefordGross = isStablefordGross
-        roundViewModel.isStablefordNet = isStablefordNet
-        
-        // Set up Match Play if selected
-        if sharedViewModel.isMatchPlay && selectedMatchPlayGolfers.count == 2 {
-            roundViewModel.setMatchPlayGolfers(golfer1: selectedMatchPlayGolfers[0], golfer2: selectedMatchPlayGolfers[1])
-        }
-        
-        // Set up Better Ball if selected
-        if isBetterBall {
-            let validAssignments = betterBallTeamAssignments.filter { $0.value != "Not Playing" }
-            roundViewModel.setBetterBallTeams(validAssignments)
-        }
-        
-        // Set up Nine Point if selected
-        if isNinePoint {
-            roundViewModel.initializeNinePoint()
-        }
-        
-        // Set up Stableford Gross if selected
-        if isStablefordGross {
-            roundViewModel.initializeStablefordGross(quotas: stablefordGrossQuotas)
-        }
-        
-        // Set up Stableford Net if selected
-        if isStablefordNet {
-            roundViewModel.initializeStablefordNet(quotas: stablefordNetQuotas)
-        }
     }
 
 }

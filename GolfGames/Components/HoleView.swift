@@ -415,15 +415,15 @@ struct HoleView: View {
                                 pages[index]
                                     .tag(index)
                                     .frame(height: maxHeight)
-                                    .border(Color.green, width: 2)
+                                    //.border(Color.green, width: 2)
                             }
                         }
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                         .frame(height: min(maxHeight, geometry.size.height))
-                        .border(Color.red, width: 2)
+                        //.border(Color.red, width: 2)
                     }
                     .frame(height: geometry.size.height)
-                    .border(Color.blue, width: 2)
+                    //.border(Color.blue, width: 2)
                 }
                 .frame(height: getMaxPageHeight() + 50) // Add extra height for safety
             }
@@ -446,10 +446,10 @@ struct HoleView: View {
             baseHeight = 30 + CGFloat(roundViewModel.golfers.count * 25)
             pressStatusHeight = 0
         case 0 where roundViewModel.isStablefordGross:
-            baseHeight = 80 + CGFloat(roundViewModel.golfers.count * 25)
+            baseHeight = 30 + CGFloat(roundViewModel.golfers.count * 25)
             pressStatusHeight = 0
         case 0 where roundViewModel.isStablefordNet:
-            baseHeight = 80 + CGFloat(roundViewModel.golfers.count * 25)
+            baseHeight = 30 + CGFloat(roundViewModel.golfers.count * 25)
             pressStatusHeight = 0
         default:
             baseHeight = 0
