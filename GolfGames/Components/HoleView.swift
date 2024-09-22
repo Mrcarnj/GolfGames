@@ -713,10 +713,11 @@ struct HoleView: View {
         @Binding var showWinner: Bool
         
         var body: some View {
-            VStack(alignment: .center, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 4) {
                 Text("Stableford Gross Scores")
                     .font(.headline)
                     .padding(.bottom, 2)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
                 let sortedGolfers = roundViewModel.golfers.sorted {
                     let overQuota1 = (roundViewModel.stablefordGrossTotalScores[$0.id] ?? 0) - (roundViewModel.stablefordGrossQuotas[$0.id] ?? 0)
@@ -725,7 +726,7 @@ struct HoleView: View {
                 }
                 
                 ForEach(sortedGolfers, id: \.id) { golfer in
-                    HStack (spacing: 10){
+                    HStack(spacing: 10) {
                         if showWinner && golfer == sortedGolfers.first {
                             Image(systemName: "crown.fill")
                                 .foregroundColor(.yellow)
@@ -737,15 +738,25 @@ struct HoleView: View {
                         let quota = roundViewModel.stablefordGrossQuotas[golfer.id] ?? 0
                         let overQuota = totalScore - quota
                         Text("\(totalScore) pts (\(formatOverQuota(overQuota)))")
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(width: 90, alignment: .leading)
                     }
+                    .font(.system(size: 14))
                 }
             }
-            .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color.secondary.opacity(0.1))
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.secondary.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+            )
             .cornerRadius(8)
+            .fixedSize(horizontal: true, vertical: false)
+            .shadow(radius: 10)
+            .padding(8)
         }
         
         private func formatOverQuota(_ points: Int) -> String {
@@ -764,10 +775,11 @@ struct HoleView: View {
         @Binding var showWinner: Bool
         
         var body: some View {
-            VStack(alignment: .center, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 4) {
                 Text("Stableford Net Scores")
                     .font(.headline)
                     .padding(.bottom, 2)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
                 let sortedGolfers = roundViewModel.golfers.sorted {
                     let overQuota1 = (roundViewModel.stablefordNetTotalScores[$0.id] ?? 0) - (roundViewModel.stablefordNetQuotas[$0.id] ?? 0)
@@ -777,29 +789,36 @@ struct HoleView: View {
                 
                 ForEach(sortedGolfers, id: \.id) { golfer in
                     HStack(spacing: 10) {
-                        HStack(spacing: 4) {
-                            if showWinner && golfer == sortedGolfers.first {
-                                Image(systemName: "crown.fill")
-                                    .foregroundColor(.yellow)
-                            }
-                            Text(golfer.formattedName(golfers: roundViewModel.golfers))
-                                .fontWeight(.semibold)
+                        if showWinner && golfer == sortedGolfers.first {
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(.yellow)
                         }
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        
+                        Text(golfer.formattedName(golfers: roundViewModel.golfers))
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
                         let totalScore = roundViewModel.stablefordNetTotalScores[golfer.id] ?? 0
                         let quota = roundViewModel.stablefordNetQuotas[golfer.id] ?? 0
                         let overQuota = totalScore - quota
                         Text("\(totalScore) pts (\(formatOverQuota(overQuota)))")
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(width: 90, alignment: .leading)
                     }
+                    .font(.system(size: 14))
                 }
             }
-            .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color.secondary.opacity(0.1))
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.secondary.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+            )
             .cornerRadius(8)
+            .fixedSize(horizontal: true, vertical: false)
+            .shadow(radius: 10)
+            .padding(8)
         }
         
         private func formatOverQuota(_ points: Int) -> String {
