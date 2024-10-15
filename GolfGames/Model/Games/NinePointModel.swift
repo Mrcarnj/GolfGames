@@ -27,9 +27,8 @@ struct NinePointModel {
     }
     
     static func updateNinePointScore(roundViewModel: RoundViewModel, holeNumber: Int) {
+        // This function will now only update the scores for a single hole
         calculateAndUpdateScoreForHole(roundViewModel: roundViewModel, holeNumber: holeNumber)
-        // Remove this line as we'll recalculate in HoleView
-        // recalculateNinePointScores(roundViewModel: roundViewModel, upToHole: holeNumber)
     }
     
     static func recalculateNinePointScores(roundViewModel: RoundViewModel, upToHole: Int) {
@@ -37,22 +36,9 @@ struct NinePointModel {
         roundViewModel.ninePointScores = [:]
         roundViewModel.ninePointTotalScores = [:]
         
-        let startingHole = roundViewModel.getStartingHoleNumber()
-        let totalHoles: Int
-        switch roundViewModel.roundType {
-        case .full18:
-            totalHoles = 18
-        case .front9, .back9:
-            totalHoles = 9
-        }
-        
-        // Recalculate scores for all holes up to and including the given hole, considering wrap-around
-        for offset in 0..<totalHoles {
-            let holeNumber = ((startingHole + offset - 1) % 18) + 1
+        // Recalculate scores for all holes up to the given hole
+        for holeNumber in 1...upToHole {
             calculateAndUpdateScoreForHole(roundViewModel: roundViewModel, holeNumber: holeNumber)
-            if holeNumber == upToHole {
-                break
-            }
         }
         
         print("Debug: Nine Point scores recalculated up to hole \(upToHole)")

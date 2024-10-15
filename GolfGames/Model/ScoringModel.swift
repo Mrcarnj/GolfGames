@@ -62,12 +62,12 @@ struct ScoringModel {
     
     static func checkScores(roundViewModel: RoundViewModel) -> [String: [Int]] {
         var missingScores: [String: [Int]] = [:]
-        let holeRange = roundViewModel.roundType == .back9 ? 10...18 : 1...(roundViewModel.roundType == .front9 ? 9 : 18)
-        for golfer in roundViewModel.golfers {
-            missingScores[golfer.id] = holeRange.filter { hole in
-                roundViewModel.grossScores[hole]?[golfer.id] == nil
-            }
+    let holeRange = roundViewModel.roundType == .back9 ? 10...18 : 1...(roundViewModel.roundType == .front9 ? 9 : 18)
+    for golfer in roundViewModel.golfers {
+        missingScores[golfer.id] = holeRange.filter { hole in
+            roundViewModel.grossScores[hole]?[golfer.id] == nil
         }
+    }
         
         // If there are no missing scores, update the final match status
         if missingScores.values.allSatisfy({ $0.isEmpty }) {
@@ -169,37 +169,18 @@ struct ScoringModel {
     }
     
     static func allScoresEntered(roundViewModel: RoundViewModel, for holeNumber: Int? = nil) -> Bool {
-        let startingHole = roundViewModel.getStartingHoleNumber()
-        let totalHoles = roundViewModel.roundType == .full18 ? 18 : 9
-        
         if let hole = holeNumber {
             // Check for a specific hole
-            let result = roundViewModel.golfers.allSatisfy { golfer in
-                let scoreEntered = roundViewModel.grossScores[hole]?[golfer.id] != nil
-                
-                return scoreEntered
+            return roundViewModel.golfers.allSatisfy { golfer in
+                roundViewModel.grossScores[hole]?[golfer.id] != nil
             }
-            return result
         } else {
-            // Check all holes for the round
-            let holeRange = (0..<totalHoles).map { index in
-                switch roundViewModel.roundType {
-                case .full18, .front9:
-                    return (startingHole + index - 1) % 18 + 1
-                case .back9:
-                    return (startingHole + index - 1) % 9 + 10
+            // Check all holes
+            return (1...18).allSatisfy { hole in
+                roundViewModel.golfers.allSatisfy { golfer in
+                    roundViewModel.grossScores[hole]?[golfer.id] != nil
                 }
             }
-            
-            let result = holeRange.allSatisfy { hole in
-                let allEntered = roundViewModel.golfers.allSatisfy { golfer in
-                    let scoreEntered = roundViewModel.grossScores[hole]?[golfer.id] != nil
-                    
-                    return scoreEntered
-                }
-                return allEntered
-            }
-            return result
         }
     }
     
@@ -216,4 +197,3 @@ struct ScoringModel {
         }
     }
 }
-

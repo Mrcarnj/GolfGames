@@ -750,7 +750,7 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
                         (teamCounts[0] == 2 && teamCounts[1] == 2)
         
         // Check if Teams C and D are valid when they are available
-        let isCDValid = availableTeams.count <= 3 || 
+        let isCDValid = availableTeams.count <= 3 ||
                         (teamCounts[2] >= 1 && teamCounts[3] >= 1)
         
         return isABValid && isCDValid

@@ -1591,4 +1591,3 @@ private struct ScoreInputView: View {
         }
     }
 }
-
