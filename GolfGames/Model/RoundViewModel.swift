@@ -52,16 +52,22 @@ class RoundViewModel: ObservableObject {
     @Published var matchPlayHandicaps: [String: Int] = [:]
     @Published var isBetterBall: Bool = false
     @Published var betterBallMatchArray: [Int] = Array(repeating: 0, count: 18)
+    @Published var betterBallMatchArrayCD: [Int] = Array(repeating: 0, count: 18)
     @Published var betterBallFinalMatchArray: [Int]?
     @Published var betterBallMatchStatus: String?
+    @Published var betterBallMatchStatusCD: String?
     @Published var betterBallTeamAssignments: [String: String] = [:]
     @Published var betterBallNetScores: [Int: [String: Int]] = [:]
     @Published var betterBallHoleWinners: [Int: String] = [:]
+    @Published var betterBallHoleWinnersCD: [Int: String] = [:]
     @Published var betterBallHoleTallies: [String: Int] = [:]
     @Published var betterBallMatchScore: Int = 0
     @Published var betterBallMatchWinner: String?
+    @Published var betterBallMatchWinnerCD: String?
     @Published var betterBallWinningScore: String?
+    @Published var betterBallWinningScoreCD: String?
     @Published var betterBallMatchWinningHole: Int?
+    @Published var betterBallMatchWinningHoleCD: Int?
     @Published var betterBallHandicaps: [String: Int] = [:]
     @Published var betterBallFinalStatistics: [String: Int] = [:]
     @Published var betterBallStrokeHoles: [String: [Int]] = [:]
@@ -87,6 +93,22 @@ class RoundViewModel: ObservableObject {
     @Published var stablefordNetQuotas: [String: Int] = [:]
     @Published var stablefordNetTotalScores: [String: Int] = [:]
     @Published var startingHole: Int = 1
+    // Add properties for Blind Draw Better Ball
+    @Published var isBlindDrawBetterBall: Bool = false
+    @Published var blindDrawBetterBallMatchArray: [Int] = Array(repeating: 0, count: 18)
+    @Published var blindDrawBetterBallMatchStatus: String?
+    @Published var blindDrawBetterBallMatchWinner: String?
+    @Published var blindDrawBetterBallWinningScore: String?
+    @Published var blindDrawBetterBallMatchWinningHole: Int?
+    @Published var blindDrawBetterBallHoleTallies: [String: Int] = [:]
+    @Published var blindDrawBetterBallTalliedHoles: Set<Int> = []
+    @Published var blindDrawBetterBallHoleWinners: [Int: String] = [:]
+    @Published var blindDrawBetterBallNetScores: [Int: [String: Int]] = [:]
+    @Published var blindDrawBetterBallStrokeHoles: [String: [Int]] = [:]
+    @Published var blindDrawBetterBallTeamAssignments: [String: String] = [:]
+    @Published var blindDrawBetterBallFinalStatistics: [String: Int] = [:]
+    @Published var blindDrawScoresToUse: Int = 1
+    @Published var blindDrawBetterBallHandicaps: [String: Int] = [:]
     
     func formattedGolferName(for golfer: Golfer) -> String {
         return golfer.formattedName(golfers: self.golfers)
@@ -464,6 +486,50 @@ func resetNinePointScore(for holeNumber: Int) {
     func displayStablefordNetFinalResults() -> String {
         return StablefordNetModel.displayFinalResults(roundViewModel: self)
     }
+    
+    // Functions for Blind Draw Better Ball
+    func setBlindDrawBetterBallTeams(_ assignments: [String: String]) {
+        self.blindDrawBetterBallTeamAssignments = assignments
+        isBlindDrawBetterBall = true
+            let namedAssignments = assignments.mapValues { teamName in
+                let teamMembers = golfers
+                    .filter { assignments[$0.id] == teamName }
+                    .map { "\($0.firstName) \($0.lastName)" }
+                    .joined(separator: ", ")
+                return "\(teamName): \(teamMembers)"
+            }
+            print("Debug: RoundViewModel setBlindDrawBetterBallTeams() - Assignments: \(namedAssignments)")
+            print("Debug: RoundViewModel setBlindDrawBetterBallTeams() - Course Handicaps: \(courseHandicaps)")
+            
+            objectWillChange.send()
+    }
+
+    func initializeBlindDrawBetterBallAfterHandicapsSet() {
+        guard isBlindDrawBetterBall, !courseHandicaps.isEmpty else { return }
+        
+        print("Debug: RoundViewModel initializeBlindDrawBetterBallAfterHandicapsSet() - Initializing Blind Draw Better Ball")
+        BlindDrawBetterBallModel.initializeBlindDrawBetterBall(roundViewModel: self)
+    }
+    
+    func updateBlindDrawBetterBallScore(for golferId: String, currentHoleNumber: Int, score: Int) {
+        BlindDrawBetterBallModel.updateBlindDrawBetterBallScore(roundViewModel: self, golferId: golferId, currentHoleNumber: currentHoleNumber, scoreInt: score)
+    }
+    
+    func resetBlindDrawBetterBallScore(for golferId: String, currentHoleNumber: Int) {
+        BlindDrawBetterBallModel.resetBlindDrawBetterBallScore(roundViewModel: self, golferId: golferId, currentHoleNumber: currentHoleNumber)
+    }
+    
+    func updateBlindDrawBetterBallMatchStatus(for currentHoleNumber: Int) {
+        BlindDrawBetterBallModel.updateBlindDrawBetterBallMatchStatus(roundViewModel: self, for: currentHoleNumber)
+    }
+    
+    func recalculateBlindDrawBetterBallTallies(upToHole: Int) {
+        BlindDrawBetterBallModel.recalculateBlindDrawBetterBallTallies(roundViewModel: self, upToHole: upToHole)
+    }
+    
+    func updateFinalBlindDrawBetterBallMatchStatus() {
+        BlindDrawBetterBallModel.updateFinalBlindDrawBetterBallMatchStatus(roundViewModel: self)
+    }
 
 ////////////////// CLEAR ROUND DATA //////////////////
 
@@ -524,16 +590,22 @@ func clearRoundData() {
     // Clear Better Ball data
     isBetterBall = false
     betterBallMatchArray = Array(repeating: 0, count: 18)
+    betterBallMatchArrayCD = Array(repeating: 0, count: 18)
     betterBallFinalMatchArray = nil
     betterBallMatchStatus = nil
+    betterBallMatchStatusCD = nil
     betterBallTeamAssignments = [:]
     betterBallNetScores = [:]
     betterBallHoleWinners = [:]
+    betterBallHoleWinnersCD = [:]
     betterBallHoleTallies = [:]
     betterBallMatchScore = 0
     betterBallMatchWinner = nil
+    betterBallMatchWinnerCD = nil
     betterBallWinningScore = nil
+    betterBallWinningScoreCD = nil
     betterBallMatchWinningHole = nil
+    betterBallMatchWinningHoleCD = nil
     betterBallHandicaps = [:]
     betterBallFinalStatistics = [:]
     betterBallStrokeHoles = [:]
@@ -561,6 +633,23 @@ func clearRoundData() {
     stablefordNetScores = [:]
     stablefordNetQuotas = [:]
     stablefordNetTotalScores = [:]
+    
+    // Clear Blind Draw Better Ball data
+    isBlindDrawBetterBall = false
+    blindDrawBetterBallMatchArray = Array(repeating: 0, count: 18)
+    blindDrawBetterBallMatchStatus = nil
+    blindDrawBetterBallMatchWinner = nil
+    blindDrawBetterBallWinningScore = nil
+    blindDrawBetterBallMatchWinningHole = nil
+    blindDrawBetterBallHoleTallies = [:]
+    blindDrawBetterBallTalliedHoles = []
+    blindDrawBetterBallHoleWinners = [:]
+    blindDrawBetterBallNetScores = [:]
+    blindDrawBetterBallStrokeHoles = [:]
+    blindDrawBetterBallTeamAssignments = [:]
+    blindDrawBetterBallFinalStatistics = [:]
+    blindDrawScoresToUse = 1
+    blindDrawBetterBallHandicaps = [:]
     
     print("Round data cleared successfully.")
     objectWillChange.send()

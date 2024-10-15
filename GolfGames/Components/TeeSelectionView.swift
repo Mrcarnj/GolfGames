@@ -13,8 +13,11 @@ struct SelectedGames {
     var isNinePoint: Bool = false
     var isStablefordGross: Bool = false
     var isStablefordNet: Bool = false
+    var isBlindDrawBetterBall: Bool = false
     var matchPlayGolfers: [Golfer] = []
     var betterBallTeams: [String: String] = [:]
+    var blindDrawScoresToUse: Int = 1
+    var blindDrawBetterBallTeams: [String: String] = [:]
 }
 
 struct TeeSelectionView: View {
@@ -139,6 +142,14 @@ struct TeeSelectionView: View {
 
             Button(action: {
                 beginRound()
+                let updatedNamedAssignments = roundViewModel.blindDrawBetterBallTeamAssignments.mapValues { teamName in
+                    let teamMembers = roundViewModel.golfers
+                        .filter { roundViewModel.blindDrawBetterBallTeamAssignments[$0.id] == teamName }
+                        .map { "\($0.firstName) \($0.lastName)" }
+                        .joined(separator: ", ")
+                    return "\(teamName): \(teamMembers)"
+                }
+                print("Debug: TeeSelectionView - Blind Draw teams after setting: \(updatedNamedAssignments)")
             }) {
                 Text("Begin Round")
                     .frame(minWidth: 0, maxWidth: .infinity)
@@ -224,6 +235,13 @@ struct TeeSelectionView: View {
             roundViewModel.setBetterBallTeams(validAssignments)
         }
         
+        // Set up Blind Draw Better Ball if selected
+        if selectedGames.isBlindDrawBetterBall {
+            let validAssignments = selectedGames.blindDrawBetterBallTeams.filter { $0.value != "Not Playing" }
+            roundViewModel.setBlindDrawBetterBallTeams(validAssignments)
+            roundViewModel.blindDrawScoresToUse = selectedGames.blindDrawScoresToUse
+        }
+        
         // Set up Nine Point if selected
         if selectedGames.isNinePoint {
             roundViewModel.initializeNinePoint()
@@ -244,6 +262,8 @@ struct TeeSelectionView: View {
         roundViewModel.selectedCourse = sharedViewModel.selectedCourse
         roundViewModel.isMatchPlay = sharedViewModel.isMatchPlay
         roundViewModel.isNinePoint = roundViewModel.isNinePoint // Make sure this is set
+        roundViewModel.isBlindDrawBetterBall = selectedGames.isBlindDrawBetterBall
+        roundViewModel.blindDrawScoresToUse = selectedGames.blindDrawScoresToUse
         roundViewModel.startingHole = selectedStartingHole
         
         // Ensure all golfers have course handicaps and tees set
@@ -326,6 +346,7 @@ struct TeeSelectionView: View {
         }
         
         roundViewModel.initializeBetterBallAfterHandicapsSet()
+        roundViewModel.initializeBlindDrawBetterBallAfterHandicapsSet()
     }
 
     private func createRound() {

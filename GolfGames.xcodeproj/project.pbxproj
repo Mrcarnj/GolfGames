@@ -64,12 +64,13 @@
 		054EB8672C3C6A6700E44F97 /* RoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054EB8662C3C6A6700E44F97 /* RoundView.swift */; };
 		0566EE712C94D9250073660C /* StablefordNetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0566EE702C94D9250073660C /* StablefordNetModel.swift */; };
 		0566EE732C987BA90073660C /* StablefordNetSCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0566EE722C987BA90073660C /* StablefordNetSCView.swift */; };
+		057D38FA2CBEBEC300115509 /* BetterBallModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057D38F92CBEBEAF00115509 /* BetterBallModel.swift */; };
 		0587FC5A2C696EE000120C99 /* SideMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0587FC592C696EDF00120C99 /* SideMenuView.swift */; };
 		05DF12CA2C76BBB500278505 /* StrokePlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12C92C76BBB500278505 /* StrokePlayModel.swift */; };
 		05DF12CC2C76BBCE00278505 /* MatchPlayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */; };
 		05DF12CE2C782C5100278505 /* MatchPlayPressModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */; };
 		05DF12D02C7833D600278505 /* StrokesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12CF2C7833D600278505 /* StrokesModel.swift */; };
-		05DF12D22C7A268C00278505 /* BetterBallModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12D12C7A268C00278505 /* BetterBallModel.swift */; };
+		05DF12D22C7A268C00278505 /* BlindDrawBetterBallModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12D12C7A268C00278505 /* BlindDrawBetterBallModel.swift */; };
 		05DF12D42C7A9AC400278505 /* BetterBallSCView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12D32C7A9AC400278505 /* BetterBallSCView.swift */; };
 		05DF12D62C7AD03000278505 /* BetteBallPressModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05DF12D52C7AD03000278505 /* BetteBallPressModel.swift */; };
 		05F1C9172C6BA525009D40EE /* OrientationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F1C9162C6BA525009D40EE /* OrientationHelper.swift */; };
@@ -134,12 +135,13 @@
 		054EB86B2C3CB53000E44F97 /* HoleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleView.swift; sourceTree = "<group>"; };
 		0566EE702C94D9250073660C /* StablefordNetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StablefordNetModel.swift; sourceTree = "<group>"; };
 		0566EE722C987BA90073660C /* StablefordNetSCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StablefordNetSCView.swift; sourceTree = "<group>"; };
+		057D38F92CBEBEAF00115509 /* BetterBallModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterBallModel.swift; sourceTree = "<group>"; };
 		0587FC592C696EDF00120C99 /* SideMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideMenuView.swift; sourceTree = "<group>"; };
 		05DF12C92C76BBB500278505 /* StrokePlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokePlayModel.swift; sourceTree = "<group>"; };
 		05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayModel.swift; sourceTree = "<group>"; };
 		05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchPlayPressModel.swift; sourceTree = "<group>"; };
 		05DF12CF2C7833D600278505 /* StrokesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokesModel.swift; sourceTree = "<group>"; };
-		05DF12D12C7A268C00278505 /* BetterBallModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterBallModel.swift; sourceTree = "<group>"; };
+		05DF12D12C7A268C00278505 /* BlindDrawBetterBallModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlindDrawBetterBallModel.swift; sourceTree = "<group>"; };
 		05DF12D32C7A9AC400278505 /* BetterBallSCView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterBallSCView.swift; sourceTree = "<group>"; };
 		05DF12D52C7AD03000278505 /* BetteBallPressModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetteBallPressModel.swift; sourceTree = "<group>"; };
 		05F1C9162C6BA525009D40EE /* OrientationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationHelper.swift; sourceTree = "<group>"; };
@@ -176,7 +178,8 @@
 		050BE2302C5DAA410060EB23 /* Games */ = {
 			isa = PBXGroup;
 			children = (
-				05DF12D12C7A268C00278505 /* BetterBallModel.swift */,
+				05DF12D12C7A268C00278505 /* BlindDrawBetterBallModel.swift */,
+				057D38F92CBEBEAF00115509 /* BetterBallModel.swift */,
 				05DF12D52C7AD03000278505 /* BetteBallPressModel.swift */,
 				05DF12CB2C76BBCE00278505 /* MatchPlayModel.swift */,
 				05DF12CD2C782C5100278505 /* MatchPlayPressModel.swift */,
@@ -484,6 +487,7 @@
 				05198A512C35BA530016F576 /* GolfGamesApp.swift in Sources */,
 				05F1C9172C6BA525009D40EE /* OrientationHelper.swift in Sources */,
 				054E962B2C498A630036165A /* CreateFriendView.swift in Sources */,
+				057D38FA2CBEBEC300115509 /* BetterBallModel.swift in Sources */,
 				051DBA0D2C617858007FB2C5 /* GameSelectionView.swift in Sources */,
 				05198A6A2C35BDDF0016F576 /* LoginView.swift in Sources */,
 				05198A792C35C26B0016F576 /* InputView.swift in Sources */,
@@ -507,7 +511,7 @@
 				05198A6C2C35BDEA0016F576 /* RegistrationView.swift in Sources */,
 				05480CF82C52C7360082E638 /* TeeSelectionView.swift in Sources */,
 				0566EE732C987BA90073660C /* StablefordNetSCView.swift in Sources */,
-				05DF12D22C7A268C00278505 /* BetterBallModel.swift in Sources */,
+				05DF12D22C7A268C00278505 /* BlindDrawBetterBallModel.swift in Sources */,
 				05480D062C5B360C0082E638 /* LandscapeScorecardView.swift in Sources */,
 				054EB8612C3A321400E44F97 /* ScoringModel.swift in Sources */,
 				05F314212C7FE82100B3C828 /* NinePointModel.swift in Sources */,

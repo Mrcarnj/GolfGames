@@ -43,6 +43,7 @@ struct HoleView: View {
     @State private var currentCarouselPage = 0
     @State private var showStablefordGrossWinner = false
     @State private var showStablefordNetWinner = false
+    @State private var showBlindDrawBetterBallWinner = false
     
     @State private var currentScoreToPar: [String: Int] = [:]
     
@@ -352,6 +353,10 @@ struct HoleView: View {
                     if roundViewModel.isStablefordNet {
                         roundViewModel.recalculateStablefordNetScores(upToHole: currentHole)
                     }
+                    if roundViewModel.isBlindDrawBetterBall {
+                        BlindDrawBetterBallModel.recalculateBlindDrawBetterBallTallies(roundViewModel: roundViewModel, upToHole: currentHole)
+                        BlindDrawBetterBallModel.updateBlindDrawBetterBallMatchStatus(roundViewModel: roundViewModel, for: currentHole)
+                    }
                     
                     currentHole = nextHole(currentHole)
                     currentHoleIndex = calculateHoleIndex(for: currentHole)
@@ -383,7 +388,9 @@ struct HoleView: View {
                     checkScoresButton
                     reviewRoundButton
                 }
+                .padding(.bottom, 100) // Add extra padding at the bottom
             }
+            .padding(.bottom, 20)
         }
         .gesture(holeNavigationGesture)
     }
@@ -440,7 +447,7 @@ struct HoleView: View {
             baseHeight = 100
             pressStatusHeight = CGFloat(roundViewModel.pressStatuses.count * 20)
         case 0 where roundViewModel.isBetterBall:
-            baseHeight = 120
+            baseHeight = 200
             pressStatusHeight = CGFloat(roundViewModel.betterBallPressStatuses.count * 20)
         case 0 where roundViewModel.isNinePoint:
             baseHeight = 30 + CGFloat(roundViewModel.golfers.count * 25)
@@ -450,6 +457,9 @@ struct HoleView: View {
             pressStatusHeight = 0
         case 0 where roundViewModel.isStablefordNet:
             baseHeight = 30 + CGFloat(roundViewModel.golfers.count * 25)
+            pressStatusHeight = 0
+        case 0 where roundViewModel.isBlindDrawBetterBall:
+            baseHeight = 200
             pressStatusHeight = 0
         default:
             baseHeight = 0
@@ -490,7 +500,10 @@ struct HoleView: View {
         if roundViewModel.isStablefordNet {
             pages.append(AnyView(StablefordNetScoresView(showWinner: $showStablefordNetWinner)))
         }
-        
+        if roundViewModel.isBlindDrawBetterBall {
+            pages.append(AnyView(BlindDrawBetterBallView(currentHoleIndex: currentHoleIndex, scoresChecked: scoresChecked)))
+        }
+                
         return pages
     }
     
@@ -572,20 +585,22 @@ struct HoleView: View {
                     .font(.headline)
                     .padding(.bottom, 2)
                 
-                ForEach(["Team A", "Team B"], id: \.self) { team in
-                    HStack {
-                        Text("\(team):")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        let teamMembers = roundViewModel.golfers
-                            .filter { roundViewModel.betterBallTeamAssignments[$0.id] == team }
-                            .map { $0.formattedName(golfers: roundViewModel.golfers) }
-                            .joined(separator: " / ")
-                        
-                        Text(teamMembers)
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                ForEach(["Team A", "Team B", "Team C", "Team D"], id: \.self) { team in
+                    if !roundViewModel.golfers.filter({ roundViewModel.betterBallTeamAssignments[$0.id] == team }).isEmpty {
+                        HStack {
+                            Text("\(team):")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            
+                            let teamMembers = roundViewModel.golfers
+                                .filter { roundViewModel.betterBallTeamAssignments[$0.id] == team }
+                                .map { $0.formattedName(golfers: roundViewModel.golfers) }
+                                .joined(separator: " / ")
+                            
+                            Text(teamMembers)
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
                 
@@ -612,9 +627,15 @@ struct HoleView: View {
         
         private var betterBallStatusSection: some View {
             VStack(alignment: .center, spacing: 2) {
-                Text(roundViewModel.betterBallMatchStatus ?? "Better Ball Status Not Available")
+                Text("A vs B: \(roundViewModel.betterBallMatchStatus ?? "Not Available")")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.blue)
+            
+                if !roundViewModel.betterBallMatchArrayCD.isEmpty {
+                    Text("C vs D: \(roundViewModel.betterBallMatchStatusCD ?? "Not Available")")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.blue)
+                }
                 
                 if !roundViewModel.betterBallPressStatuses.isEmpty {
                     Text("Presses:")
@@ -995,6 +1016,10 @@ struct HoleView: View {
                     if roundViewModel.isStablefordNet {
                         roundViewModel.recalculateStablefordNetScores(upToHole: currentHole)
                     }
+                    if roundViewModel.isBlindDrawBetterBall {
+                        BlindDrawBetterBallModel.recalculateBlindDrawBetterBallTallies(roundViewModel: roundViewModel, upToHole: currentHole)
+                        BlindDrawBetterBallModel.updateBlindDrawBetterBallMatchStatus(roundViewModel: roundViewModel, for: currentHole)
+                    }
                     
                     currentHole = nextHole(currentHole)
                     currentHoleIndex = calculateHoleIndex(for: currentHole)
@@ -1111,6 +1136,10 @@ struct HoleView: View {
             if roundViewModel.isBetterBall {
                 BetterBallModel.updateBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: adjustedHoleNumber, scoreInt: scoreInt)
             }
+            
+            if roundViewModel.isBlindDrawBetterBall {
+                BlindDrawBetterBallModel.updateBlindDrawBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: adjustedHoleNumber, scoreInt: scoreInt)
+            }
 
         } else {
             // Reset scores if the input is invalid
@@ -1136,6 +1165,10 @@ struct HoleView: View {
             if roundViewModel.isStablefordNet {
                 roundViewModel.resetStablefordNetScore(for: adjustedHoleNumber)
             }
+            
+            if roundViewModel.isBlindDrawBetterBall {
+                BlindDrawBetterBallModel.resetBlindDrawBetterBallScore(roundViewModel: roundViewModel, golferId: golferId, currentHoleNumber: adjustedHoleNumber)
+            }
         }
         
         // Update tallies if all scores are entered
@@ -1146,6 +1179,10 @@ struct HoleView: View {
             
             if roundViewModel.isBetterBall {
                 BetterBallModel.updateBetterBallTallies(roundViewModel: roundViewModel, for: adjustedHoleNumber)
+            }
+            
+            if roundViewModel.isBlindDrawBetterBall {
+                BlindDrawBetterBallModel.updateBlindDrawBetterBallTallies(roundViewModel: roundViewModel, for: adjustedHoleNumber)
             }
             
             // Force view update
@@ -1165,6 +1202,74 @@ struct HoleView: View {
         case .back9:
             return (holeNumber - startingHole + 9) % 9 == 8
         }
+    }
+
+    private struct BlindDrawBetterBallView: View {
+        @EnvironmentObject var roundViewModel: RoundViewModel
+        let currentHoleIndex: Int
+        let scoresChecked: Bool
+        
+        var body: some View {
+            VStack(alignment: .center, spacing: 4) {
+                Text("Blind Draw Better Ball")
+                    .font(.headline)
+                    .padding(.bottom, 2)
+                
+                ForEach(["Team A", "Team B"], id: \.self) { team in
+                    if !roundViewModel.golfers.filter({ roundViewModel.blindDrawBetterBallTeamAssignments[$0.id] == team }).isEmpty {
+                        HStack {
+                            Text("\(team):")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            
+                            let teamMembers = roundViewModel.golfers
+                                .filter { roundViewModel.blindDrawBetterBallTeamAssignments[$0.id] == team }
+                                .map { $0.formattedName(golfers: roundViewModel.golfers) }
+                                .joined(separator: " / ")
+                            
+                            Text(teamMembers)
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                
+                Divider()
+                    .padding(.vertical, 2)
+                
+                blindDrawBetterBallStatusSection
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(8)
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(8)
+            .onAppear {
+                let namedAssignments = roundViewModel.blindDrawBetterBallTeamAssignments.mapValues { teamName in
+                    let teamMembers = roundViewModel.golfers
+                        .filter { roundViewModel.blindDrawBetterBallTeamAssignments[$0.id] == teamName }
+                        .map { "\($0.firstName) \($0.lastName)" }
+                        .joined(separator: ", ")
+                    return "\(teamName): \(teamMembers)"
+                }
+                print("Blind Draw Teams in view: \(namedAssignments)")
+            }
+        }
+        
+        private var blindDrawBetterBallStatusSection: some View {
+            VStack(alignment: .center, spacing: 2) {
+                Text("A vs B: \(roundViewModel.blindDrawBetterBallMatchStatus ?? "Not Available")")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.blue)
+                
+                Text("Scores to Use: \(roundViewModel.blindDrawScoresToUse)")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .padding(.top, 2)
+            }
+        }
+        
     }
     
     private func checkScores() {
@@ -1287,7 +1392,9 @@ struct HoleView: View {
             MatchPlayModel.updateFinalMatchStatus(roundViewModel: roundViewModel)
         } else if roundViewModel.isBetterBall {
             BetterBallModel.updateFinalBetterBallMatchStatus(roundViewModel: roundViewModel)
-        } else if roundViewModel.isNinePoint {
+        }else if roundViewModel.isBlindDrawBetterBall {
+            BlindDrawBetterBallModel.updateFinalBlindDrawBetterBallMatchStatus(roundViewModel: roundViewModel)
+            } else if roundViewModel.isNinePoint {
             // Update Nine Point scoring for the last hole
             NinePointModel.updateNinePointScore(roundViewModel: roundViewModel, holeNumber: lastHole)
             // Display final results
@@ -1358,7 +1465,11 @@ struct HoleView: View {
             let isStrokeHole = roundViewModel.betterBallStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
             // print("Debug: HoleView strokeHoleInfo() - Better Ball")
             return (isStrokeHole, isNegativeHandicap)
-        } else if roundViewModel.isNinePoint {
+        } else if roundViewModel.isBlindDrawBetterBall {
+            let isStrokeHole = roundViewModel.blindDrawBetterBallStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
+            // print("Debug: HoleView strokeHoleInfo() - Better Ball")
+            return (isStrokeHole, isNegativeHandicap)
+        }else if roundViewModel.isNinePoint {
             let isStrokeHole = roundViewModel.ninePointStrokeHoles[golferId]?.contains(currentHoleNumber) ?? false
             // print("Debug: HoleView strokeHoleInfo() - Nine Point")
             return (isStrokeHole, isNegativeHandicap)

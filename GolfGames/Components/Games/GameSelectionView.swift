@@ -20,6 +20,7 @@ struct GameSelectionView: View {
     @State private var refreshID = UUID()
     @State private var isBetterBall = false
     @State private var betterBallTeamAssignments: [String: String] = [:]
+    @State private var availableTeams: [String] = ["Team A", "Team B", "Not Playing"]
     @State private var isNinePoint = false
     @State private var showingNinePointInfo = false
     @State private var showingStablefordGrossInfo = false
@@ -28,6 +29,11 @@ struct GameSelectionView: View {
     @State private var showingStablefordNetInfo = false
     @State private var isStablefordNet = false
     @State private var stablefordNetQuotas: [String: Int] = [:]
+    @State private var isBlindDrawBetterBall = false
+    @State private var showingBlindDrawBetterBallInfo = false
+    @State private var blindDrawScoresToUse = 1
+    @State private var blindDrawBetterBallTeamAssignments: [String: String] = [:]
+
     
     @Binding var isPresented: Bool
     @Binding var selectedGames: SelectedGames
@@ -57,8 +63,11 @@ struct GameSelectionView: View {
                 if isStablefordNet {
                     stablefordNetInfoSection
                 }
+                if isBlindDrawBetterBall {
+                    blindDrawBetterBallInfoSection
+                }
                 Spacer()
-                
+            
                 closeButton
             }
             .id(refreshID) // Force view refresh
@@ -68,7 +77,7 @@ struct GameSelectionView: View {
             .onAppear {
                 printDebugInfo()
                 initializeSelectedGolfers()
-                // Don't call initializeTeamAssignments() here
+                initializeTeamAssignments()
             }
             .alert(isPresented: $showingMatchPlayInfo) {
                 Alert(
@@ -131,10 +140,12 @@ struct GameSelectionView: View {
             isNinePoint = selectedGames.isNinePoint
             isStablefordGross = selectedGames.isStablefordGross
             isStablefordNet = selectedGames.isStablefordNet
+            isBlindDrawBetterBall = selectedGames.isBlindDrawBetterBall
             selectedMatchPlayGolfers = selectedGames.matchPlayGolfers
+            blindDrawScoresToUse = selectedGames.blindDrawScoresToUse
             
             // Use the initialized team assignments if they exist, otherwise initialize them
-            if betterBallTeamAssignments.isEmpty {
+            if betterBallTeamAssignments.isEmpty && isBetterBall == true{
                 initializeTeamAssignments()
             } else {
                 betterBallTeamAssignments = selectedGames.betterBallTeams
@@ -214,6 +225,22 @@ struct GameSelectionView: View {
                             stablefordNetQuotas = calculateStablefordNetQuotas()
                         }
                     }
+            }
+            
+            // Blind Draw Better Ball toggle and score selection
+            if sharedViewModel.golfers.count >= 2 {
+                VStack {
+                    gameToggle(isOn: $isBlindDrawBetterBall,
+                               imageName: "dice.fill",
+                               text: "Blind Draw Better Ball",
+                               action: showBlindDrawBetterBallInfo)
+                        .onChange(of: isBlindDrawBetterBall) { newValue in
+                            if newValue {
+                                initializeBlindDrawBetterBallTeams()
+                            }
+                        }
+                    
+                }
             }
         }
     }
@@ -358,9 +385,9 @@ struct GameSelectionView: View {
                                 get: { self.betterBallTeamAssignments[golfer.id] ?? "Not Playing" },
                                 set: { self.betterBallTeamAssignments[golfer.id] = $0 }
                             )) {
-                                Text("Team A").tag("Team A")
-                                Text("Team B").tag("Team B")
-                                Text("Not Playing").tag("Not Playing")
+                                ForEach(availableTeams, id: \.self) { team in
+                                    Text(team).tag(team)
+                                }
                             }
                             .pickerStyle(MenuPickerStyle())
                         }
@@ -370,6 +397,18 @@ struct GameSelectionView: View {
                 .padding()
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(10)
+                
+                if availableTeams.count > 3 {
+                    Text("Teams A vs B and C vs D")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 5)
+                } else {
+                    Text("Teams A vs B")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 5)
+                }
             }
         }
     }
@@ -486,6 +525,77 @@ struct GameSelectionView: View {
         }
     }
 
+    private var blindDrawBetterBallInfoSection: some View {
+        Group {
+            if isBlindDrawBetterBall {
+                let betterBallHandicaps = calculateGameHandicaps(for: sharedViewModel.golfers)
+                let lowestHandicapGolfer = sharedViewModel.golfers.min { betterBallHandicaps[$0.id] ?? 0 < betterBallHandicaps[$1.id] ?? 0 }
+                
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Blind Draw Better Ball Teams")
+                        .font(.headline)
+                    
+                    ForEach(sharedViewModel.golfers, id: \.id) { golfer in
+                        HStack {
+                            Text(roundViewModel.formattedGolferName(for: golfer))
+                                .font(.subheadline)
+                            
+                            if golfer.id == lowestHandicapGolfer?.id {
+                                Text("0 strokes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            } else if let handicap = betterBallHandicaps[golfer.id] {
+                                Text("\(handicap) stroke\(handicap == 1 ? "" : "s")")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            } else {
+                                Text("0 strokes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+                            
+                            Spacer()
+
+                            Picker("Team", selection: Binding(
+                                get: { self.blindDrawBetterBallTeamAssignments[golfer.id] ?? "Not Playing" },
+                                set: { self.blindDrawBetterBallTeamAssignments[golfer.id] = $0 }
+                            )) {
+                                ForEach(["Team A", "Team B", "Not Playing"], id: \.self) { team in
+                                    Text(team).tag(team)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
+                    }
+                    
+                    Text("Select number of scores to use:")
+                        .font(.subheadline)
+                        .padding(.top)
+                    
+                    Picker("Scores to Use", selection: $blindDrawScoresToUse) {
+                        ForEach(1...4, id: \.self) { number in
+                            Text("\(number)").tag(number)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.horizontal)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
+                
+                Text("Teams A vs B")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 5)
+            }
+        }
+    }
+
     private func calculateQuota(courseHandicap: Int) -> Int {
         return 36 - courseHandicap
     }
@@ -498,8 +608,19 @@ struct GameSelectionView: View {
             selectedGames.isNinePoint = isNinePoint
             selectedGames.isStablefordGross = isStablefordGross
             selectedGames.isStablefordNet = isStablefordNet
+            selectedGames.isBlindDrawBetterBall = isBlindDrawBetterBall
             selectedGames.matchPlayGolfers = selectedMatchPlayGolfers
             selectedGames.betterBallTeams = betterBallTeamAssignments
+            selectedGames.blindDrawBetterBallTeams = blindDrawBetterBallTeamAssignments
+            selectedGames.blindDrawScoresToUse = blindDrawScoresToUse
+            let namedAssignments = blindDrawBetterBallTeamAssignments.mapValues { teamName in
+                let teamMembers = sharedViewModel.golfers
+                    .filter { blindDrawBetterBallTeamAssignments[$0.id] == teamName }
+                    .map { "\($0.firstName) \($0.lastName)" }
+                    .joined(separator: ", ")
+                return "\(teamName): \(teamMembers)"
+            }
+            print("Blind Draw Teams at close: \(namedAssignments)")
             
             // Close the sheet
             isPresented = false
@@ -576,28 +697,63 @@ private func calculateGameHandicaps(for golfers: [Golfer]) -> [String: Int] {
         showingStablefordNetInfo = true
     }
 
+    private func showBlindDrawBetterBallInfo() {
+        showingBlindDrawBetterBallInfo = true
+    }
+
+
     private func initializeTeamAssignments() {
         let golfers = sharedViewModel.golfers
-        for (index, golfer) in golfers.enumerated() {
-            if index == 0 {
-                betterBallTeamAssignments[golfer.id] = "Team A"
-            } else if index < 4 {
-                betterBallTeamAssignments[golfer.id] = "Team B"
-            } else {
-                betterBallTeamAssignments[golfer.id] = "Not Playing"
+        
+        // Initialize Better Ball teams
+        availableTeams = golfers.count >= 7 ? ["Team A", "Team B", "Team C", "Team D", "Not Playing"] : ["Team A", "Team B", "Not Playing"]
+        if isBetterBall {
+            for (index, golfer) in golfers.enumerated() {
+                if index == 0 {
+                    betterBallTeamAssignments[golfer.id] = "Team A"
+                } else if index < 4 {
+                    betterBallTeamAssignments[golfer.id] = "Team B"
+                } else if index < 6 && golfers.count >= 7 {
+                    betterBallTeamAssignments[golfer.id] = "Team C"
+                } else if index < 8 && golfers.count >= 7 {
+                    betterBallTeamAssignments[golfer.id] = "Team D"
+                } else {
+                    betterBallTeamAssignments[golfer.id] = "Not Playing"
+                }
             }
         }
-        print("Debug: Initialized Better Ball Teams: \(betterBallTeamAssignments)")
+        
+    }
+    
+    private func initializeBlindDrawBetterBallTeams() {
+        let golfers = sharedViewModel.golfers
+        for (index, golfer) in golfers.enumerated() {
+            if index % 2 == 0 {
+                blindDrawBetterBallTeamAssignments[golfer.id] = "Team A"
+            } else {
+                blindDrawBetterBallTeamAssignments[golfer.id] = "Team B"
+            }
+        }
+        print("Debug: Initialized Blind Draw Better Ball Teams: \(blindDrawBetterBallTeamAssignments)")
     }
 
     private func isValidBetterBallSetup() -> Bool {
-        let teamACounts = betterBallTeamAssignments.values.filter { $0 == "Team A" }.count
-        let teamBCounts = betterBallTeamAssignments.values.filter { $0 == "Team B" }.count
-        return (teamACounts == 1 && teamBCounts == 2) || 
-               (teamACounts == 2 && teamBCounts == 1) || 
-               (teamACounts == 1 && teamBCounts == 3) ||
-               (teamACounts == 3 && teamBCounts == 1) ||
-               (teamACounts == 2 && teamBCounts == 2)
+        let teamCounts = ["Team A", "Team B", "Team C", "Team D"].map { team in
+            betterBallTeamAssignments.values.filter { $0 == team }.count
+        }
+        
+        // Check if Teams A and B have valid counts
+        let isABValid = (teamCounts[0] == 1 && teamCounts[1] == 2) ||
+                        (teamCounts[0] == 2 && teamCounts[1] == 1) ||
+                        (teamCounts[0] == 1 && teamCounts[1] == 3) ||
+                        (teamCounts[0] == 3 && teamCounts[1] == 1) ||
+                        (teamCounts[0] == 2 && teamCounts[1] == 2)
+        
+        // Check if Teams C and D are valid when they are available
+        let isCDValid = availableTeams.count <= 3 || 
+                        (teamCounts[2] >= 1 && teamCounts[3] >= 1)
+        
+        return isABValid && isCDValid
     }
 
     private func calculateStablefordGrossQuotas() -> [String: Int] {
