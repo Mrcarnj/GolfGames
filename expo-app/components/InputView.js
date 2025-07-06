@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, useColorScheme } from 'react-native';
+import { View, Text, TextInput, StyleSheet, useColorScheme, Keyboard } from 'react-native';
 import { colors, fontSizes } from '../theme.js';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -39,6 +39,8 @@ export default function InputView({
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          returnKeyType="done"
+          onSubmitEditing={Keyboard.dismiss}
           {...props}
         />
         {validationIcon ? (
