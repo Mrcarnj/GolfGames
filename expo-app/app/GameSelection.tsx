@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, Switch, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Button, Switch, Alert } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 export default function GameSelection() {
-  const { golfers: golfersParam, courseName, selectedTees: selectedTeesParam } = useLocalSearchParams();
+  const {
+    golfers: golfersParam,
+    courseName,
+    selectedTees: selectedTeesParam,
+  } = useLocalSearchParams();
   const router = useRouter();
   const golfers = golfersParam ? JSON.parse(golfersParam) : [];
   const selectedTees = selectedTeesParam ? JSON.parse(selectedTeesParam) : {};
@@ -16,11 +20,24 @@ export default function GameSelection() {
 
   const handleStartRound = () => {
     // TODO: Pass all selections to round start logic
-    Alert.alert('Starting Round', JSON.stringify({
-      golfers,
-      selectedTees,
-      games: { isMatchPlay, isBetterBall, isNinePoint, isStablefordGross, isStablefordNet },
-    }, null, 2));
+    Alert.alert(
+      "Starting Round",
+      JSON.stringify(
+        {
+          golfers,
+          selectedTees,
+          games: {
+            isMatchPlay,
+            isBetterBall,
+            isNinePoint,
+            isStablefordGross,
+            isStablefordNet,
+          },
+        },
+        null,
+        2,
+      ),
+    );
     // router.push({ pathname: '/Scorecard', params: { ... } });
   };
 
@@ -43,7 +60,10 @@ export default function GameSelection() {
       </View>
       <View style={styles.gameRow}>
         <Text>Stableford Gross</Text>
-        <Switch value={isStablefordGross} onValueChange={setIsStablefordGross} />
+        <Switch
+          value={isStablefordGross}
+          onValueChange={setIsStablefordGross}
+        />
       </View>
       <View style={styles.gameRow}>
         <Text>Stableford Net</Text>
@@ -58,26 +78,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "flex-start",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 24,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 16,
     marginBottom: 8,
   },
   gameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
     marginBottom: 16,
   },
-}); 
+});

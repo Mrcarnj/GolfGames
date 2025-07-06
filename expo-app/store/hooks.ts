@@ -1,8 +1,8 @@
-import { useAuthStore } from './authStore';
-import { useRoundStore } from './roundStore';
-import { useSharedStore } from './sharedStore';
-import { useFriendsStore } from './friendsStore';
-import { useLocationStore } from './locationStore';
+import { useAuthStore } from "./authStore";
+import { useRoundStore } from "./roundStore";
+import { useSharedStore } from "./sharedStore";
+import { useFriendsStore } from "./friendsStore";
+import { useLocationStore } from "./locationStore";
 
 export function useAuth() {
   const userSession = useAuthStore((s) => s.userSession);
@@ -34,27 +34,28 @@ export function useRound() {
   const setCurrentHole = useRoundStore((s) => s.setCurrentHole);
   const setRoundType = useRoundStore((s) => s.setRoundType);
   return {
-    selectedTee, selectedCourse, grossScores, netStrokePlayScores, pars, courseHandicaps, golfers, currentHole, roundType,
-    setSelectedTee, setSelectedCourse, setGrossScores, setNetStrokePlayScores, setPars, setCourseHandicaps, setGolfers, setCurrentHole, setRoundType
+    selectedTee,
+    selectedCourse,
+    grossScores,
+    netStrokePlayScores,
+    pars,
+    courseHandicaps,
+    golfers,
+    currentHole,
+    roundType,
+    setSelectedTee,
+    setSelectedCourse,
+    setGrossScores,
+    setNetStrokePlayScores,
+    setPars,
+    setCourseHandicaps,
+    setGolfers,
+    setCurrentHole,
+    setRoundType,
   };
 }
 
-export function useShared() {
-  const golfers = useSharedStore((s) => s.golfers);
-  const selectedTees = useSharedStore((s) => s.selectedTees);
-  const courseHandicaps = useSharedStore((s) => s.courseHandicaps);
-  const selectedCourse = useSharedStore((s) => s.selectedCourse);
-  const roundId = useSharedStore((s) => s.roundId);
-  const setGolfers = useSharedStore((s) => s.setGolfers);
-  const setSelectedTees = useSharedStore((s) => s.setSelectedTees);
-  const setCourseHandicaps = useSharedStore((s) => s.setCourseHandicaps);
-  const setSelectedCourse = useSharedStore((s) => s.setSelectedCourse);
-  const setRoundId = useSharedStore((s) => s.setRoundId);
-  return {
-    golfers, selectedTees, courseHandicaps, selectedCourse, roundId,
-    setGolfers, setSelectedTees, setCourseHandicaps, setSelectedCourse, setRoundId
-  };
-}
+export { useSharedStore } from "./sharedStore";
 
 export function useFriends() {
   const friends = useFriendsStore((s) => s.friends);
@@ -70,6 +71,15 @@ export function useLocation() {
   const isLocationAvailable = useLocationStore((s) => s.isLocationAvailable);
   const setLocationStatus = useLocationStore((s) => s.setLocationStatus);
   const setLastLocation = useLocationStore((s) => s.setLastLocation);
-  const setIsLocationAvailable = useLocationStore((s) => s.setIsLocationAvailable);
-  return { locationStatus, lastLocation, isLocationAvailable, setLocationStatus, setLastLocation, setIsLocationAvailable };
-} 
+  const setIsLocationAvailable = useLocationStore(
+    (s) => s.setIsLocationAvailable,
+  );
+  return {
+    locationStatus,
+    lastLocation,
+    isLocationAvailable,
+    setLocationStatus,
+    setLastLocation,
+    setIsLocationAvailable,
+  };
+}

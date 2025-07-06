@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { zustandAsyncStorage } from './persistConfig';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { zustandAsyncStorage } from "./persistConfig";
 
 interface FriendsState {
   friends: any[];
@@ -18,9 +18,9 @@ export const useFriendsStore = create<FriendsState>()(
       setUserId: (id) => set({ userId: id }),
     }),
     {
-      name: 'friends-store',
+      name: "friends-store",
       storage: zustandAsyncStorage,
       partialize: (state) => ({ friends: state.friends, userId: state.userId }),
-    }
-  )
-); 
+    },
+  ),
+);

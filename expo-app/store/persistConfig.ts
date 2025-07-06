@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StateStorage } from 'zustand/middleware';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StateStorage } from "zustand/middleware";
 
 export const zustandAsyncStorage: StateStorage = {
   getItem: async (name) => {
@@ -7,9 +7,13 @@ export const zustandAsyncStorage: StateStorage = {
     return value ?? null;
   },
   setItem: async (name, value) => {
-    await AsyncStorage.setItem(name, value);
+    // Always store as a string!
+    await AsyncStorage.setItem(
+      name,
+      typeof value === "string" ? value : JSON.stringify(value),
+    );
   },
   removeItem: async (name) => {
     await AsyncStorage.removeItem(name);
   },
-}; 
+};

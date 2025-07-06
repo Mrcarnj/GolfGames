@@ -1,7 +1,14 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, useColorScheme, Keyboard } from 'react-native';
-import { colors, fontSizes } from '../theme.js';
-import Icon from 'react-native-vector-icons/Ionicons';
+import React from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  useColorScheme,
+  Keyboard,
+} from "react-native";
+import { colors, fontSizes } from "../theme.js";
+import Icon from "react-native-vector-icons/Ionicons";
 
 export default function InputView({
   label,
@@ -9,29 +16,23 @@ export default function InputView({
   onChangeText,
   placeholder,
   secureTextEntry = false,
-  keyboardType = 'default',
-  autoCapitalize = 'none',
+  keyboardType = "default",
+  autoCapitalize = "none",
   validationIcon, // 'checkmark-circle' | 'close-circle' | null
   validationColor, // color for icon
   style,
   ...props
 }) {
   const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = colorScheme === "dark";
   return (
     <View style={[styles.container, style]}>
-      <Text style={[
-        styles.label,
-        { color: isDark ? '#fff' : colors.gray },
-      ]}>
+      <Text style={[styles.label, { color: isDark ? "#fff" : colors.gray }]}>
         {label}
       </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
         <TextInput
-          style={[
-            styles.input,
-            { color: isDark ? '#fff' : colors.text },
-          ]}
+          style={[styles.input, { color: isDark ? "#fff" : colors.text }]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: fontSizes.footnote,
     marginBottom: 2,
   },
@@ -79,4 +80,4 @@ const styles = StyleSheet.create({
     marginTop: 2,
     borderRadius: 1,
   },
-}); 
+});

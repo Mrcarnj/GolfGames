@@ -1,19 +1,19 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { zustandAsyncStorage } from './persistConfig';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { zustandAsyncStorage } from "./persistConfig";
 
 interface LocationState {
   locationStatus: string | null;
-  lastLocation: any | null;
+  lastLocation: { latitude: number; longitude: number } | null;
   isLocationAvailable: boolean;
   setLocationStatus: (status: string | null) => void;
-  setLastLocation: (location: any | null) => void;
+  setLastLocation: (location: { latitude: number; longitude: number } | null) => void;
   setIsLocationAvailable: (available: boolean) => void;
 }
 
 export const useLocationStore = create<LocationState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       locationStatus: null,
       lastLocation: null,
       isLocationAvailable: false,
@@ -22,9 +22,13 @@ export const useLocationStore = create<LocationState>()(
       setIsLocationAvailable: (available) => set({ isLocationAvailable: available }),
     }),
     {
-      name: 'location-store',
+      name: "location-store",
       storage: zustandAsyncStorage,
-      partialize: (state) => ({ locationStatus: state.locationStatus, lastLocation: state.lastLocation, isLocationAvailable: state.isLocationAvailable }),
-    }
-  )
-); 
+      partialize: (state) => ({
+        locationStatus: state.locationStatus,
+        lastLocation: state.lastLocation,
+        isLocationAvailable: state.isLocationAvailable,
+      }),
+    },
+  ),
+);
