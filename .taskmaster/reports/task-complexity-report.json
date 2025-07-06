@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-07-06T05:38:23.777Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 13,
+			"taskTitle": "Setup React Native Project with Expo",
+			"complexityScore": 4,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the React Native project setup with Expo into subtasks covering initial installation, expo-router configuration, and project structure setup. Include specific steps for each subtask.",
+			"reasoning": "This task involves standard project setup procedures with well-documented steps. The complexity is moderate as it requires following specific configuration steps for Expo and expo-router, but these are straightforward with clear documentation. The task is well-defined with clear steps already outlined."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Implement Firebase Integration",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Divide the Firebase integration task into subtasks covering project setup, authentication implementation, database configuration, and storage implementation. Each subtask should include specific configuration steps and code examples.",
+			"reasoning": "Firebase integration involves multiple services (auth, database, storage) and requires careful configuration. The complexity is high due to security considerations, offline persistence setup, and the need to implement error handling. Each Firebase service requires its own implementation patterns and testing approaches."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Implement State Management Architecture",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the state management architecture implementation into subtasks covering evaluation of options, core state slice implementation, persistence layer, selector creation, and custom hooks development. Include specific implementation details for each subtask.",
+			"reasoning": "State management is a complex architectural decision that affects the entire application. The task requires evaluating different solutions, implementing a chosen approach, and creating multiple state slices with proper TypeScript typing. It also involves persistence, selectors, and custom hooks which add significant complexity."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Implement Authentication Flows",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Divide the authentication flows implementation into subtasks covering UI screens creation, Firebase auth methods implementation, form validation and error handling, and session management. Include specific implementation details for each authentication feature.",
+			"reasoning": "Authentication involves multiple user flows (login, registration, password reset) and requires careful security implementation. The complexity comes from handling various edge cases, error states, and ensuring proper session management. The task requires both UI development and backend integration."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Implement User Profile and Friends Management",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the user profile and friends management implementation into subtasks covering profile screens development, profile data management, friends list functionality, friend request system, and profile image handling. Include specific implementation details for each feature.",
+			"reasoning": "This task involves complex social features with multiple screens and bidirectional relationships between users. The complexity is high due to the need to manage friend requests, handle profile images, implement search functionality, and maintain real-time updates. It requires both UI development and complex database operations."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Implement Course and Tee Selection",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Divide the course and tee selection implementation into subtasks covering location services integration, course search/browse functionality, course details display, and favorites management. Include specific implementation details for each feature.",
+			"reasoning": "This task involves geolocation features and complex data relationships between courses, tees, and user preferences. The complexity comes from implementing location-based search, handling large datasets of courses, and creating intuitive selection interfaces. It requires both device API integration and database operations."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Implement Round Setup and Player Management",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the round setup and player management implementation into subtasks covering round creation UI, game type selection, player invitation system, handicap application, and round settings configuration. Include specific implementation details for each feature.",
+			"reasoning": "This task involves complex game setup logic with multiple configuration options and player management. The complexity is high due to the need to handle different game types, manage player invitations, apply handicaps correctly, and ensure data consistency. It requires both UI development and sophisticated business logic."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Implement Game Types and Scoring Logic",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Divide the game types and scoring logic implementation into subtasks covering base scoring system, game-specific scoring rules for each game type, scorecard UI, real-time updates, statistics calculation, and results display. Include specific implementation details for each scoring system.",
+			"reasoning": "This is one of the most complex tasks as it involves implementing multiple game types with different scoring rules, real-time updates, and complex calculations. Each game type has unique logic that must be correctly implemented and displayed. The task requires sophisticated business logic, real-time data synchronization, and intuitive UI presentation."
+		},
+		{
+			"taskId": 21,
+			"taskTitle": "Implement Responsive Layouts and Orientation Handling",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the responsive layouts implementation into subtasks covering orientation detection and handling, responsive component creation, and scorecard-specific layout adaptations. Include specific implementation details for handling different device sizes and orientations.",
+			"reasoning": "This task involves creating layouts that work across different device sizes and orientations. The complexity comes from handling orientation changes dynamically, especially for complex views like scorecards. While challenging, the patterns for responsive design in React Native are well-established."
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Implement Recent Rounds History and Results Viewing",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Divide the rounds history implementation into subtasks covering rounds list/history UI, round details view, statistics calculation and visualization, and round sharing functionality. Include specific implementation details for each feature.",
+			"reasoning": "This task involves retrieving and displaying historical data with various filtering and visualization options. The complexity comes from implementing statistics calculations, creating intuitive visualizations, and handling potentially large datasets. It requires both UI development and data processing logic."
+		}
+	]
+}
