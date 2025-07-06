@@ -1,0 +1,104 @@
+# Task ID: 9
+# Title: Implement Responsive Layouts and Orientation Handling
+# Status: pending
+# Dependencies: 1, 8
+# Priority: medium
+# Description: Develop responsive layouts for all screens, ensuring proper display on different device sizes and orientations, with special attention to scorecard views.
+# Details:
+1. Install orientation detection: `npx expo install expo-screen-orientation`
+2. Create responsive layout components:
+   ```typescript
+   // ResponsiveContainer.tsx
+   import React, { useState, useEffect } from 'react';
+   import { View, Dimensions, StyleSheet } from 'react-native';
+   import * as ScreenOrientation from 'expo-screen-orientation';
+   
+   interface Props {
+     children: React.ReactNode;
+     style?: any;
+   }
+   
+   export const ResponsiveContainer: React.FC<Props> = ({ children, style }) => {
+     const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
+     
+     useEffect(() => {
+       const subscription = Dimensions.addEventListener('change', ({ window }) => {
+         const isLandscape = window.width > window.height;
+         setOrientation(isLandscape ? 'landscape' : 'portrait');
+       });
+       
+       return () => subscription.remove();
+     }, []);
+     
+     return (
+       <View style={[styles.container, orientation === 'landscape' ? styles.landscape : styles.portrait, style]}>
+         {children}
+       </View>
+     );
+   };
+   
+   const styles = StyleSheet.create({
+     container: {
+       flex: 1,
+     },
+     portrait: {
+       // Portrait-specific styles
+     },
+     landscape: {
+       // Landscape-specific styles
+     },
+   });
+   ```
+3. Implement adaptive scorecard layouts for different orientations
+4. Create responsive grid systems for different screen sizes
+5. Implement tablet-specific layouts where appropriate
+6. Add orientation lock options for specific screens
+7. Create orientation-aware navigation patterns
+8. Implement responsive typography and spacing
+
+# Test Strategy:
+1. Test layouts on various device sizes (phones and tablets)
+2. Verify orientation changes handle correctly
+3. Test scorecard display in both orientations
+4. Validate touch targets remain accessible in all layouts
+5. Test navigation patterns in different orientations
+6. Verify text remains readable on all screen sizes
+7. Test orientation lock functionality
+8. Validate layout on both iOS and Android devices
+
+# Subtasks:
+## 1. Implement orientation detection and handling system [pending]
+### Dependencies: None
+### Description: Create a system to detect and respond to device orientation changes in the app
+### Details:
+1. Set up a Dimensions API listener to detect orientation changes
+2. Create a custom hook (useOrientation) that provides current orientation state
+3. Implement an OrientationContext provider to make orientation data available throughout the app
+4. Add configuration in app.json to support both portrait and landscape modes
+5. Create utility functions to determine if the device is in portrait or landscape mode
+6. Test orientation changes on different device sizes
+
+## 2. Develop responsive component library [pending]
+### Dependencies: 9.1
+### Description: Create a set of responsive UI components that adapt to different screen sizes and orientations
+### Details:
+1. Implement responsive typography system with scalable font sizes
+2. Create flexible container components with percentage-based or flex layouts
+3. Develop responsive grid system for organizing content
+4. Build adaptive spacing utilities that adjust based on screen size
+5. Create responsive image components that resize appropriately
+6. Implement responsive navigation components (headers, menus)
+7. Add responsive form elements that adjust for touch targets on different devices
+
+## 3. Implement scorecard-specific responsive layouts [pending]
+### Dependencies: 9.1, 9.2
+### Description: Create specialized responsive layouts for the scorecard views that handle orientation changes gracefully
+### Details:
+1. Design landscape-optimized scorecard layout with horizontal data presentation
+2. Create portrait-optimized scorecard layout with vertical data presentation
+3. Implement conditional rendering based on orientation for scorecard components
+4. Add animations for smooth transitions between orientation changes
+5. Optimize data tables to reflow based on available screen width
+6. Ensure scorecard charts and graphs resize appropriately
+7. Test scorecard layouts on various device sizes and orientations
+

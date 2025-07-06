@@ -1,0 +1,62 @@
+# Task ID: 1
+# Title: Setup React Native Project with Expo
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Initialize the React Native project using Expo and configure expo-router for navigation, establishing the foundation for the GolfGames migration.
+# Details:
+1. Install Expo CLI: `npm install -g expo-cli`
+2. Create new project: `npx create-expo-app GolfGames --template expo-template-blank-typescript`
+3. Install expo-router: `npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar`
+4. Configure app directory structure for expo-router:
+   - Create `app/` directory
+   - Set up `app/_layout.tsx` for root navigation
+   - Create initial route files (index.tsx, login.tsx, etc.)
+5. Update app.json with proper app identifiers and permissions
+6. Configure TypeScript settings in tsconfig.json
+7. Set up environment configuration for development/production
+8. Test basic navigation between screens
+
+# Test Strategy:
+1. Verify project builds successfully on iOS and Android simulators
+2. Test navigation between basic screens
+3. Confirm hot reloading works properly
+4. Validate TypeScript configuration
+5. Ensure Expo development tools are functioning
+
+# Subtasks:
+## 1. Install Expo CLI and create a new project [pending]
+### Dependencies: None
+### Description: Set up the development environment and create a new React Native project using Expo
+### Details:
+1. Install Node.js and npm if not already installed
+2. Install Expo CLI globally: `npm install -g expo-cli`
+3. Create a new project: `npx create-expo-app my-app`
+4. Navigate to the project directory: `cd my-app`
+5. Install dev dependencies: `npm install -D typescript @types/react @types/react-native`
+6. Verify installation by running: `npx expo start`
+
+## 2. Configure expo-router for navigation [pending]
+### Dependencies: 1.1
+### Description: Set up and configure expo-router to handle navigation in the React Native application
+### Details:
+1. Install expo-router: `npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar`
+2. Create an app directory in the project root
+3. Create an index.js file in the app directory with a basic component
+4. Update app.json to include the expo-router configuration
+5. Modify package.json to use expo-router as the main entry point
+6. Create a basic layout.js file for shared UI elements
+
+## 3. Set up project structure and initial components [pending]
+### Dependencies: 1.2
+### Description: Establish the folder structure and create initial components for the application
+### Details:
+1. Create a components folder for reusable UI components
+2. Create a hooks folder for custom React hooks
+3. Create a utils folder for utility functions
+4. Create a constants folder for app constants and theme configuration
+5. Set up basic screens in the app directory (home, details, settings)
+6. Configure environment variables if needed
+7. Set up a basic theme with colors, typography, and spacing
+8. Test the navigation flow between screens
+

@@ -1,0 +1,93 @@
+# Task ID: 8
+# Title: Implement Game Types and Scoring Logic
+# Status: pending
+# Dependencies: 3, 7
+# Priority: high
+# Description: Develop all the game types (Stroke Play, Match Play, Better Ball, Stableford, Nine Point, etc.) and their associated scoring rules and display logic.
+# Details:
+1. Create scoring screens:
+   - Scorecard entry
+   - Hole details
+   - Game status/results
+   - Leaderboard
+2. Implement base scoring system:
+   ```typescript
+   // scoringService.ts
+   import { db } from '../firebase/config';
+   import { doc, updateDoc, getDoc } from 'firebase/firestore';
+   
+   export const updateScore = async (roundId: string, holeNumber: number, playerId: string, score: number) => {
+     const roundRef = doc(db, 'rounds', roundId);
+     const roundSnap = await getDoc(roundRef);
+     if (!roundSnap.exists()) throw new Error('Round not found');
+     
+     const roundData = roundSnap.data();
+     const scores = roundData.scores || {};
+     
+     // Update the score for this player and hole
+     if (!scores[playerId]) scores[playerId] = {};
+     scores[playerId][holeNumber] = score;
+     
+     await updateDoc(roundRef, { scores });
+     return calculateGameResults(roundData.gameType, scores, roundData);
+   };
+   ```
+3. Implement game-specific scoring logic for each game type:
+   - Stroke Play: Total strokes
+   - Match Play: Hole-by-hole winner
+   - Better Ball: Best score per hole
+   - Stableford: Points based on score relative to par
+   - Nine Point: Point allocation per hole
+   - Other game types from original app
+4. Create scorecard display with game-specific information
+5. Implement real-time score updates and synchronization
+6. Add statistics calculation during and after rounds
+7. Create game results and summary displays
+
+# Test Strategy:
+1. Test score entry for each game type
+2. Verify scoring calculations match expected results
+3. Test edge cases (very high/low scores, ties, etc.)
+4. Validate real-time updates between players
+5. Test scorecard display in different orientations
+6. Verify statistics calculations
+7. Test game completion and results display
+8. Validate handicap application in scoring
+
+# Subtasks:
+## 1. Implement Base Scoring System Framework [pending]
+### Dependencies: None
+### Description: Create the foundational scoring system that will serve as the base for all game types
+### Details:
+Design and implement a flexible scoring framework that can be extended for different game types. Create core classes/interfaces for Score, ScoreCard, and ScoreCalculator. Implement methods for adding points, calculating totals, and tracking game progress. Include validation logic to ensure scores follow general bowling rules (e.g., maximum pins per frame).
+
+## 2. Implement Traditional Bowling Scoring Logic [pending]
+### Dependencies: 8.1
+### Description: Develop the scoring rules specific to traditional 10-pin bowling
+### Details:
+Implement the standard 10-pin bowling scoring algorithm including: handling strikes (10 pins in first throw) with bonus points from next two throws, handling spares (10 pins in two throws) with bonus points from next throw, calculating frame scores progressively, handling the 10th frame special rules (potential for 3 throws), and ensuring proper score calculation with running totals.
+
+## 3. Implement Alternative Game Type Scoring Logic [pending]
+### Dependencies: 8.1
+### Description: Develop scoring rules for additional game types like No-Tap, Low Ball, and custom variations
+### Details:
+Create specialized scoring implementations for: No-Tap bowling (9 pins on first throw counts as strike), Low Ball bowling (lowest score wins, gutter balls worth 10 points), and at least one custom variation. Each implementation should extend the base scoring system while overriding specific rules. Include configuration options for game variations (e.g., 9-pin No-Tap vs 8-pin No-Tap).
+
+## 4. Design and Implement Scorecard UI Components [pending]
+### Dependencies: 8.1
+### Description: Create the visual components for displaying scores across different game types
+### Details:
+Design responsive UI components for the scorecard that work across device sizes. Implement frame-by-frame display with appropriate visual indicators for strikes, spares, fouls, and splits. Create different scorecard layouts optimized for each game type. Include animations for score updates and achievement highlights. Ensure accessibility compliance for all scorecard elements.
+
+## 5. Implement Real-time Score Updates and Synchronization [pending]
+### Dependencies: 8.2, 8.3, 8.4
+### Description: Develop the system for updating scores in real-time and syncing across devices
+### Details:
+Create event-driven architecture to update scores immediately after each throw. Implement WebSocket or similar technology for real-time updates across multiple devices. Add optimistic UI updates with server validation. Implement conflict resolution for simultaneous score entries. Create fallback mechanisms for offline scoring with synchronization when connection is restored.
+
+## 6. Implement Statistics Calculation and Results Display [pending]
+### Dependencies: 8.5
+### Description: Develop the system for calculating game statistics and displaying final results
+### Details:
+Create algorithms to calculate key statistics: average score per frame, strike percentage, spare percentage, open frame percentage, and split conversion rate. Implement historical tracking of player performance across games. Design and implement end-of-game results display with comprehensive statistics. Add visualization components (charts, graphs) for statistical data. Include export functionality for game results and statistics.
+

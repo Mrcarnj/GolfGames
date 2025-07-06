@@ -1,0 +1,103 @@
+# Task ID: 10
+# Title: Implement Recent Rounds History and Results Viewing
+# Status: pending
+# Dependencies: 3, 8
+# Priority: medium
+# Description: Develop the functionality to view past rounds, their results, statistics, and share round outcomes with friends.
+# Details:
+1. Create rounds history screens:
+   - Rounds list/history
+   - Round details/results
+   - Player statistics
+   - Round sharing
+2. Implement rounds history retrieval:
+   ```typescript
+   // roundsHistoryService.ts
+   import { db, auth } from '../firebase/config';
+   import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+   
+   export const getUserRounds = async (limit = 20) => {
+     const currentUser = auth.currentUser;
+     if (!currentUser) throw new Error('User not authenticated');
+     
+     const roundsRef = collection(db, 'rounds');
+     const q = query(
+       roundsRef,
+       where('players', 'array-contains', currentUser.uid),
+       orderBy('createdAt', 'desc'),
+       limit(limit)
+     );
+     
+     const querySnapshot = await getDocs(q);
+     return querySnapshot.docs.map(doc => ({
+       id: doc.id,
+       ...doc.data()
+     }));
+   };
+   ```
+3. Create round details view with game-specific results
+4. Implement statistics calculation and visualization
+5. Add round sharing via social media or messaging
+6. Create player performance comparisons
+7. Implement round filtering and searching
+8. Add round deletion or archiving functionality
+
+# Test Strategy:
+1. Test rounds history retrieval and display
+2. Verify round details show correct game results
+3. Test statistics calculations for accuracy
+4. Validate round sharing functionality
+5. Test performance with large history datasets
+6. Verify filtering and searching functionality
+7. Test round deletion/archiving
+8. Validate data consistency across devices
+
+# Subtasks:
+## 1. Implement Rounds List/History UI [pending]
+### Dependencies: None
+### Description: Create the user interface for displaying the history of completed rounds with filtering and sorting options.
+### Details:
+1. Design and implement a responsive list view showing completed rounds
+2. Add date range filters (today, this week, this month, all time)
+3. Implement sorting options (by date, score, course)
+4. Create a search functionality to find specific rounds
+5. Add pagination or infinite scrolling for handling large datasets
+6. Include basic round information in each list item (date, course, score, weather conditions)
+
+## 2. Develop Round Details View [pending]
+### Dependencies: 10.1
+### Description: Create a detailed view for individual round information when selected from the history list.
+### Details:
+1. Design a comprehensive round details page/modal
+2. Display all round metadata (date, time, course, weather, etc.)
+3. Show hole-by-hole breakdown with scores, pars, and statistics
+4. Include notes and comments from the round
+5. Add photo gallery integration if photos were taken during the round
+6. Implement edit functionality for correcting round information
+7. Add option to delete rounds from history
+
+## 3. Implement Statistics Calculation and Visualization [pending]
+### Dependencies: 10.1, 10.2
+### Description: Create the logic for calculating various golf statistics and visualizing them through charts and graphs.
+### Details:
+1. Implement calculation logic for key statistics (scoring average, GIR, fairways hit, putts per round, etc.)
+2. Create trend analysis for performance over time
+3. Develop comparative statistics (performance by course, by weather condition, etc.)
+4. Design and implement visualization components (line charts, bar graphs, pie charts)
+5. Add interactive elements to visualizations (tooltips, filters, date range selectors)
+6. Implement data caching for performance optimization with large datasets
+7. Create printable/exportable statistics reports
+
+## 4. Develop Round Sharing Functionality [pending]
+### Dependencies: 10.2, 10.3
+### Description: Implement features to share round results and statistics with friends or on social media platforms.
+### Details:
+1. Create shareable links for individual rounds
+2. Implement social media sharing integration (Facebook, Twitter, Instagram)
+3. Design shareable round cards with key statistics and course information
+4. Add option to export rounds as PDF or image files
+5. Implement email sharing functionality
+6. Create privacy settings to control what information is shared
+7. Add option to share statistics and performance trends
+8. Implement QR code generation for easy sharing
+

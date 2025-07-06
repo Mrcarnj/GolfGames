@@ -2,22 +2,22 @@
   "master": {
     "tasks": [
       {
-        "id": 13,
+        "id": 1,
         "title": "Setup React Native Project with Expo",
         "description": "Initialize the React Native project using Expo and configure expo-router for navigation, establishing the foundation for the GolfGames migration.",
         "details": "1. Install Expo CLI: `npm install -g expo-cli`\n2. Create new project: `npx create-expo-app GolfGames --template expo-template-blank-typescript`\n3. Install expo-router: `npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar`\n4. Configure app directory structure for expo-router:\n   - Create `app/` directory\n   - Set up `app/_layout.tsx` for root navigation\n   - Create initial route files (index.tsx, login.tsx, etc.)\n5. Update app.json with proper app identifiers and permissions\n6. Configure TypeScript settings in tsconfig.json\n7. Set up environment configuration for development/production\n8. Test basic navigation between screens",
         "testStrategy": "1. Verify project builds successfully on iOS and Android simulators\n2. Test navigation between basic screens\n3. Confirm hot reloading works properly\n4. Validate TypeScript configuration\n5. Ensure Expo development tools are functioning",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Install Expo CLI and create a new project",
             "description": "Set up the development environment and create a new React Native project using Expo",
             "dependencies": [],
-            "details": "1. Install Node.js and npm if not already installed\n2. Install Expo CLI globally: `npm install -g expo-cli`\n3. Create a new project: `npx create-expo-app my-app`\n4. Navigate to the project directory: `cd my-app`\n5. Install dev dependencies: `npm install -D typescript @types/react @types/react-native`\n6. Verify installation by running: `npx expo start`",
-            "status": "pending",
+            "details": "1. Install Node.js and npm if not already installed\n2. Install Expo CLI globally: `npm install -g expo-cli`\n3. Create a new project: `npx create-expo-app my-app`\n4. Navigate to the project directory: `cd my-app`\n5. Install dev dependencies: `npm install -D typescript @types/react @types/react-native`\n6. Verify installation by running: `npx expo start`\n<info added on 2025-07-06T14:07:54.245Z>\n1. Check if Node.js and npm are installed: `node -v && npm -v`\n   - If not installed, download and install from nodejs.org\n2. Install Expo CLI globally: `npm install -g expo-cli`\n3. Create a new project with TypeScript template: `npx create-expo-app GolfGames --template blank-typescript`\n4. Navigate to the project directory: `cd GolfGames`\n5. Install dev dependencies: `npm install -D typescript @types/react @types/react-native`\n6. Verify installation by running: `npx expo start`\n7. Troubleshoot any errors that occur during installation or startup\n</info added on 2025-07-06T14:07:54.245Z>\n<info added on 2025-07-06T14:08:38.662Z>\n8. If you encounter \"The directory 'GolfGames' already exists and contains files\" error:\n   - Create the Expo app in a subdirectory: `npx create-expo-app GolfGames/expo-app --template blank-typescript`\n   - Navigate to the subdirectory: `cd GolfGames/expo-app`\n   - Alternatively, use a different project name: `npx create-expo-app GolfGamesApp --template blank-typescript`\n9. After creating the project in a subdirectory, you may need to migrate or merge files between the existing project and the new Expo app\n</info added on 2025-07-06T14:08:38.662Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -27,8 +27,8 @@
             "dependencies": [
               1
             ],
-            "details": "1. Install expo-router: `npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar`\n2. Create an app directory in the project root\n3. Create an index.js file in the app directory with a basic component\n4. Update app.json to include the expo-router configuration\n5. Modify package.json to use expo-router as the main entry point\n6. Create a basic layout.js file for shared UI elements",
-            "status": "pending",
+            "details": "1. Install expo-router: `npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar`\n2. Create an app directory in the project root\n3. Create an index.js file in the app directory with a basic component\n4. Update app.json to include the expo-router configuration\n5. Modify package.json to use expo-router as the main entry point\n6. Create a basic layout.js file for shared UI elements\n<info added on 2025-07-06T14:10:18.222Z>\nThe Expo app was successfully created in the 'expo-app' subdirectory. The development server was started and the application is running correctly. The next step is to implement the navigation system using expo-router by following the installation and configuration steps outlined in the subtask details.\n</info added on 2025-07-06T14:10:18.222Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -39,22 +39,22 @@
               2
             ],
             "details": "1. Create a components folder for reusable UI components\n2. Create a hooks folder for custom React hooks\n3. Create a utils folder for utility functions\n4. Create a constants folder for app constants and theme configuration\n5. Set up basic screens in the app directory (home, details, settings)\n6. Configure environment variables if needed\n7. Set up a basic theme with colors, typography, and spacing\n8. Test the navigation flow between screens",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
       },
       {
-        "id": 14,
+        "id": 2,
         "title": "Implement Firebase Integration",
         "description": "Set up and configure Firebase services for authentication, database, and storage to match the existing backend functionality of the iOS app.",
         "details": "1. Create Firebase project in Firebase console\n2. Add iOS and Android apps to the Firebase project\n3. Install Firebase dependencies: `npx expo install @react-native-firebase/app @react-native-firebase/auth @react-native-firebase/firestore @react-native-firebase/storage`\n4. Configure Firebase initialization in app startup:\n   ```typescript\n   import { initializeApp } from 'firebase/app';\n   import { getAuth } from 'firebase/auth';\n   import { getFirestore } from 'firebase/firestore';\n   import { getStorage } from 'firebase/storage';\n   \n   const firebaseConfig = {\n     apiKey: '...',\n     authDomain: '...',\n     projectId: '...',\n     storageBucket: '...',\n     messagingSenderId: '...',\n     appId: '...'\n   };\n   \n   const app = initializeApp(firebaseConfig);\n   export const auth = getAuth(app);\n   export const db = getFirestore(app);\n   export const storage = getStorage(app);\n   ```\n5. Create Firebase service wrappers for auth, database, and storage operations\n6. Set up security rules for Firestore and Storage\n7. Configure offline persistence for Firestore\n8. Implement error handling and retry logic for Firebase operations",
         "testStrategy": "1. Test Firebase connection and initialization\n2. Verify authentication flows with test accounts\n3. Test CRUD operations on Firestore\n4. Validate file upload/download with Firebase Storage\n5. Test offline functionality and data synchronization\n6. Verify security rules are properly enforced",
         "priority": "high",
         "dependencies": [
-          13
+          1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -62,7 +62,7 @@
             "description": "Initialize a Firebase project, install required dependencies, and configure the SDK in the application",
             "dependencies": [],
             "details": "1. Create a new Firebase project in the Firebase console\n2. Register the application (iOS/Android/Web)\n3. Download and add the configuration file (google-services.json or GoogleService-Info.plist)\n4. Install Firebase SDK: `npm install firebase` or equivalent\n5. Create a firebase.js config file with initialization code:\n```javascript\nimport { initializeApp } from 'firebase/app';\n\nconst firebaseConfig = {\n  apiKey: 'YOUR_API_KEY',\n  authDomain: 'YOUR_PROJECT.firebaseapp.com',\n  projectId: 'YOUR_PROJECT_ID',\n  storageBucket: 'YOUR_PROJECT.appspot.com',\n  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',\n  appId: 'YOUR_APP_ID'\n};\n\nconst app = initializeApp(firebaseConfig);\nexport default app;\n```\n6. Test the connection to ensure proper setup",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -73,7 +73,7 @@
               1
             ],
             "details": "1. Import authentication modules:\n```javascript\nimport { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, onAuthStateChanged } from 'firebase/auth';\nimport app from './firebase';\n\nconst auth = getAuth(app);\n```\n2. Implement sign-up function:\n```javascript\nconst signUp = async (email, password) => {\n  try {\n    const userCredential = await createUserWithEmailAndPassword(auth, email, password);\n    return userCredential.user;\n  } catch (error) {\n    console.error('Error signing up:', error.code, error.message);\n    throw error;\n  }\n};\n```\n3. Implement sign-in function with similar pattern\n4. Create password reset functionality\n5. Set up auth state listener for session management\n6. Implement social authentication (Google, Facebook, etc.)\n7. Create protected routes using auth state\n8. Add error handling for all authentication flows",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -84,7 +84,7 @@
               1
             ],
             "details": "1. Choose and initialize database (Firestore or Realtime):\n```javascript\nimport { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, onSnapshot } from 'firebase/firestore';\nimport app from './firebase';\n\nconst db = getFirestore(app);\n// Enable offline persistence\nenablePersistence(db).catch((err) => console.error('Offline persistence error:', err));\n```\n2. Define security rules in Firebase console:\n```\nrules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /users/{userId} {\n      allow read, write: if request.auth != null && request.auth.uid == userId;\n    }\n  }\n}\n```\n3. Create data models and collections\n4. Implement CRUD operations:\n   - Create: `setDoc(doc(db, 'collection', 'id'), data)`\n   - Read: `getDoc(doc(db, 'collection', 'id'))`\n   - Update: `updateDoc(doc(db, 'collection', 'id'), updates)`\n   - Delete: `deleteDoc(doc(db, 'collection', 'id'))`\n5. Implement real-time listeners with `onSnapshot`\n6. Add batch operations for transactional updates\n7. Implement query functions with proper indexing",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -95,31 +95,31 @@
               1
             ],
             "details": "1. Initialize Firebase Storage:\n```javascript\nimport { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll } from 'firebase/storage';\nimport app from './firebase';\n\nconst storage = getStorage(app);\n```\n2. Set up security rules in Firebase console:\n```\nrules_version = '2';\nservice firebase.storage {\n  match /b/{bucket}/o {\n    match /users/{userId}/{allPaths=**} {\n      allow read, write: if request.auth != null && request.auth.uid == userId;\n    }\n  }\n}\n```\n3. Implement file upload function:\n```javascript\nconst uploadFile = async (file, path) => {\n  try {\n    const storageRef = ref(storage, path);\n    const snapshot = await uploadBytes(storageRef, file);\n    const downloadURL = await getDownloadURL(snapshot.ref);\n    return { path, downloadURL };\n  } catch (error) {\n    console.error('Error uploading file:', error);\n    throw error;\n  }\n};\n```\n4. Create functions for listing, downloading, and deleting files\n5. Add progress monitoring for large file uploads\n6. Implement file type validation and size restrictions\n7. Create image resizing with Cloud Functions (optional)\n8. Set up caching strategies for frequently accessed files",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
       },
       {
-        "id": 15,
+        "id": 3,
         "title": "Implement State Management Architecture",
         "description": "Set up the state management solution for the application, evaluating and implementing either Redux, Context API, or Zustand based on the application's needs.",
         "details": "1. Evaluate state management options:\n   - Redux + Redux Toolkit for complex global state\n   - Context API for simpler shared state\n   - Zustand for lightweight state management\n2. Based on evaluation, implement the chosen solution (example using Redux Toolkit):\n   ```typescript\n   // store.ts\n   import { configureStore } from '@reduxjs/toolkit';\n   import authReducer from './slices/authSlice';\n   import roundsReducer from './slices/roundsSlice';\n   import friendsReducer from './slices/friendsSlice';\n   \n   export const store = configureStore({\n     reducer: {\n       auth: authReducer,\n       rounds: roundsReducer,\n       friends: friendsReducer,\n     },\n   });\n   \n   export type RootState = ReturnType<typeof store.getState>;\n   export type AppDispatch = typeof store.dispatch;\n   ```\n3. Create core state slices/contexts for:\n   - Authentication state\n   - User profile data\n   - Friends list\n   - Active rounds\n   - Game settings\n4. Implement persistence layer using AsyncStorage\n5. Set up selectors for efficient state access\n6. Create custom hooks for state interactions\n7. Implement middleware for side effects (API calls, etc.)",
         "testStrategy": "1. Unit test state reducers and selectors\n2. Test state persistence across app restarts\n3. Verify state updates correctly propagate to components\n4. Test performance with large state objects\n5. Validate state synchronization with Firebase\n6. Test concurrent state updates",
         "priority": "high",
         "dependencies": [
-          13,
-          14
+          1,
+          2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Evaluate State Management Options",
             "description": "Research and compare different state management solutions to determine the best fit for the project requirements.",
             "dependencies": [],
-            "details": "Compare Redux Toolkit, Zustand, Jotai, and React Context API. Evaluate based on: bundle size, TypeScript support, performance, developer experience, and community support. Create a comparison matrix with pros/cons of each solution. Consider the specific needs of our application including persistence requirements and component tree depth. Document the decision with justification.",
-            "status": "pending",
+            "details": "Compare Redux Toolkit, Zustand, Jotai, and React Context API. Evaluate based on: bundle size, TypeScript support, performance, developer experience, and community support. Create a comparison matrix with pros/cons of each solution. Consider the specific needs of our application including persistence requirements and component tree depth. Document the decision with justification.\n<info added on 2025-07-06T16:23:02.807Z>\n# State Management Evaluation Plan\n\n## Preparation\n1. Review the existing iOS app's state management patterns in the GolfGames/ directory to understand:\n   - Current data flow architecture\n   - State dependencies between components\n   - Persistence mechanisms\n   - Observable patterns currently in use\n\n## Comparison Framework\nCompare the following state management solutions for React Native/Expo:\n- Redux Toolkit\n- Zustand\n- Jotai\n- React Context API\n\n## Evaluation Criteria\nFor each solution, evaluate:\n1. Bundle size impact on the mobile application\n2. TypeScript integration and type safety\n3. Performance with frequent updates and large state objects\n4. Developer experience and learning curve\n5. Community support and documentation quality\n6. Persistence capabilities and Firebase integration options\n7. Migration complexity from Swift's ObservableObject/StateObject patterns\n\n## Deliverables\n1. Detailed comparison matrix with quantitative and qualitative metrics\n2. Code samples demonstrating key patterns in each solution\n3. Recommendation document with justification for the selected approach\n4. Migration strategy outline from Swift patterns to the chosen React Native state management solution\n\n## Decision Factors\n- Prioritize solutions that align with Swift's reactive patterns for easier mental model transition\n- Consider scalability for future feature additions\n- Evaluate Firebase integration capabilities for each option\n- Assess impact on team productivity and onboarding\n</info added on 2025-07-06T16:23:02.807Z>\n<info added on 2025-07-06T16:23:35.541Z>\n# State Management Solution Comparison Results\n\n## Redux Toolkit\n**Pros:**\n- Highly scalable architecture for complex applications\n- Excellent TypeScript integration with strong type safety\n- Robust community support and extensive documentation\n- Comprehensive developer tools for debugging and time-travel\n- Rich middleware ecosystem\n- Reliable persistence via redux-persist\n- Aligns well with modular view model pattern from Swift\n- Seamless Firebase integration options\n\n**Cons:**\n- Requires more boilerplate code\n- Steeper learning curve for team members\n- Can be excessive for simpler state management needs\n\n## Zustand\n**Pros:**\n- Minimal boilerplate with intuitive API\n- Strong TypeScript support\n- Modular store approach that maps well to our existing architecture\n- Natural migration path from Swift's ObservableObject pattern\n- Built-in persistence capabilities\n- Effective Firebase integration\n- Lightweight bundle size impact\n- Performance optimized for React Native\n\n**Cons:**\n- Smaller community compared to Redux\n- Fewer specialized developer tools\n- Less rigid structure for very large applications\n\n## Jotai\n**Pros:**\n- Atomic state management approach\n- Very minimal boilerplate\n- Strong TypeScript integration\n- Composable state atoms\n- Extremely lightweight\n\n**Cons:**\n- Less widespread adoption\n- Smaller ecosystem of extensions and patterns\n- Less structured approach for complex applications\n- Less direct mapping to our existing view model pattern\n\n## React Context API\n**Pros:**\n- Built into React with zero dependencies\n- Simple implementation for basic state needs\n- Familiar to React developers\n- No additional learning required\n\n**Cons:**\n- Not optimized for large or global state\n- Performance degradation with frequent updates\n- No built-in persistence mechanisms\n- Requires more manual implementation for modular state\n- Less suitable for our complex state requirements\n\n## Recommendation\nBased on our evaluation, **Zustand** provides the optimal balance for our migration needs. It closely aligns with SwiftUI's ObservableObject pattern, offering a familiar reactive programming model while maintaining simplicity and performance. Its modular approach will facilitate a clean migration path while supporting our persistence and Firebase integration requirements.\n\nFor future scalability, we can consider layering in Redux Toolkit for more complex global state management if needed, but Zustand provides an excellent starting point that minimizes migration complexity.\n\n## Implementation Plan\nProceed with implementing core state slices using Zustand, mapping each major view model from our Swift codebase (authentication, round management, shared resources, friends/social, and location services) to corresponding Zustand stores.\n</info added on 2025-07-06T16:23:35.541Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -130,7 +130,7 @@
               1
             ],
             "details": "Implement state slices for: user authentication, application settings, UI state (modals, toasts, etc.), and data caching. Define TypeScript interfaces for each slice. Create action creators and reducers with proper error handling. Implement middleware for side effects if needed. Set up the store configuration with proper TypeScript typing.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -141,7 +141,7 @@
               2
             ],
             "details": "Create a persistence middleware/layer that saves selected state slices to localStorage/sessionStorage. Implement encryption for sensitive data. Add versioning to handle state schema migrations. Create utilities to handle storage quota limitations. Implement selective persistence to avoid storing unnecessary data. Add synchronization between tabs if needed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -152,7 +152,7 @@
               2
             ],
             "details": "Implement memoized selectors using createSelector or equivalent. Create selectors for common data access patterns. Develop complex derived selectors that combine multiple state slices. Add TypeScript typing for all selectors. Document selector usage patterns. Create tests for selectors to ensure correct data transformation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -164,21 +164,21 @@
               4
             ],
             "details": "Develop useAppSelector and useAppDispatch hooks with proper TypeScript typing. Create domain-specific hooks for common state operations (e.g., useUser, useSettings). Implement hooks that combine multiple selectors for complex UI needs. Add error handling and loading states to hooks. Document hook usage with examples. Create tests for custom hooks.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
       },
       {
-        "id": 16,
+        "id": 4,
         "title": "Implement Authentication Flows",
         "description": "Develop the login, registration, password reset, and session management functionality to match the existing iOS app's authentication system.",
         "details": "1. Create authentication screens:\n   - Login screen\n   - Registration screen\n   - Password reset screen\n   - Email verification screen\n2. Implement Firebase authentication methods:\n   ```typescript\n   // authService.ts\n   import { auth } from '../firebase/config';\n   import { \n     createUserWithEmailAndPassword,\n     signInWithEmailAndPassword,\n     sendPasswordResetEmail,\n     signOut,\n     updateProfile\n   } from 'firebase/auth';\n   \n   export const registerUser = async (email: string, password: string, displayName: string) => {\n     const userCredential = await createUserWithEmailAndPassword(auth, email, password);\n     await updateProfile(userCredential.user, { displayName });\n     return userCredential.user;\n   };\n   \n   export const loginUser = async (email: string, password: string) => {\n     const userCredential = await signInWithEmailAndPassword(auth, email, password);\n     return userCredential.user;\n   };\n   ```\n3. Create form validation logic with error handling\n4. Implement session persistence and token refresh\n5. Add social authentication options if present in original app\n6. Create protected route system with authentication checks\n7. Implement logout functionality\n8. Add loading states and error handling for auth operations",
         "testStrategy": "1. Test user registration with valid and invalid inputs\n2. Verify login with correct and incorrect credentials\n3. Test password reset flow\n4. Validate email verification process\n5. Test session persistence across app restarts\n6. Verify protected routes redirect unauthenticated users\n7. Test social authentication flows if implemented\n8. Validate error messages and form validation",
         "priority": "high",
         "dependencies": [
-          14,
-          15
+          2,
+          3
         ],
         "status": "pending",
         "subtasks": [
@@ -188,7 +188,7 @@
             "description": "Design and implement all authentication-related UI screens including login, registration, password reset, and email verification.",
             "dependencies": [],
             "details": "Create responsive UI components for: 1) Login screen with email/password fields and social login buttons, 2) Registration form with username, email, password, and confirmation fields, 3) Password reset request screen, 4) Email verification screen, 5) Success/confirmation screens for each flow. Use Material UI components for consistent styling and ensure all screens are mobile-responsive.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -228,16 +228,16 @@
         ]
       },
       {
-        "id": 17,
+        "id": 5,
         "title": "Implement User Profile and Friends Management",
         "description": "Develop the user profile editing, viewing, and friends management functionality, including adding, viewing, and inviting friends.",
         "details": "1. Create profile screens:\n   - Profile view\n   - Profile edit\n   - Friends list\n   - Friend requests\n   - Friend search\n2. Implement profile data management:\n   ```typescript\n   // profileService.ts\n   import { db, storage, auth } from '../firebase/config';\n   import { doc, getDoc, updateDoc } from 'firebase/firestore';\n   import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';\n   \n   export const getUserProfile = async (userId: string) => {\n     const docRef = doc(db, 'users', userId);\n     const docSnap = await getDoc(docRef);\n     return docSnap.exists() ? docSnap.data() : null;\n   };\n   \n   export const updateUserProfile = async (userId: string, profileData: any) => {\n     const docRef = doc(db, 'users', userId);\n     await updateDoc(docRef, profileData);\n     return getUserProfile(userId);\n   };\n   ```\n3. Implement friends management functions:\n   - Send friend requests\n   - Accept/reject requests\n   - Remove friends\n   - Search for users\n4. Create profile image upload and management\n5. Implement handicap calculation and display\n6. Add friend activity feed if present in original app\n7. Create notifications for friend requests and activities",
         "testStrategy": "1. Test profile data retrieval and updates\n2. Verify profile image upload and display\n3. Test friend request sending and receiving\n4. Validate friend acceptance and rejection flows\n5. Test user search functionality\n6. Verify friend list display and filtering\n7. Test notifications for friend activities\n8. Validate handicap calculations",
         "priority": "medium",
         "dependencies": [
-          14,
-          15,
-          16
+          2,
+          3,
+          4
         ],
         "status": "pending",
         "subtasks": [
@@ -297,15 +297,15 @@
         ]
       },
       {
-        "id": 18,
+        "id": 6,
         "title": "Implement Course and Tee Selection",
         "description": "Develop the course browsing, searching, and tee selection functionality, including location-based course finding and course details viewing.",
         "details": "1. Install location services: `npx expo install expo-location`\n2. Create course-related screens:\n   - Course search/browse\n   - Course details\n   - Tee selection\n   - Course favorites\n3. Implement location-based course finding:\n   ```typescript\n   // locationService.ts\n   import * as Location from 'expo-location';\n   import { db } from '../firebase/config';\n   import { collection, query, where, getDocs, GeoPoint } from 'firebase/firestore';\n   \n   export const getNearbyGolfCourses = async (radiusInMiles = 25) => {\n     const { status } = await Location.requestForegroundPermissionsAsync();\n     if (status !== 'granted') {\n       throw new Error('Location permission not granted');\n     }\n     \n     const location = await Location.getCurrentPositionAsync({});\n     const { latitude, longitude } = location.coords;\n     \n     // Query courses near the user's location\n     // This is a simplified example - actual implementation would depend on how geolocation is stored in Firestore\n     const coursesRef = collection(db, 'courses');\n     // Implementation would need a geospatial query solution\n     return getDocs(coursesRef);\n   };\n   ```\n4. Create course data models and services\n5. Implement tee selection and management\n6. Add course favorites functionality\n7. Create course search with filters (distance, rating, etc.)\n8. Implement course details display (holes, pars, distances, etc.)",
         "testStrategy": "1. Test location permission requests\n2. Verify nearby course finding with mock locations\n3. Test course search with various filters\n4. Validate tee selection and display\n5. Test course favorites adding and removal\n6. Verify course details display accuracy\n7. Test performance with large course datasets\n8. Validate location services on both iOS and Android",
         "priority": "medium",
         "dependencies": [
-          14,
-          15
+          2,
+          3
         ],
         "status": "pending",
         "subtasks": [
@@ -354,16 +354,16 @@
         ]
       },
       {
-        "id": 19,
+        "id": 7,
         "title": "Implement Round Setup and Player Management",
         "description": "Develop the round creation, setup, and player management functionality, allowing users to start new rounds, add players, and configure game settings.",
         "details": "1. Create round setup screens:\n   - New round creation\n   - Game type selection\n   - Player selection/invitation\n   - Round settings configuration\n2. Implement round creation and management:\n   ```typescript\n   // roundService.ts\n   import { db, auth } from '../firebase/config';\n   import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore';\n   \n   export const createNewRound = async (courseId: string, teeId: string, gameType: string, players: string[]) => {\n     const currentUser = auth.currentUser;\n     if (!currentUser) throw new Error('User not authenticated');\n     \n     const roundData = {\n       courseId,\n       teeId,\n       gameType,\n       players,\n       createdBy: currentUser.uid,\n       createdAt: new Date(),\n       status: 'active',\n       scores: {}\n     };\n     \n     const docRef = await addDoc(collection(db, 'rounds'), roundData);\n     return { id: docRef.id, ...roundData };\n   };\n   ```\n3. Implement player invitation and management\n4. Create game type selection with rules display\n5. Implement handicap application based on game type\n6. Add round settings configuration (scoring options, etc.)\n7. Create round sharing functionality\n8. Implement round resumption for incomplete rounds",
         "testStrategy": "1. Test round creation with various game types\n2. Verify player invitation and acceptance\n3. Test handicap calculations for different game types\n4. Validate round settings configuration\n5. Test round sharing functionality\n6. Verify round resumption for incomplete rounds\n7. Test error handling for invalid configurations\n8. Validate data consistency between devices",
         "priority": "medium",
         "dependencies": [
-          15,
-          17,
-          18
+          3,
+          5,
+          6
         ],
         "status": "pending",
         "subtasks": [
@@ -426,15 +426,15 @@
         ]
       },
       {
-        "id": 20,
+        "id": 8,
         "title": "Implement Game Types and Scoring Logic",
         "description": "Develop all the game types (Stroke Play, Match Play, Better Ball, Stableford, Nine Point, etc.) and their associated scoring rules and display logic.",
         "details": "1. Create scoring screens:\n   - Scorecard entry\n   - Hole details\n   - Game status/results\n   - Leaderboard\n2. Implement base scoring system:\n   ```typescript\n   // scoringService.ts\n   import { db } from '../firebase/config';\n   import { doc, updateDoc, getDoc } from 'firebase/firestore';\n   \n   export const updateScore = async (roundId: string, holeNumber: number, playerId: string, score: number) => {\n     const roundRef = doc(db, 'rounds', roundId);\n     const roundSnap = await getDoc(roundRef);\n     if (!roundSnap.exists()) throw new Error('Round not found');\n     \n     const roundData = roundSnap.data();\n     const scores = roundData.scores || {};\n     \n     // Update the score for this player and hole\n     if (!scores[playerId]) scores[playerId] = {};\n     scores[playerId][holeNumber] = score;\n     \n     await updateDoc(roundRef, { scores });\n     return calculateGameResults(roundData.gameType, scores, roundData);\n   };\n   ```\n3. Implement game-specific scoring logic for each game type:\n   - Stroke Play: Total strokes\n   - Match Play: Hole-by-hole winner\n   - Better Ball: Best score per hole\n   - Stableford: Points based on score relative to par\n   - Nine Point: Point allocation per hole\n   - Other game types from original app\n4. Create scorecard display with game-specific information\n5. Implement real-time score updates and synchronization\n6. Add statistics calculation during and after rounds\n7. Create game results and summary displays",
         "testStrategy": "1. Test score entry for each game type\n2. Verify scoring calculations match expected results\n3. Test edge cases (very high/low scores, ties, etc.)\n4. Validate real-time updates between players\n5. Test scorecard display in different orientations\n6. Verify statistics calculations\n7. Test game completion and results display\n8. Validate handicap application in scoring",
         "priority": "high",
         "dependencies": [
-          15,
-          19
+          3,
+          7
         ],
         "status": "pending",
         "subtasks": [
@@ -507,15 +507,15 @@
         ]
       },
       {
-        "id": 21,
+        "id": 9,
         "title": "Implement Responsive Layouts and Orientation Handling",
         "description": "Develop responsive layouts for all screens, ensuring proper display on different device sizes and orientations, with special attention to scorecard views.",
         "details": "1. Install orientation detection: `npx expo install expo-screen-orientation`\n2. Create responsive layout components:\n   ```typescript\n   // ResponsiveContainer.tsx\n   import React, { useState, useEffect } from 'react';\n   import { View, Dimensions, StyleSheet } from 'react-native';\n   import * as ScreenOrientation from 'expo-screen-orientation';\n   \n   interface Props {\n     children: React.ReactNode;\n     style?: any;\n   }\n   \n   export const ResponsiveContainer: React.FC<Props> = ({ children, style }) => {\n     const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');\n     \n     useEffect(() => {\n       const subscription = Dimensions.addEventListener('change', ({ window }) => {\n         const isLandscape = window.width > window.height;\n         setOrientation(isLandscape ? 'landscape' : 'portrait');\n       });\n       \n       return () => subscription.remove();\n     }, []);\n     \n     return (\n       <View style={[styles.container, orientation === 'landscape' ? styles.landscape : styles.portrait, style]}>\n         {children}\n       </View>\n     );\n   };\n   \n   const styles = StyleSheet.create({\n     container: {\n       flex: 1,\n     },\n     portrait: {\n       // Portrait-specific styles\n     },\n     landscape: {\n       // Landscape-specific styles\n     },\n   });\n   ```\n3. Implement adaptive scorecard layouts for different orientations\n4. Create responsive grid systems for different screen sizes\n5. Implement tablet-specific layouts where appropriate\n6. Add orientation lock options for specific screens\n7. Create orientation-aware navigation patterns\n8. Implement responsive typography and spacing",
         "testStrategy": "1. Test layouts on various device sizes (phones and tablets)\n2. Verify orientation changes handle correctly\n3. Test scorecard display in both orientations\n4. Validate touch targets remain accessible in all layouts\n5. Test navigation patterns in different orientations\n6. Verify text remains readable on all screen sizes\n7. Test orientation lock functionality\n8. Validate layout on both iOS and Android devices",
         "priority": "medium",
         "dependencies": [
-          13,
-          20
+          1,
+          8
         ],
         "status": "pending",
         "subtasks": [
@@ -554,15 +554,15 @@
         ]
       },
       {
-        "id": 22,
+        "id": 10,
         "title": "Implement Recent Rounds History and Results Viewing",
         "description": "Develop the functionality to view past rounds, their results, statistics, and share round outcomes with friends.",
         "details": "1. Create rounds history screens:\n   - Rounds list/history\n   - Round details/results\n   - Player statistics\n   - Round sharing\n2. Implement rounds history retrieval:\n   ```typescript\n   // roundsHistoryService.ts\n   import { db, auth } from '../firebase/config';\n   import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';\n   \n   export const getUserRounds = async (limit = 20) => {\n     const currentUser = auth.currentUser;\n     if (!currentUser) throw new Error('User not authenticated');\n     \n     const roundsRef = collection(db, 'rounds');\n     const q = query(\n       roundsRef,\n       where('players', 'array-contains', currentUser.uid),\n       orderBy('createdAt', 'desc'),\n       limit(limit)\n     );\n     \n     const querySnapshot = await getDocs(q);\n     return querySnapshot.docs.map(doc => ({\n       id: doc.id,\n       ...doc.data()\n     }));\n   };\n   ```\n3. Create round details view with game-specific results\n4. Implement statistics calculation and visualization\n5. Add round sharing via social media or messaging\n6. Create player performance comparisons\n7. Implement round filtering and searching\n8. Add round deletion or archiving functionality",
         "testStrategy": "1. Test rounds history retrieval and display\n2. Verify round details show correct game results\n3. Test statistics calculations for accuracy\n4. Validate round sharing functionality\n5. Test performance with large history datasets\n6. Verify filtering and searching functionality\n7. Test round deletion/archiving\n8. Validate data consistency across devices",
         "priority": "medium",
         "dependencies": [
-          15,
-          20
+          3,
+          8
         ],
         "status": "pending",
         "subtasks": [
@@ -615,7 +615,7 @@
     ],
     "metadata": {
       "created": "2025-07-06T05:33:58.096Z",
-      "updated": "2025-07-06T05:36:22.595Z",
+      "updated": "2025-07-06T16:26:17.092Z",
       "description": "Tasks for master context"
     }
   }

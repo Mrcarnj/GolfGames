@@ -1,0 +1,100 @@
+# Task ID: 6
+# Title: Implement Course and Tee Selection
+# Status: pending
+# Dependencies: 2, 3
+# Priority: medium
+# Description: Develop the course browsing, searching, and tee selection functionality, including location-based course finding and course details viewing.
+# Details:
+1. Install location services: `npx expo install expo-location`
+2. Create course-related screens:
+   - Course search/browse
+   - Course details
+   - Tee selection
+   - Course favorites
+3. Implement location-based course finding:
+   ```typescript
+   // locationService.ts
+   import * as Location from 'expo-location';
+   import { db } from '../firebase/config';
+   import { collection, query, where, getDocs, GeoPoint } from 'firebase/firestore';
+   
+   export const getNearbyGolfCourses = async (radiusInMiles = 25) => {
+     const { status } = await Location.requestForegroundPermissionsAsync();
+     if (status !== 'granted') {
+       throw new Error('Location permission not granted');
+     }
+     
+     const location = await Location.getCurrentPositionAsync({});
+     const { latitude, longitude } = location.coords;
+     
+     // Query courses near the user's location
+     // This is a simplified example - actual implementation would depend on how geolocation is stored in Firestore
+     const coursesRef = collection(db, 'courses');
+     // Implementation would need a geospatial query solution
+     return getDocs(coursesRef);
+   };
+   ```
+4. Create course data models and services
+5. Implement tee selection and management
+6. Add course favorites functionality
+7. Create course search with filters (distance, rating, etc.)
+8. Implement course details display (holes, pars, distances, etc.)
+
+# Test Strategy:
+1. Test location permission requests
+2. Verify nearby course finding with mock locations
+3. Test course search with various filters
+4. Validate tee selection and display
+5. Test course favorites adding and removal
+6. Verify course details display accuracy
+7. Test performance with large course datasets
+8. Validate location services on both iOS and Android
+
+# Subtasks:
+## 1. Implement Location Services Integration [pending]
+### Dependencies: None
+### Description: Integrate device location services to enable proximity-based course search and recommendations
+### Details:
+1. Request and handle location permissions
+2. Implement geolocation service to get user's current coordinates
+3. Create a location manager class to handle location updates
+4. Add error handling for when location services are unavailable
+5. Implement distance calculation between user and golf courses
+6. Create a location cache to minimize API calls
+
+## 2. Develop Course Search and Browse Functionality [pending]
+### Dependencies: 6.1
+### Description: Create robust search and browse features allowing users to find courses by name, location, and other criteria
+### Details:
+1. Design and implement search UI with filters
+2. Create API service for course data retrieval
+3. Implement pagination for course listings
+4. Add sorting options (distance, rating, difficulty)
+5. Create search history feature
+6. Implement search result caching
+7. Add recent searches functionality
+
+## 3. Build Course Details Display [pending]
+### Dependencies: 6.2
+### Description: Create detailed course view showing course information, available tees, and course statistics
+### Details:
+1. Design course detail UI with expandable sections
+2. Implement tee selection interface
+3. Display course ratings, slope, and par information
+4. Add course photos gallery
+5. Implement course amenities display
+6. Create course map integration
+7. Add weather information for the course location
+
+## 4. Implement Favorites Management [pending]
+### Dependencies: 6.3
+### Description: Allow users to save favorite courses and tees for quick access
+### Details:
+1. Create database schema for favorites
+2. Implement add/remove favorite functionality
+3. Build favorites list UI
+4. Add default tee selection for favorited courses
+5. Implement sync with cloud for cross-device access
+6. Create favorite courses widget for home screen
+7. Add notifications for updates to favorite courses
+

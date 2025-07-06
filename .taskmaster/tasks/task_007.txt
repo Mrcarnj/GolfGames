@@ -1,0 +1,85 @@
+# Task ID: 7
+# Title: Implement Round Setup and Player Management
+# Status: pending
+# Dependencies: 3, 5, 6
+# Priority: medium
+# Description: Develop the round creation, setup, and player management functionality, allowing users to start new rounds, add players, and configure game settings.
+# Details:
+1. Create round setup screens:
+   - New round creation
+   - Game type selection
+   - Player selection/invitation
+   - Round settings configuration
+2. Implement round creation and management:
+   ```typescript
+   // roundService.ts
+   import { db, auth } from '../firebase/config';
+   import { collection, addDoc, updateDoc, doc, getDoc } from 'firebase/firestore';
+   
+   export const createNewRound = async (courseId: string, teeId: string, gameType: string, players: string[]) => {
+     const currentUser = auth.currentUser;
+     if (!currentUser) throw new Error('User not authenticated');
+     
+     const roundData = {
+       courseId,
+       teeId,
+       gameType,
+       players,
+       createdBy: currentUser.uid,
+       createdAt: new Date(),
+       status: 'active',
+       scores: {}
+     };
+     
+     const docRef = await addDoc(collection(db, 'rounds'), roundData);
+     return { id: docRef.id, ...roundData };
+   };
+   ```
+3. Implement player invitation and management
+4. Create game type selection with rules display
+5. Implement handicap application based on game type
+6. Add round settings configuration (scoring options, etc.)
+7. Create round sharing functionality
+8. Implement round resumption for incomplete rounds
+
+# Test Strategy:
+1. Test round creation with various game types
+2. Verify player invitation and acceptance
+3. Test handicap calculations for different game types
+4. Validate round settings configuration
+5. Test round sharing functionality
+6. Verify round resumption for incomplete rounds
+7. Test error handling for invalid configurations
+8. Validate data consistency between devices
+
+# Subtasks:
+## 1. Implement Round Creation UI [pending]
+### Dependencies: None
+### Description: Design and implement the user interface for creating a new golf round
+### Details:
+Create a responsive form with fields for round name, date, course selection, and basic settings. Include validation for required fields. Design should follow the app's style guide with clear section headers and intuitive navigation. Implement form submission handling with proper error states and loading indicators.
+
+## 2. Develop Game Type Selection System [pending]
+### Dependencies: 7.1
+### Description: Implement the functionality to select and configure different game types for a round
+### Details:
+Create a dropdown or card-based selection UI for different game types (stroke play, match play, stableford, etc.). Each game type should display its rules and configuration options. Implement logic to validate game-specific settings and update the UI based on selection. Store selected game type and settings in the round data model.
+
+## 3. Build Player Invitation System [pending]
+### Dependencies: 7.1
+### Description: Create a system to invite players to join a round
+### Details:
+Implement a search interface to find players by username or email. Add functionality to send invitations via in-app notifications, email, or shareable links. Create UI components to display invited players with their status (pending, accepted, declined). Implement backend APIs to handle invitation creation, acceptance, and rejection.
+
+## 4. Implement Handicap Application Logic [pending]
+### Dependencies: 7.2, 7.3
+### Description: Develop the system to apply and calculate handicaps for players in a round
+### Details:
+Create logic to fetch and apply player handicaps based on their profiles. Implement course-specific handicap calculations based on slope and rating. Add UI controls to manually adjust handicaps if needed. Ensure handicap calculations are properly applied based on the selected game type. Include validation to prevent invalid handicap entries.
+
+## 5. Create Round Settings Configuration [pending]
+### Dependencies: 7.1, 7.2, 7.4
+### Description: Implement advanced settings for round customization
+### Details:
+Develop UI for configuring tee selection, scoring options, and game-specific rules. Implement settings for weather conditions, local rules, and competition formats. Create a summary view of all settings before round creation. Add functionality to save round templates for future use. Ensure all settings are properly validated and stored in the database.
+

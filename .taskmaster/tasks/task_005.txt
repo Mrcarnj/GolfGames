@@ -1,0 +1,83 @@
+# Task ID: 5
+# Title: Implement User Profile and Friends Management
+# Status: pending
+# Dependencies: 2, 3, 4
+# Priority: medium
+# Description: Develop the user profile editing, viewing, and friends management functionality, including adding, viewing, and inviting friends.
+# Details:
+1. Create profile screens:
+   - Profile view
+   - Profile edit
+   - Friends list
+   - Friend requests
+   - Friend search
+2. Implement profile data management:
+   ```typescript
+   // profileService.ts
+   import { db, storage, auth } from '../firebase/config';
+   import { doc, getDoc, updateDoc } from 'firebase/firestore';
+   import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+   
+   export const getUserProfile = async (userId: string) => {
+     const docRef = doc(db, 'users', userId);
+     const docSnap = await getDoc(docRef);
+     return docSnap.exists() ? docSnap.data() : null;
+   };
+   
+   export const updateUserProfile = async (userId: string, profileData: any) => {
+     const docRef = doc(db, 'users', userId);
+     await updateDoc(docRef, profileData);
+     return getUserProfile(userId);
+   };
+   ```
+3. Implement friends management functions:
+   - Send friend requests
+   - Accept/reject requests
+   - Remove friends
+   - Search for users
+4. Create profile image upload and management
+5. Implement handicap calculation and display
+6. Add friend activity feed if present in original app
+7. Create notifications for friend requests and activities
+
+# Test Strategy:
+1. Test profile data retrieval and updates
+2. Verify profile image upload and display
+3. Test friend request sending and receiving
+4. Validate friend acceptance and rejection flows
+5. Test user search functionality
+6. Verify friend list display and filtering
+7. Test notifications for friend activities
+8. Validate handicap calculations
+
+# Subtasks:
+## 1. Implement User Profile Screen UI [pending]
+### Dependencies: None
+### Description: Design and implement the user profile screen with all necessary UI components
+### Details:
+Create a responsive profile screen with: profile image display area, user name and bio sections, edit profile button, friends count display, settings access, and activity feed. Use Material Design components for consistency. Implement both view mode and edit mode layouts. Include proper error states and loading indicators.
+
+## 2. Develop Profile Data Management System [pending]
+### Dependencies: 5.1
+### Description: Create backend services to handle user profile data storage, retrieval, and updates
+### Details:
+Implement Firebase Firestore schema for user profiles with fields for name, bio, profile image URL, friend IDs, and account settings. Create API services for CRUD operations on profiles. Add data validation and sanitization. Implement caching strategy for profile data to reduce database reads. Set up security rules to protect user data.
+
+## 3. Build Friends List Functionality [pending]
+### Dependencies: 5.2
+### Description: Implement the friends list view and management features
+### Details:
+Create a friends list screen showing all connected users with profile pictures and names. Implement search and filter functionality for the list. Add ability to view a friend's profile. Create database queries to efficiently retrieve friend data. Implement pagination for large friend lists. Add UI for unfriending with confirmation dialog.
+
+## 4. Develop Friend Request System [pending]
+### Dependencies: 5.3
+### Description: Create the complete friend request sending, receiving, and management functionality
+### Details:
+Implement database structure for friend requests with status tracking (pending, accepted, declined). Create UI for sending friend requests from profile or search. Build notifications for incoming friend requests. Implement accept/decline actions with appropriate database updates. Add friend suggestion algorithm based on mutual connections. Create real-time updates using Firebase listeners.
+
+## 5. Implement Profile Image Handling [pending]
+### Dependencies: 5.2
+### Description: Create system for uploading, storing, retrieving, and displaying profile images
+### Details:
+Set up Firebase Storage for profile images with proper security rules. Implement image upload functionality with compression and cropping. Create image caching system for efficient loading. Add placeholder images for users without profile pictures. Implement progressive loading for images. Create error handling for failed uploads or retrievals.
+
