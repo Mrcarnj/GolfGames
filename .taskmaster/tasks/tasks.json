@@ -325,8 +325,8 @@
             "dependencies": [
               1
             ],
-            "details": "1. Design and implement search UI with filters\n2. Create API service for course data retrieval\n3. Implement pagination for course listings\n4. Add sorting options (distance, rating, difficulty)\n5. Create search history feature\n6. Implement search result caching\n7. Add recent searches functionality",
-            "status": "in-progress",
+            "details": "1. Design and implement search UI with filters\n2. Create API service for course data retrieval\n3. Implement pagination for course listings\n4. Add sorting options (distance, rating, difficulty)\n5. Create search history feature\n6. Implement search result caching\n7. Add recent searches functionality\n<info added on 2025-07-06T17:39:33.517Z>\nCompleted implementation of course search and browse functionality with the following features:\n- Search bar with case-insensitive filtering by course name\n- Sort toggle allowing users to sort by distance or name\n- Pagination system showing 20 courses per page with next/previous navigation controls\n- Recent searches feature that caches and displays up to 5 most recent searches as clickable chips\n- UI/UX design consistent with iOS app standards\n- Maintained compatibility with existing picker and navigation features\n- Optimized for performance and responsiveness during course browsing\n</info added on 2025-07-06T17:39:33.517Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -336,8 +336,8 @@
             "dependencies": [
               2
             ],
-            "details": "1. Design course detail UI with expandable sections\n2. Implement tee selection interface\n3. Display course ratings, slope, and par information\n4. Add course photos gallery\n5. Implement course amenities display\n6. Create course map integration\n7. Add weather information for the course location",
-            "status": "pending",
+            "details": "1. Design course detail UI with expandable sections\n2. Implement tee selection interface\n3. Display course ratings, slope, and par information\n4. Add course photos gallery\n5. Implement course amenities display\n6. Create course map integration\n7. Add weather information for the course location\n<info added on 2025-07-06T17:41:24.532Z>\nCompleted implementation of the course details display:\n- Created detailed course view showing name, location, rating, slope, par, and available tees with selection functionality\n- Established navigation from course search/browse list to CourseDetails screen\n- Implemented expandable sections for course statistics, photos, amenities, and map with placeholders for future content\n- Designed UI/UX to match iOS app's expandable info sections style\n- Ensured robust navigation and data fetching architecture to support future expansion\n</info added on 2025-07-06T17:41:24.532Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -347,8 +347,8 @@
             "dependencies": [
               3
             ],
-            "details": "1. Create database schema for favorites\n2. Implement add/remove favorite functionality\n3. Build favorites list UI\n4. Add default tee selection for favorited courses\n5. Implement sync with cloud for cross-device access\n6. Create favorite courses widget for home screen\n7. Add notifications for updates to favorite courses",
-            "status": "pending",
+            "details": "1. Create database schema for favorites\n2. Implement add/remove favorite functionality\n3. Build favorites list UI\n4. Add default tee selection for favorited courses\n5. Implement sync with cloud for cross-device access\n6. Create favorite courses widget for home screen\n7. Add notifications for updates to favorite courses\n<info added on 2025-07-06T17:44:05.448Z>\nImplemented favorites management with the following features:\n- Added gold star icon in CourseDetails screen for adding/removing favorite courses and tees\n- Created persistent storage for favorites in sharedStore\n- Built Favorites screen displaying all favorited courses/tees with options to view details or remove\n- Added 'Favorites' button on home screen for quick access\n- Designed UI/UX to match iOS app's favorites flow\n- System is ready for planned enhancements (default tee selection, cloud sync, and widgets)\n</info added on 2025-07-06T17:44:05.448Z>",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -615,7 +615,7 @@
     ],
     "metadata": {
       "created": "2025-07-06T05:33:58.096Z",
-      "updated": "2025-07-06T17:36:41.016Z",
+      "updated": "2025-07-06T17:44:06.998Z",
       "description": "Tasks for master context"
     }
   }

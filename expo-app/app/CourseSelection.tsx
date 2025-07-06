@@ -254,7 +254,11 @@ export default function CourseSelection() {
       <Text style={styles.label}>All Courses</Text>
       <ScrollView style={{ maxHeight: 200 }}>
         {paginatedCourses.map(course => (
-          <TouchableOpacity key={course.id} style={[styles.pickerItem, selectedCourse?.id === course.id && styles.selected]} onPress={() => setSelectedCourse(course)}>
+          <TouchableOpacity
+            key={course.id}
+            style={[styles.pickerItem, selectedCourse?.id === course.id && styles.selected]}
+            onPress={() => router.push({ pathname: '/CourseDetails', params: { courseId: course.id } })}
+          >
             <Text>{course.name}{course.distance != null ? ` (${course.distance.toFixed(1)} mi)` : ''}</Text>
           </TouchableOpacity>
         ))}

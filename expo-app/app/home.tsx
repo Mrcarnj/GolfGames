@@ -12,6 +12,7 @@ export default function Home() {
       <Text style={styles.title}>Welcome, {userSession?.email || 'Golfer'}!</Text>
       <Button title="Start New Round" onPress={() => router.push('/CourseSelection')} />
       <Button title="Recent Rounds" onPress={() => router.push('/RecentRounds')} />
+      <Button title="Favorites" onPress={() => router.push('/Favorites')} />
       <Button title="Logout" onPress={signOut} />
       {/* TODO: Add main app navigation and features here, matching iOS app */}
     </View>
