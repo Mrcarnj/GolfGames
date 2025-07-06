@@ -307,15 +307,15 @@
           2,
           3
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
             "title": "Implement Location Services Integration",
             "description": "Integrate device location services to enable proximity-based course search and recommendations",
             "dependencies": [],
-            "details": "1. Request and handle location permissions\n2. Implement geolocation service to get user's current coordinates\n3. Create a location manager class to handle location updates\n4. Add error handling for when location services are unavailable\n5. Implement distance calculation between user and golf courses\n6. Create a location cache to minimize API calls",
-            "status": "in-progress",
+            "details": "1. Request and handle location permissions\n2. Implement geolocation service to get user's current coordinates\n3. Create a location manager class to handle location updates\n4. Add error handling for when location services are unavailable\n5. Implement distance calculation between user and golf courses\n6. Create a location cache to minimize API calls\n<info added on 2025-07-06T17:36:38.314Z>\nRefactored location services integration:\n- Created a reusable locationService module that encapsulates permission handling, geolocation functionality, and distance calculation using the Haversine formula\n- Implemented Zustand-based caching system for storing last known location to minimize API calls and improve performance\n- Updated CourseSelection component to leverage the new locationService for all location-related logic\n- Added comprehensive error handling for scenarios when location services are unavailable or permissions are denied\n- Maintained consistent UI/UX while improving the underlying implementation\n- Successfully implemented proximity-based course search and recommendations matching iOS app functionality\n</info added on 2025-07-06T17:36:38.314Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -326,7 +326,7 @@
               1
             ],
             "details": "1. Design and implement search UI with filters\n2. Create API service for course data retrieval\n3. Implement pagination for course listings\n4. Add sorting options (distance, rating, difficulty)\n5. Create search history feature\n6. Implement search result caching\n7. Add recent searches functionality",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -615,7 +615,7 @@
     ],
     "metadata": {
       "created": "2025-07-06T05:33:58.096Z",
-      "updated": "2025-07-06T17:24:02.873Z",
+      "updated": "2025-07-06T17:36:41.016Z",
       "description": "Tasks for master context"
     }
   }
