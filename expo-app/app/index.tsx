@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, useColorScheme, ScrollView } from "react-native";
+import { View, Text, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, useColorScheme, ScrollView, Image } from "react-native";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import InputView from "../components/InputView";
@@ -7,6 +7,12 @@ import PrimaryButton from "../components/PrimaryButton";
 import SecondaryButton from "../components/SecondaryButton";
 import Logo from "../components/Logo";
 import { colors } from "../theme.js";
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { signInWithGoogle } from '../authService';
+import React from 'react';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function Index() {
   const [mode, setMode] = useState<'signup' | 'signin'>("signin");
@@ -20,6 +26,14 @@ export default function Index() {
   const [showReset, setShowReset] = useState(false);
   const colorScheme = useColorScheme();
 
+  // Google Auth
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: '64996444063-rlbepaoamu4801dfrlfa35oiasehucn7.apps.googleusercontent.com', // For Expo Go
+    iosClientId: '<YOUR_IOS_CLIENT_ID>',      // (optional, for standalone iOS builds)
+    androidClientId: '<YOUR_ANDROID_CLIENT_ID>', // (optional, for standalone Android builds)
+    webClientId: '64996444063-rlbepaoamu4801dfrlfa35oiasehucn7.apps.googleusercontent.com', // (optional, for web)
+  });
+
   // Password validation
   const hasEightCharacters = password.length >= 8;
   const hasNumber = /\d/.test(password);
@@ -28,7 +42,7 @@ export default function Index() {
 
   const formIsValid =
     email.includes("@") &&
-    password.length > 0 &&
+    password.length >= 8 &&
     (mode === "signin" || (firstName && lastName && isPasswordValid && passwordsMatch));
 
   const handleAuth = async () => {
@@ -64,6 +78,22 @@ export default function Index() {
       setError(e.message);
     }
   };
+
+  // Google sign-in effect
+  React.useEffect(() => {
+    if (response?.type === 'success') {
+      setLoading(true);
+      setError("");
+      signInWithGoogle(response)
+        .then(() => {
+          Alert.alert("Google sign-in successful");
+        })
+        .catch((e) => {
+          setError(e.message);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [response]);
 
   return (
     <KeyboardAvoidingView
@@ -156,7 +186,17 @@ export default function Index() {
             disabled={!formIsValid || loading}
             icon={null}
             style={{}}
+            textColor="#fff"
           />
+          {/* <PrimaryButton
+            title="Sign in with Google"
+            onPress={() => promptAsync()}
+            disabled={!request || loading}
+            icon={<Image source={require('../assets/google-logo.png')} style={{ width: 24, height: 24 }} />}
+            iconPosition="left"
+            style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#ccc', marginTop: 8 }}
+            textColor="#222"
+          /> */}
           <SecondaryButton
             text={mode === "signup" ? "Already have an account?" : "Don't have an account?"}
             actionText={mode === "signup" ? "Sign In" : "Sign Up"}

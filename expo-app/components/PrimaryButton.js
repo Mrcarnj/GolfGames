@@ -1,8 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { colors } from '../theme';
+import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { colors } from '../theme.js';
 
-export default function PrimaryButton({ title, onPress, disabled, icon, style }) {
+export default function PrimaryButton({ title, onPress, disabled, icon, iconPosition = 'left', style, textColor }) {
   return (
     <TouchableOpacity
       style={[
@@ -14,8 +14,11 @@ export default function PrimaryButton({ title, onPress, disabled, icon, style })
       disabled={disabled}
       activeOpacity={0.8}
     >
-      <Text style={styles.text}>{title}</Text>
-      {icon}
+      <View style={styles.contentRow}>
+        {icon && iconPosition === 'left' ? icon : null}
+        <Text style={[styles.text, { color: textColor || '#fff' }]}>{title}</Text>
+        {icon && iconPosition === 'right' ? icon : null}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -31,10 +34,14 @@ const styles = StyleSheet.create({
     width: '100%',
     marginVertical: 8,
   },
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   text: {
-    color: '#fff',
     fontWeight: '600',
     fontSize: 16,
-    marginRight: 8,
+    marginHorizontal: 8,
   },
 }); 

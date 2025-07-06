@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "expo-apple-authentication": "^7.2.4"
+  }
+}
