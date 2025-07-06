@@ -1,0 +1,70 @@
+# Overview
+GolfGames is a feature-rich golf scoring and social application, currently implemented in Swift for iOS. The primary objective of this project is to migrate the entire app to React Native, leveraging Expo and expo-router for navigation. The migration aims to deliver an identical user experience and feature set, while enabling cross-platform support (iOS and Android) and streamlining future development and maintenance.
+
+# Core Features
+- Authentication: Login and registration flows.
+- Friends Management: Add, view, and invite friends.
+- Round Management: Course and tee selection, player management, round setup.
+- Game Types: Support for Stroke Play, Match Play, Better Ball, Stableford, Nine Point, and other existing games.
+- Scorecard: Per-hole, per-player score entry and display, with all current scoring rules.
+- Recent Rounds: History and results viewing.
+- Profile Management: User profile editing and viewing.
+- Location Features: Course and tee selection based on device location.
+- Orientation Handling: Responsive layouts for landscape and portrait, especially for scorecards.
+- Settings & Preferences: All current user-configurable options.
+
+# User Experience
+- Target Users: Golfers of all skill levels, both casual and competitive, seeking to track scores and play with friends.
+- Key Flows: Authentication → Home → Start/Join Round → Select Game/Players → Enter Scores → View Results → Save/Share Round.
+- UI/UX Requirements:
+  - Clean, intuitive navigation (mirroring the current app).
+  - Responsive design for phones and tablets.
+  - Easy, error-resistant score entry.
+  - Clear display of game rules and results.
+  - Seamless friend and round management.
+
+# Technical Architecture
+- Frontend: React Native (TypeScript), Expo, expo-router for navigation.
+- Backend: Firebase (Authentication, Firestore/Realtime Database, Storage).
+- State Management: Redux, Context API, or Zustand (to be selected based on best fit).
+- Native Modules: Integration for device location and orientation (using Expo APIs or custom modules as needed).
+- Assets: Cross-platform asset pipeline for images and icons.
+
+# Development Roadmap
+- Foundation:
+  - Set up React Native project with Expo and expo-router.
+  - Configure navigation, state management, and Firebase integration.
+- Core Features:
+  - Implement authentication, user profile, and friend management.
+- Rounds & Games:
+  - Migrate round setup, course/tee selection, and player management.
+  - Implement all existing game types and scorecard flows.
+- UI/UX Parity:
+  - Recreate all screens and flows to match the current app’s design and behavior.
+  - Ensure responsive layouts and orientation handling.
+- Testing & Validation:
+  - Conduct thorough testing on both iOS and Android.
+  - Validate feature parity and user experience.
+- Polish & Launch:
+  - Address platform-specific issues, optimize performance, and prepare for deployment.
+
+# Logical Dependency Chain
+- Foundation: App shell, navigation, state management, Firebase setup.
+- Core: Authentication, user profile, friend management.
+- Rounds: Course/tee selection, round setup, player management.
+- Games: Implement all game types and scorecard flows.
+- Expansion: Add remaining game types, advanced features, and polish.
+- Final: Platform-specific tweaks, testing, deployment.
+
+# Risks and Mitigations
+- Native Module Integration: Location and orientation features may require custom bridging.  
+  Mitigation: Use well-supported Expo/React Native libraries; prototype early.
+- Feature Creep: Risk of expanding scope beyond migration.  
+  Mitigation: Strictly adhere to feature parity; defer enhancements to post-migration.
+- Learning Curve: Adapting to React Native/Android development.  
+  Mitigation: Leverage community resources and incremental migration.
+
+# Appendix
+- Source Code: Original Swift codebase for logic and UI mapping.
+- Technical Resources: List of required React Native libraries and modules.
+- Best Practices: Research on cross-platform golf scoring app design. 
