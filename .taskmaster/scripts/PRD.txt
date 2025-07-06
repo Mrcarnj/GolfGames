@@ -1,6 +1,8 @@
 # Overview
 GolfGames is a feature-rich golf scoring and social application, currently implemented in Swift for iOS. The primary objective of this project is to migrate the entire app to React Native, leveraging Expo and expo-router for navigation. The migration aims to deliver an identical user experience and feature set, while enabling cross-platform support (iOS and Android) and streamlining future development and maintenance.
 
+- Where clear opportunities exist to improve user experience or streamline workflows, optimize these flows during migration—provided changes do not compromise overall feature parity or introduce scope creep.
+
 # Core Features
 - Authentication: Login and registration flows.
 - Friends Management: Add, view, and invite friends.
@@ -42,6 +44,8 @@ GolfGames is a feature-rich golf scoring and social application, currently imple
 - UI/UX Parity:
   - Recreate all screens and flows to match the current app’s design and behavior.
   - Ensure responsive layouts and orientation handling.
+- Flow Optimization:
+  - Review existing user flows for inefficiencies or pain points, and implement optimizations where they provide clear value and do not alter core functionality.
 - Testing & Validation:
   - Conduct thorough testing on both iOS and Android.
   - Validate feature parity and user experience.
@@ -61,6 +65,8 @@ GolfGames is a feature-rich golf scoring and social application, currently imple
   Mitigation: Use well-supported Expo/React Native libraries; prototype early.
 - Feature Creep: Risk of expanding scope beyond migration.  
   Mitigation: Strictly adhere to feature parity; defer enhancements to post-migration.
+- Scope Creep from Optimizations: Risk that improvements may expand beyond intended optimizations.  
+  Mitigation: Limit optimizations to clear, high-impact improvements; document and defer larger enhancements to post-migration.
 - Learning Curve: Adapting to React Native/Android development.  
   Mitigation: Leverage community resources and incremental migration.
 
