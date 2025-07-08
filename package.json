@@ -2,6 +2,8 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",
     "expo-apple-authentication": "^7.2.4",
-    "expo-location": "~18.1.6"
+    "expo-location": "~18.1.6",
+    "firebase": "^11.10.0",
+    "expo-router": "~5.1.3"
   }
 }

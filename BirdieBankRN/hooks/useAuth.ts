@@ -6,7 +6,7 @@ import {
   signOut as fbSignOut,
   sendPasswordResetEmail,
   updateProfile as fbUpdateProfile,
-  User,
+  User as FirebaseUser,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc, getDocs, collection, query, where, deleteDoc } from "firebase/firestore";
 import {
@@ -16,6 +16,7 @@ import {
   validateHandicap,
   validateGHIN,
 } from "../utilities/authUtils";
+import { User as AppUser } from "../models/User";
 
 export function useAuth() {
   const { user, loading, error, setError } = useAuthContext();
@@ -46,14 +47,13 @@ export function useAuth() {
     const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
     const firebaseUser = userCredential.user;
 
-    let userData = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
+    let userData: AppUser = {
+      id: firebaseUser.uid,
+      email: firebaseUser.email || "",
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       handicap: handicap ? parseFloat(handicap) : undefined,
       ghinNumber: ghinNumber ? parseInt(ghinNumber) : undefined,
-      createdAt: new Date().toISOString(),
     };
 
     if (!querySnapshot.empty) {
@@ -94,22 +94,26 @@ export function useAuth() {
   };
 
   // Update user profile
-  const updateUserProfile = async (updates: Partial<User>) => {
+  const updateUserProfile = async (updates: Partial<AppUser & FirebaseUser>) => {
     setError(null);
     if (!auth.currentUser) throw new Error("No authenticated user");
-    await fbUpdateProfile(auth.currentUser, updates);
-    // Optionally update Firestore user doc as well
+    // Update Auth displayName if needed
     if (updates.displayName) {
-      await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        displayName: updates.displayName,
-      });
+      await fbUpdateProfile(auth.currentUser, { displayName: updates.displayName });
     }
+    // Update Firestore user doc
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const firestoreUpdates: Partial<AppUser> = {};
+    if (updates.firstName) firestoreUpdates.firstName = updates.firstName;
+    if (updates.lastName) firestoreUpdates.lastName = updates.lastName;
+    if (updates.handicap !== undefined) firestoreUpdates.handicap = updates.handicap;
+    if (updates.ghinNumber !== undefined) firestoreUpdates.ghinNumber = updates.ghinNumber;
+    if (updates.email) firestoreUpdates.email = updates.email;
+    await updateDoc(userRef, firestoreUpdates);
   };
 
   // Migration stubs (for completeness)
   const migrateFriends = async (oldUserId: string, newUserId: string) => {
-    // Implement Firestore friends migration logic here if needed
-    // Example: copy all docs from users/{oldUserId}/friends to users/{newUserId}/friends
     const oldFriendsRef = collection(db, "users", oldUserId, "friends");
     const newFriendsRef = collection(db, "users", newUserId, "friends");
     const snapshot = await getDocs(oldFriendsRef);
@@ -119,8 +123,6 @@ export function useAuth() {
   };
 
   const migrateRounds = async (oldUserId: string, newUserId: string) => {
-    // Implement Firestore rounds migration logic here if needed
-    // Example: copy all docs from users/{oldUserId}/rounds to users/{newUserId}/rounds
     const oldRoundsRef = collection(db, "users", oldUserId, "rounds");
     const newRoundsRef = collection(db, "users", newUserId, "rounds");
     const snapshot = await getDocs(oldRoundsRef);
@@ -143,7 +145,7 @@ export function useAuth() {
   };
 
   return {
-    user,
+    user: user as (FirebaseUser & AppUser) | null,
     loading,
     error,
     register,
