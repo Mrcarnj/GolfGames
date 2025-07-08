@@ -1,31 +1,31 @@
-import React, { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
 import { useAuth } from "../hooks/useAuth";
-import LoginView from "./(auth)/login";
-import { useRouter } from "expo-router";
+import { Redirect } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
 
 export default function Index() {
   const { user, loading } = useAuth();
-  const router = useRouter();
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      router.replace("/(tabs)");
-    }
-  }, [user, router]);
+    const initTimeout = setTimeout(() => {
+      setIsInitializing(false);
+    }, 1000);
+    return () => clearTimeout(initTimeout);
+  }, []);
 
-  if (loading) {
+  if (loading || isInitializing) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+        <ActivityIndicator size="large" color="#ff6600" />
       </View>
     );
   }
 
   if (!user) {
-    return <LoginView />;
+    return <Redirect href="/(auth)/login" />;
   }
 
-  // Optionally, render nothing while redirecting
-  return null;
+  // Redirect to the main protected area
+  return <Redirect href="/(protected)/(tabs)" />;
 }
