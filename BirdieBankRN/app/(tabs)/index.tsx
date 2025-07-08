@@ -21,7 +21,7 @@ export default function TabsIndex() {
       </View>
       <TouchableOpacity
         style={styles.roundButton}
-        onPress={() => router.push("/single-round-setup")}
+        onPress={() => router.push("/single-round-setup")} //needs to be changed to the new round setup
       >
         <Text style={styles.roundButtonText}>New Round</Text>
       </TouchableOpacity>
